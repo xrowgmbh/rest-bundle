@@ -1,0 +1,9 @@
+{
+    "name": "xrow/rest-bundle",
+    "type": "symfony-bundle",
+    "license": "MIT",
+    "description": "REST bundle for CRM interfaces",
+    "autoload": {
+        "psr-4": { "xrow\\restBundle\\": "" }
+    }
+}
