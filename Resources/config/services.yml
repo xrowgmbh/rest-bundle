@@ -1,5 +1,5 @@
 parameters:
-    xrow_rest.controller.user.class: Xrow\Bundle\RestBundle\Controller\User
+    xrow_rest.controller.user.class: xrow\restBundle\Controller\User
  
 services:
     xrow_rest.controller.user:
