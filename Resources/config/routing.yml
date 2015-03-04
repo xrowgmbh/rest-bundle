@@ -1,0 +1,23 @@
+xrow_rest_user:
+    path: /user
+    defaults: 
+        _controller: xrow_rest.controller.user:index
+    methods: [GET]
+
+#xrow_rest_user_login:
+#    path:     /user/sessions
+#    defaults: 
+#        _controller: xrow_rest.controller.user:loginAction
+#    methods: [POST]
+
+xrow_rest_user_logout:
+    path:     /user/sessions
+    defaults: 
+        _controller: xrow_rest.controller.user:logoutAction
+    methods: [GET]
+
+xrow_rest_user_subscriptions:
+    path:     /user/subscriptions/{userId}
+    defaults:
+        _controller: xrow_rest.controller.user:getUserSubscription
+    methods: [GET]
