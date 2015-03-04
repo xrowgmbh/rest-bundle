@@ -1,6 +1,6 @@
 <?php
 
-namespace Xrow\Bundle\RestBundle;
+namespace xrow\restBundle;
 
 use Symfony\Component\HttpKernel\Bundle\Bundle;
 

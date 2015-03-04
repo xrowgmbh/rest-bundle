@@ -1,6 +1,6 @@
 <?php
 
-namespace Xrow\Bundle\RestBundle\DependencyInjection;
+namespace xrow\restBundle\DependencyInjection;
 
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\Config\FileLocator;

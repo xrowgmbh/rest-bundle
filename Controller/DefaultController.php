@@ -1,6 +1,6 @@
 <?php
 
-namespace Xrow\Bundle\RestBundle\Controller;
+namespace xrow\restBundle\Controller;
 
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 

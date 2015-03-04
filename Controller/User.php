@@ -7,7 +7,7 @@
  * @version //autogentag//
  */
 
-namespace Xrow\Bundle\RestBundle\Controller;
+namespace xrow\restBundle\Controller;
 
 use eZ\Publish\Core\REST\Common\Message;
 use eZ\Publish\Core\REST\Server\Values;
