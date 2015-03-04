@@ -1,6 +1,6 @@
 <?php
 /**
- * File containing the User controller class
+ * File containing the CRM Plugin controller class
  *
  * @copyright Copyright (C) eZ Systems AS. All rights reserved.
  * @license For full copyright and license information view LICENSE file distributed with this source code.
@@ -9,21 +9,13 @@
 
 namespace xrow\restBundle\Controller;
 
-use eZ\Publish\Core\REST\Common\Message;
-use eZ\Publish\Core\REST\Server\Values;
-use eZ\Publish\Core\REST\Server\Exceptions;
-use eZ\Publish\Core\REST\Server\Controller as RestController;
-
-use eZ\Publish\API\Repository\UserService;
-
 /**
  * User controller
  */
-class User extends RestController
+class CRMPlugin extends RestController
 {
     public function getUserSubscription($userId)
     {
-        die(var_dump($this->userService));
         die('drin');
         /*$user = $this->userService->loadUser( $userId );
     
