@@ -6,6 +6,8 @@ use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\Config\FileLocator;
 use Symfony\Component\HttpKernel\DependencyInjection\Extension;
 use Symfony\Component\DependencyInjection\Loader;
+use Symfony\Component\DependencyInjection\Exception\ServiceNotFoundException;
+use Symfony\Component\DependencyInjection\Extension\PrependExtensionInterface;
 
 /**
  * This is the class that loads and manages your bundle configuration
@@ -23,6 +25,40 @@ class xrowRestExtension extends Extension
         $config = $this->processConfiguration($configuration, $configs);
 
         $loader = new Loader\YamlFileLoader($container, new FileLocator(__DIR__.'/../Resources/config'));
-        $loader->load('services.yml');
+        $configurations = array(
+                'services.yml',
+                'services.xml'
+        );
+        
+        foreach ($configurations as $basename) {
+            $loader->load($basename);
+        }
+        #$loader->load('services.yml');
+    }
+
+    /**
+     * {@inheritdoc}
+     *
+     * @throws ServiceNotFoundException
+     */
+    public function prepend(ContainerBuilder $container)
+    {
+        if (!$container->hasExtension('fos_oauth_server')) {
+            throw new ServiceNotFoundException('FOSOAuthServerBundle must be registered in kernel.');
+        }
+
+        $config = $this->processConfiguration(new Configuration(), $container->getExtensionConfig($this->getAlias()));
+
+        $container->prependExtensionConfig('fos_oauth_server', array(
+                'db_driver'           => 'orm',
+                'client_class'        => $config['classes']['api_client']['model'],
+                'access_token_class'  => $config['classes']['api_access_token']['model'],
+                'refresh_token_class' => $config['classes']['api_refresh_token']['model'],
+                'auth_code_class'     => $config['classes']['api_auth_code']['model'],
+                
+                'service'             => array(
+                        'user_provider' => 'fos_user.user_provider.username'
+                ),
+        ));
     }
 }
