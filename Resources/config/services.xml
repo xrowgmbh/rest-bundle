@@ -10,7 +10,7 @@
 
     <services>
         <service id="xrow.oauth.user_provider" class="%xrow.oauth.user_provider.class%">
-            <argument type="service" id="ezpublish.security.user_providerr" />
+            <argument type="service" id="ezpublish.security.user_provider" />
         </service>
     </services>
 </container>
