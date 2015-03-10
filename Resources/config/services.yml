@@ -1,11 +1,13 @@
 parameters:
     xrow_rest.controller.user.class: xrow\restBundle\Controller\User
-    xrow_rest.controller.crmplugin.class: xrow\restBundle\Controller\CRMPlugin
- 
+    xrow.oauth.user_provider.class: xrow\restBundle\OAuth\UserProvider
+
 services:
     xrow_rest.controller.user:
         class: %xrow_rest.controller.user.class%
         parent: ezpublish_rest.controller.base
 
-    xrow_rest.controller.crmplugin:
-        class: %xrow_rest.controller.crmplugin.class%
+    xrow.oauth.user_provider:
+        class: %xrow.oauth.user_provider.class%
+        arguments:
+            - @doctrine
