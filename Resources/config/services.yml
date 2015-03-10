@@ -1,17 +1,12 @@
 parameters:
     xrow_rest.interactive_event_listener.class: xrow\restBundle\EventListener\InteractiveLoginListener
     xrow_rest.controller.user.class: xrow\restBundle\Controller\User
-    xrow_rest.oauth.user_provider.class: xrow\restBundle\OAuth\UserProvider
+    xrow.oauth.user_provider.class: xrow\restBundle\OAuth\UserProvider
 
 services:
     xrow_rest.controller.user:
         class: %xrow_rest.controller.user.class%
         parent: ezpublish_rest.controller.base
-
-    xrow_rest.oauth.user_provider:
-        class: %xrow_rest.oauth.user_provider.class%
-        arguments:
-            - @doctrine
 
     xrow_rest.interactive_event_listener:
         class: %xrow_rest.interactive_event_listener.class%
