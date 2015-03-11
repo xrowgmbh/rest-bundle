@@ -11,7 +11,7 @@
     </parameters>
 
     <services>
-        <service id="xrow_rest.oauth.user_provider" class="%xrow.oauth.user_provider.class%">
+        <service id="xrow_rest.oauth.user_provider" class="%xrow_rest.oauth.user_provider.class%">
             <argument type="service" id="ezpublish.security.user_provider" />
         </service>
 
