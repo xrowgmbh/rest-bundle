@@ -16,12 +16,12 @@
         </service>
 
         <service id="xrow_rest.interactive_event_listener" class="%xrow_rest.interactive_event_listener.class%">
-            <argument type="service" id="@ezpublish.api.service.user" />
+            <argument type="service" id="ezpublish.api.service.user" />
             <tag name="kernel.event_subscriber" />
         </service>
  
         <service id="xrow_rest.controller.user" class="%xrow_rest.controller.user.class%">
-            <argument type="service" id="ezpublish_rest.controller.baser" />
+            <argument type="service" id="ezpublish_rest.controller.base" />
         </service>
     </services>
 </container>
