@@ -1,2 +1,5 @@
-plugins:
-    crm_plugin: xrowFormCRMPlugin
+xrow_rest_settings:
+    plugins:
+        crm_plugin: xrowFormCRMPlugin
+
+    ezuserlogin: here_the_loginname_of_the_ezuser

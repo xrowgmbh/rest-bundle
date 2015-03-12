@@ -24,12 +24,13 @@ class User extends RestController
         #die(var_dump($this));
         $session = $this->request->getSession();
         $currentUser = $this->repository->getCurrentUser();
-        $sessionName = $session->getName();
-        echo "<pre>";
-        var_dump($currentUser);
-        var_dump($sessionName);
-        var_dump($session);
-        echo "</pre>";
-        die();
+        return json_encode(array('response' => $currentUser));
+        #$sessionName = $session->getName();
+        #echo "<pre>";
+        #var_dump($currentUser);
+        #var_dump($sessionName);
+        #var_dump($session);
+        #echo "</pre>";
+        #die();
     }
 }

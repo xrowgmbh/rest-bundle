@@ -24,10 +24,8 @@ class xrowRestExtension extends Extension
         $configuration = new Configuration();
         $config = $this->processConfiguration($configuration, $configs);
 
-        #$loader = new Loader\YamlFileLoader($container, new FileLocator(__DIR__.'/../Resources/config'));
-        #$loader->load('services.yml');
-        $loader = new Loader\XmlFileLoader($container, new FileLocator(__DIR__.'/../Resources/config'));
-        $loader->load('services.xml');
+        $loader = new Loader\YamlFileLoader($container, new FileLocator(__DIR__.'/../Resources/config'));
+        $loader->load('services.yml');
     }
 
     /**
@@ -37,13 +35,14 @@ class xrowRestExtension extends Extension
      */
     public function prepend(ContainerBuilder $container)
     {
-        if (!$container->hasExtension('fos_oauth_server')) {
-            throw new ServiceNotFoundException('FOSOAuthServerBundle must be registered in kernel.');
-        }
+        // das ist ein Beispiel vom HWI Bundle
+        #if (!$container->hasExtension('fos_oauth_server')) {
+        #    throw new ServiceNotFoundException('FOSOAuthServerBundle must be registered in kernel.');
+        #}
 
-        $config = $this->processConfiguration(new Configuration(), $container->getExtensionConfig($this->getAlias()));
+        #$config = $this->processConfiguration(new Configuration(), $container->getExtensionConfig($this->getAlias()));
 
-        $container->prependExtensionConfig('fos_oauth_server', array(
+        /*$container->prependExtensionConfig('fos_oauth_server', array(
                 'db_driver'           => 'orm',
                 'client_class'        => $config['classes']['api_client']['model'],
                 'access_token_class'  => $config['classes']['api_access_token']['model'],
@@ -53,6 +52,6 @@ class xrowRestExtension extends Extension
                 'service'             => array(
                         'user_provider' => 'fos_user.user_provider.username'
                 ),
-        ));
+        ));*/
     }
 }

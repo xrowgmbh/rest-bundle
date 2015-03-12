@@ -27,8 +27,13 @@ class InteractiveLoginListener implements EventSubscriberInterface
 
     public function onInteractiveLogin( InteractiveLoginEvent $event )
     {
+        // Hat $event vielleicht das hier:
+        // $this->configResolver = $configResolver;
+        // dann könnte ich das hier machen: 
+        // $eZUserLoginName = $this->configResolver->getParameter( 'xrow_rest_settings.ezuserlogin' )
+
         // We just load a generic user and assign it back to the event.
         // You may want to create users here, or even load predefined users depending on your own rules.
-        $event->setApiUser( $this->userService->loadUserByLogin( 'lolautruche' ) );
+        $event->setApiUser( $this->userService->loadUserByLogin( $eZUserLoginName ) );
     }
 }
