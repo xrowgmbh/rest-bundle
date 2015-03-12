@@ -1,5 +1,5 @@
 xrow_rest_settings:
     plugins:
-        crm_plugin: xrowFormCRMPlugin
+        crmclass: pathToCRMClassWithGetUserFunction
 
-    ezuserlogin: here_the_loginname_of_the_ezuser
+    ezuserlogin: anonymous

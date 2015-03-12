@@ -27,31 +27,4 @@ class xrowRestExtension extends Extension
         $loader = new Loader\YamlFileLoader($container, new FileLocator(__DIR__.'/../Resources/config'));
         $loader->load('services.yml');
     }
-
-    /**
-     * {@inheritdoc}
-     *
-     * @throws ServiceNotFoundException
-     */
-    public function prepend(ContainerBuilder $container)
-    {
-        // das ist ein Beispiel vom HWI Bundle
-        #if (!$container->hasExtension('fos_oauth_server')) {
-        #    throw new ServiceNotFoundException('FOSOAuthServerBundle must be registered in kernel.');
-        #}
-
-        #$config = $this->processConfiguration(new Configuration(), $container->getExtensionConfig($this->getAlias()));
-
-        /*$container->prependExtensionConfig('fos_oauth_server', array(
-                'db_driver'           => 'orm',
-                'client_class'        => $config['classes']['api_client']['model'],
-                'access_token_class'  => $config['classes']['api_access_token']['model'],
-                'refresh_token_class' => $config['classes']['api_refresh_token']['model'],
-                'auth_code_class'     => $config['classes']['api_auth_code']['model'],
-                
-                'service'             => array(
-                        'user_provider' => 'fos_user.user_provider.username'
-                ),
-        ));*/
-    }
 }
