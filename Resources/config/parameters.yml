@@ -1,3 +1,0 @@
-parameters:
-    # URI part that all REST routes begin with. By this a REST request is recognized.
-    xrow_rest.path_prefix: /xrow/rest
