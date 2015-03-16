@@ -9,7 +9,7 @@
  * file that was distributed with this source code.
  */
 
-namespace Sylius\Bundle\ApiBundle\Command;
+namespace xrow\restBundle\Command;
 
 use FOS\OAuthServerBundle\Model\ClientManagerInterface;
 use Symfony\Component\Console\Command\Command;
