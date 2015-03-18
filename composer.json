@@ -5,5 +5,8 @@
     "description": "REST bundle for CRM interfaces",
     "autoload": {
         "psr-4": { "xrow\\restBundle\\": "" }
+    },
+    "require": {
+        "ezsystems/ezpublish-kernel": "~5.4"
     }
 }
