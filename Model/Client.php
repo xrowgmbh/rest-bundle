@@ -1,13 +1,24 @@
 <?php
 
-namespace xrow\restBundle\Model;
+namespace xrow\restBundle\Entity;
 
 use FOS\OAuthServerBundle\Entity\Client as BaseClient;
+use Doctrine\ORM\Mapping as ORM;
 
+/**
+ * @ORM\Entity
+ */
 class Client extends BaseClient
 {
-    public function getPublicId()
+    /**
+     * @ORM\Id
+     * @ORM\Column(type="integer")
+     * @ORM\GeneratedValue(strategy="AUTO")
+     */
+    protected $id;
+
+    public function __construct()
     {
-        return $this->randomId;
+        parent::__construct();
     }
 }
