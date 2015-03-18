@@ -2,107 +2,61 @@
 
 namespace xrow\restBundle\Provider;
 
-use eZ\Publish\API\Repository\Exceptions\NotFoundException;
-use eZ\Publish\API\Repository\Repository;
-use eZ\Publish\Core\MVC\Symfony\Security\User;
-use eZ\Publish\Core\MVC\Symfony\Security\UserInterface;
-use eZ\Publish\API\Repository\Values\User\User as APIUser;
-use eZ\Publish\Core\MVC\Symfony\Security\User\APIUserProviderInterface;
-use Symfony\Component\Security\Core\Exception\UnsupportedUserException;
-use Symfony\Component\Security\Core\User\UserInterface as CoreUserInterface;
+use Symfony\Component\Security\Core\User\UserInterface;
+use Symfony\Component\Security\Core\User\UserProviderInterface;
 use Symfony\Component\Security\Core\Exception\UsernameNotFoundException;
+use Symfony\Component\Security\Core\Exception\UnsupportedUserException;
+use Doctrine\Common\Persistence\ObjectRepository;
+use Doctrine\ORM\NoResultException;
 
-class UserProvider implements APIUserProviderInterface
+class UserProvider implements UserProviderInterface
 {
-    /**
-     * @var \eZ\Publish\API\Repository\Repository
-     */
-    protected $repository;
+  protected $userRepository;
 
-    /**
-     * @param \eZ\Publish\API\Repository\Repository $repository
-     */
-    public function __construct( Repository $repository )
-    {
-        $this->repository = $repository;
-    }
+  public function __construct(ObjectRepository $userRepository){
+      $this->userRepository = $userRepository;
+  }
 
-    /**
-     * Loads the user for the given user ID.
-     * $user can be either the user ID or an instance of \eZ\Publish\Core\MVC\Symfony\Security\User
-     * (anonymous user we try to check access via SecurityContext::isGranted())
-     *
-     * @param string|\eZ\Publish\Core\MVC\Symfony\Security\User $user Either the user ID to load an instance of User object. A value of -1 represents an anonymous user.
-     *
-     * @return \eZ\Publish\Core\MVC\Symfony\Security\UserInterface
-     *
-     * @throws \Symfony\Component\Security\Core\Exception\UsernameNotFoundException if the user is not found
-     */
-    public function loadUserByUsername( $user )
-    {
-        try
-        {
-            // SecurityContext always tries to authenticate anonymous users when checking granted access.
-            // In that case $user is an instance of \eZ\Publish\Core\MVC\Symfony\Security\User.
-            // We don't need to reload the user here.
-            if ( $user instanceof UserInterface )
-                return $user;
+  public function loadUserByUsername($username)
+  {
+      $q = $this->userRepository
+          ->createQueryBuilder('u')
+          ->where('u.username = :username OR u.email = :email')
+          ->setParameter('username', $username)
+          ->setParameter('email', $username)
+          ->getQuery();
 
-            return new User( $this->repository->getUserService()->loadUserByLogin( $user ), array( 'ROLE_USER' ) );
-        }
-        catch ( NotFoundException $e )
-        {
-            throw new UsernameNotFoundException( $e->getMessage(), 0, $e );
-        }
-    }
+      try {
+          $user = $q->getSingleResult();
+      } catch (NoResultException $e) {
+          $message = sprintf(
+              'Unable to find an active admin AcmeDemoBundle:User object identified by "%s".',
+              $username
+          );
+          throw new UsernameNotFoundException($message, 0, $e);
+      }
 
-    /**
-     * Refreshes the user for the account interface.
-     *
-     * It is up to the implementation to decide if the user data should be
-     * totally reloaded (e.g. from the database), or if the UserInterface
-     * object can just be merged into some internal array of users / identity
-     * map.
-     *
-     * @param \Symfony\Component\Security\Core\User\UserInterface $user
-     *
-     * @throws \Symfony\Component\Security\Core\Exception\UnsupportedUserException
-     *
-     * @return \Symfony\Component\Security\Core\User\UserInterface
-     */
-    public function refreshUser( CoreUserInterface $user )
-    {
-        if ( !$user instanceof UserInterface )
-        {
-            throw new UnsupportedUserException( sprintf( 'Instances of "%s" are not supported.', get_class( $user ) ) );
-        }
+      return $user;
+  }
 
-        $this->repository->setCurrentUser( $user->getAPIUser() );
-        return $user;
-    }
+  public function refreshUser(UserInterface $user)
+  {
+      $class = get_class($user);
+      if (!$this->supportsClass($class)) {
+          throw new UnsupportedUserException(
+              sprintf(
+                  'Instances of "%s" are not supported.',
+                  $class
+              )
+          );
+      }
 
-    /**
-     * Whether this provider supports the given user class
-     *
-     * @param string $class
-     *
-     * @return Boolean
-     */
-    public function supportsClass( $class )
-    {
-        $supportedClass = 'eZ\\Publish\\Core\\MVC\\Symfony\\Security\\User';
-        return $class === $supportedClass || is_subclass_of( $class, $supportedClass );
-    }
+      return $this->userRepository->find($user->getId());
+  }
 
-    /**
-     * Loads a regular user object, usable by Symfony Security component, from a user object returned by Public API
-     *
-     * @param \eZ\Publish\API\Repository\Values\User\User $apiUser
-     *
-     * @return \eZ\Publish\Core\MVC\Symfony\Security\User
-     */
-    public function loadUserByAPIUser( APIUser $apiUser )
-    {
-        return new User( $apiUser );
-    }
+  public function supportsClass($class)
+  {
+      return $this->userRepository->getClassName() === $class
+      || is_subclass_of($class, $this->userRepository->getClassName());
+  }
 }
