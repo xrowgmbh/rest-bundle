@@ -6,6 +6,7 @@ use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\Config\FileLocator;
 use Symfony\Component\HttpKernel\DependencyInjection\Extension;
 use Symfony\Component\DependencyInjection\Loader;
+use Symfony\Component\DependencyInjection\Alias;
 use Symfony\Component\DependencyInjection\Exception\ServiceNotFoundException;
 use Symfony\Component\DependencyInjection\Extension\PrependExtensionInterface;
 
@@ -25,6 +26,19 @@ class xrowRestExtension extends Extension
         $config = $this->processConfiguration($configuration, $configs);
 
         $loader = new Loader\XmlFileLoader($container, new FileLocator(__DIR__.'/../Resources/config'));
-        $loader->load('services.xml');
+        foreach (array('xrow_rest', 'services') as $basename) {
+            $loader->load(sprintf('%s.xml', $basename));
+        }
+        if (null !== $config['plugins']['crmclass']) {
+            $container->setParameter('xrow_rest.plugins.crmclass', $config['plugins']['crmclass']);
+        }
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getAlias()
+    {
+        return 'xrow_rest';
     }
 }

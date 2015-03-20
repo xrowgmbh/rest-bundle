@@ -6,6 +6,9 @@ use FOS\OAuthServerBundle\Entity\RefreshToken as BaseRefreshToken;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
+ * xrow\restBundle\Entity\RefreshToken
+ *
+ * @ORM\Table(name="api_RefreshToken")
  * @ORM\Entity
  */
 class RefreshToken extends BaseRefreshToken
