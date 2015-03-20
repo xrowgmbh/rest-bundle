@@ -3,6 +3,10 @@
     "type": "symfony-bundle",
     "license": "MIT",
     "description": "REST bundle for CRM interfaces",
+    "require": {
+        "friendsofsymfony/oauth-server-bundle": "1.4.2",
+        "doctrine/orm": "~2.4"
+    },
     "autoload": {
         "psr-4": { "xrow\\restBundle\\": "" }
     }
