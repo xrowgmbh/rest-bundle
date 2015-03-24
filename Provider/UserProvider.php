@@ -7,21 +7,22 @@ use Symfony\Component\Security\Core\User\UserProviderInterface;
 use Symfony\Component\Security\Core\Exception\UsernameNotFoundException;
 use Symfony\Component\Security\Core\Exception\UnsupportedUserException;
 use xrow\restBundle\Repository\UserRepository;
-use xrow\restBundle\CRM\CRMPlugin;
+use xrow\restBundle\CRM\LoadCRMPlugin;
 
 class UserProvider implements UserProviderInterface
 {
     protected $userRepository;
-    protected $crmPlugin;
+    protected $crmPluginClassObject;
 
-    public function __construct(UserRepository $userRepository, CRMPlugin $crmPlugin){
+    public function __construct(UserRepository $userRepository, LoadCRMPlugin $loadCRMPlugin){
         $this->userRepository = $userRepository;
-        $this->crmPlugin = $crmPlugin->crmPluginClass;
+        $this->crmPluginClassObject = $loadCRMPlugin->crmPluginClass;
+        $this->crmPluginClassObject->connect($loadCRMPlugin->container);
     }
 
     public function loadUserFromCRM($username, $password)
     {
-        $user = $this->crmPlugin->loadUser($username, $password);
+        $user = $this->crmPluginClassObject->loadUser($username, $password);
         die(var_dump($password));
     }
 

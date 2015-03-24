@@ -157,14 +157,9 @@ class OAuthStorage implements IOAuth2RefreshTokens, IOAuth2GrantUser, IOAuth2Gra
         }
 
         if (null !== $user) {
-            die(var_dump($this->encoderFactory));
-            $encoder = $this->encoderFactory->getEncoder($user);
-
-            if ($encoder->isPasswordValid($user->getPassword(), $password, $user->getSalt())) {
-                return array(
-                    'data' => $user,
-                );
-            }
+            return array(
+                'data' => $user,
+            );
         }
 
         return false;
