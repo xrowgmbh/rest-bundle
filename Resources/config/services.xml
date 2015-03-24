@@ -6,7 +6,15 @@
 
     <services>
 
-        <service id="xrowsso.platform.user.repository" class="xrow\restBundle\Repository\UserRepository" />
+        <service id="xrowsso.platform.user.manager" class="Doctrine\ORM\EntityManager"
+                 factory-service="doctrine" factory-method="getManagerForClass">
+            <argument>xrow\restBundle\Entity\User</argument>
+        </service>
+
+        <service id="xrowsso.platform.user.repository" class="xrow\restBundle\Repository\UserRepository"
+                 factory-service="xrowsso.platform.user.manager" factory-method="getRepository">
+            <argument>xrow\restBundle\Entity\User</argument>
+        </service>
 
         <service id="xrow_rest.loadcrm.plugin" class="xrow\restBundle\CRM\LoadCRMPlugin">
             <argument type="service" id="service_container" /> 

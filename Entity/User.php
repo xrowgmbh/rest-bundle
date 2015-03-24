@@ -8,130 +8,73 @@ use Doctrine\ORM\Mapping as ORM;
 /**
 * xrow\restBundle\Entity\User
 *
-* @ORM\Table(name="api_users")
+* @ORM\Table(name="api_Users")
 * @ORM\Entity(repositoryClass="xrow\restBundle\Repository\UserRepository")
 */
-class User implements UserInterface, \Serializable
+class User implements UserInterface
 {
-  /**
-  * @ORM\Column(type="integer")
-  * @ORM\Id
-  * @ORM\GeneratedValue(strategy="AUTO")
-  */
-  private $id;
+    /**
+    * @ORM\Column(type="integer")
+    * @ORM\Id
+    * @ORM\GeneratedValue(strategy="AUTO")
+    */
+    private $id;
 
-  /**
-  * @ORM\Column(type="string", length=25, unique=true)
-  */
-  private $username;
+    /**
+    * @ORM\Column(type="string", length=25, unique=true)
+    */
+    private $username;
 
-  /**
-  * @ORM\Column(type="string", length=25, unique=true)
-  */
-  private $email;
+    /**
+    * @ORM\Column(type="string", length=25, unique=true)
+    */
+    private $sfprofileId;
 
-  /**
-  * @ORM\Column(type="string", length=32)
-  */
-  private $salt;
+    public function getId(){
+        return $this->id;
+    }
 
-  /**
-  * @ORM\Column(type="string", length=40)
-  */
-  private $password;
-
-  /**
-  * @ORM\Column(name="is_active", type="boolean")
-  */
-  private $isActive;
-
-  public function __construct()
-  {
-      $this->isActive = true;
-      $this->salt = md5(uniqid(null, true));
-  }
-
-  public function getId(){
-      return $this->id;
-  }
-
-  /**
-  * @inheritDoc
-  */
-  public function getUsername()
-  {
+    /**
+    * @inheritDoc
+    */
+    public function getUsername()
+    {
       return $this->username;
-  }
+    }
 
-  /**
-  * @inheritDoc
-  */
-  public function setUsername($username)
-  {
+    /**
+    * @inheritDoc
+    */
+    public function setUsername($username)
+    {
       $this->username = $username;
-      $this->email = $username;
-  }
+    }
 
-  /**
-  * @inheritDoc
-  */
-  public function getSalt()
-  {
-      return $this->salt;
-  }
+    /**
+    * @inheritDoc
+    */
+    public function getSfprofileId()
+    {
+      return $this->sfprofileId;
+    }
 
-  public function setSalt($salt)
-  {
-      $this->salt = $salt;
-  }
+    public function setSfprofileId($sfprofileId)
+    {
+      $this->sfprofileId = $sfprofileId;
+    }
 
-  /**
-  * @inheritDoc
-  */
-  public function getPassword()
-  {
-      return $this->password;
-  }
-
-  public function setPassword($password)
-  {
-      $this->password = $password;
-  }
-
-  /**
-  * @inheritDoc
-  */
-  public function getRoles()
-  {
+    /**
+    * @inheritDoc
+    */
+    public function getRoles()
+    {
       return array('ROLE_USER');
-  }
+    }
 
-  /**
-  * @inheritDoc
-  */
-  public function eraseCredentials()
-  {
-  }
-
-  /**
-  * @see \Serializable::serialize()
-  */
-  public function serialize()
-  {
-      return serialize(
-          array(
-              $this->id,
-          )
-      );
-  }
-
-  /**
-  * @see \Serializable::unserialize()
-  */
-  public function unserialize($serialized)
-  {
-      list (
-          $this->id,
-          ) = unserialize($serialized);
-  }
+    /**
+    * @inheritDoc
+    */
+    public function eraseCredentials()
+    {
+    }
 }

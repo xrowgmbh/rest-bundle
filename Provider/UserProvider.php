@@ -6,15 +6,17 @@ use Symfony\Component\Security\Core\User\UserInterface;
 use Symfony\Component\Security\Core\User\UserProviderInterface;
 use Symfony\Component\Security\Core\Exception\UsernameNotFoundException;
 use Symfony\Component\Security\Core\Exception\UnsupportedUserException;
-use xrow\restBundle\Repository\UserRepository;
+#use xrow\restBundle\Repository\UserRepository;
 use xrow\restBundle\CRM\LoadCRMPlugin;
+use Doctrine\Common\Persistence\ObjectRepository;
+use Doctrine\ORM\NoResultException;
 
 class UserProvider implements UserProviderInterface
 {
     protected $userRepository;
     protected $crmPluginClassObject;
 
-    public function __construct(UserRepository $userRepository, LoadCRMPlugin $loadCRMPlugin){
+    public function __construct(ObjectRepository $userRepository, LoadCRMPlugin $loadCRMPlugin){
         $this->userRepository = $userRepository;
         $this->crmPluginClassObject = $loadCRMPlugin->crmPluginClass;
         $this->crmPluginClassObject->connect($loadCRMPlugin->container);
@@ -22,8 +24,17 @@ class UserProvider implements UserProviderInterface
 
     public function loadUserFromCRM($username, $password)
     {
-        $user = $this->crmPluginClassObject->loadUser($username, $password);
-        die(var_dump($password));
+        try {
+            $user = $this->crmPluginClassObject->loadUser(trim($username), trim($password));
+        } catch (NoResultException $e) {
+            $message = sprintf(
+                'Unable to find an active admin AcmeDemoBundle:User object identified by "%s".',
+                $username
+            );
+            throw new UsernameNotFoundException($message, 0, $e);
+        }
+
+        return $user;
     }
 
     /**
@@ -33,16 +44,16 @@ class UserProvider implements UserProviderInterface
     public function loadUserByUsername($username)
     {
         try {
-          $user = null;
-      } catch (NoResultException $e) {
-          $message = sprintf(
-              'Unable to find an active admin AcmeDemoBundle:User object identified by "%s".',
-              $username
-          );
-          throw new UsernameNotFoundException($message, 0, $e);
-      }
+            $user = null;
+        } catch (NoResultException $e) {
+            $message = sprintf(
+                'Unable to find an active admin AcmeDemoBundle:User object identified by "%s".',
+                $username
+            );
+            throw new UsernameNotFoundException($message, 0, $e);
+        }
 
-      return $user;
+        return $user;
     }
 
     public function refreshUser(UserInterface $user)
