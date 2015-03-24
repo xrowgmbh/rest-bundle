@@ -25,7 +25,14 @@ class UserProvider implements UserProviderInterface
     public function loadUserFromCRM($username, $password)
     {
         try {
-            $user = $this->crmPluginClassObject->loadUser(trim($username), trim($password));
+            $CRMUser = $this->crmPluginClassObject->loadUser(trim($username), trim($password));
+            $q = $this->userRepository
+                            ->createQueryBuilder('u')
+                            ->where('u.username = :username AND u.crmuserId = :crmuserId')
+                            ->setParameter('username', $CRMUser->username)
+                            ->setParameter('crmuserId', $CRMUser->crmuserId)
+                            ->getQuery();
+            $user = $q->getSingleResult();
         } catch (NoResultException $e) {
             $message = sprintf(
                 'Unable to find an active admin AcmeDemoBundle:User object identified by "%s".',

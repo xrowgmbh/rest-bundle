@@ -2,7 +2,7 @@
 
 namespace xrow\restBundle\Entity;
 
-use Symfony\Component\Security\Core\User\UserInterface;
+#use Symfony\Component\Security\Core\User\UserInterface;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
@@ -11,7 +11,7 @@ use Doctrine\ORM\Mapping as ORM;
 * @ORM\Table(name="api_Users")
 * @ORM\Entity(repositoryClass="xrow\restBundle\Repository\UserRepository")
 */
-class User implements UserInterface
+class User
 {
     /**
     * @ORM\Column(type="integer")
@@ -28,7 +28,7 @@ class User implements UserInterface
     /**
     * @ORM\Column(type="string", length=25, unique=true)
     */
-    private $sfprofileId;
+    private $crmuserId;
 
     public function getId(){
         return $this->id;
@@ -39,7 +39,7 @@ class User implements UserInterface
     */
     public function getUsername()
     {
-      return $this->username;
+        return $this->username;
     }
 
     /**
@@ -47,20 +47,20 @@ class User implements UserInterface
     */
     public function setUsername($username)
     {
-      $this->username = $username;
+        $this->username = $username;
     }
 
     /**
     * @inheritDoc
     */
-    public function getSfprofileId()
+    public function getCrmuserId()
     {
-      return $this->sfprofileId;
+        return $this->crmuserId;
     }
 
-    public function setSfprofileId($sfprofileId)
+    public function setCrmuserId($crmuserId)
     {
-      $this->sfprofileId = $sfprofileId;
+        $this->crmuserId = $crmuserId;
     }
 
     /**
@@ -68,7 +68,7 @@ class User implements UserInterface
     */
     public function getRoles()
     {
-      return array('ROLE_USER');
+        return array('ROLE_USER');
     }
 
     /**
