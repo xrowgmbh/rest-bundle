@@ -2,7 +2,7 @@
 
 namespace xrow\restBundle\Entity;
 
-#use Symfony\Component\Security\Core\User\UserInterface;
+use Symfony\Component\Security\Core\User\UserInterface;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
@@ -11,7 +11,7 @@ use Doctrine\ORM\Mapping as ORM;
 * @ORM\Table(name="api_Users")
 * @ORM\Entity(repositoryClass="xrow\restBundle\Repository\UserRepository")
 */
-class User
+class User implements UserInterface
 {
     /**
     * @ORM\Column(type="integer")
@@ -61,6 +61,22 @@ class User
     public function setCrmuserId($crmuserId)
     {
         $this->crmuserId = $crmuserId;
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function getSalt()
+    {
+        return null;
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function getPassword()
+    {
+        return null;
     }
 
     /**

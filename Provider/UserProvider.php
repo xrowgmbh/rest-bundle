@@ -12,7 +12,7 @@ use xrow\restBundle\CRM\LoadCRMPlugin;
 
 class UserProvider implements UserProviderInterface
 {
-    protected $userRepository;
+    public $userRepository;
     protected $crmPluginClassObject;
 
     public function __construct(ObjectRepository $userRepository, LoadCRMPlugin $loadCRMPlugin){
@@ -24,17 +24,10 @@ class UserProvider implements UserProviderInterface
     public function loadUserFromCRM($username, $password)
     {
         try {
-            $CRMUser = $this->crmPluginClassObject->loadUser(trim($username), trim($password));
-            $q = $this->userRepository
-                            ->createQueryBuilder('u')
-                            ->where('u.username = :username AND u.crmuserId = :crmuserId')
-                            ->setParameter('username', $CRMUser->username)
-                            ->setParameter('crmuserId', $CRMUser->crmuserId)
-                            ->getQuery();
-            $user = $q->getSingleResult();
+            $user = $this->crmPluginClassObject->loadUser(trim($username), trim($password), $this->userRepository);
         } catch (NoResultException $e) {
             $message = sprintf(
-                'Unable to find an active admin AcmeDemoBundle:User object identified by "%s".',
+                'Unable to find an active api user object identified by "%s".',
                 $username
             );
             throw new UsernameNotFoundException($message, 0, $e);
@@ -53,7 +46,7 @@ class UserProvider implements UserProviderInterface
             $user = null;
         } catch (NoResultException $e) {
             $message = sprintf(
-                'Unable to find an active admin AcmeDemoBundle:User object identified by "%s".',
+                'Unable to find an active api user object identified by "%s".',
                 $username
             );
             throw new UsernameNotFoundException($message, 0, $e);
