@@ -1,11 +1,11 @@
 xrow_rest_api:
-    path: /user/{sfuserId}
+    path: /user/{crmuserId}
     defaults: 
         _controller: xrow_rest.controller.api:getUserAction
     methods: [GET]
 
 xrow_rest_user_subscriptions:
-    path:     /user/subscriptions/{sfuserId}
+    path:     /user/subscriptions/{crmuserId}
     defaults:
         _controller: xrow_rest.controller.api:getSubscriptionsAction
     methods: [GET]
