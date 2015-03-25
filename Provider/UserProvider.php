@@ -6,10 +6,9 @@ use Symfony\Component\Security\Core\User\UserInterface;
 use Symfony\Component\Security\Core\User\UserProviderInterface;
 use Symfony\Component\Security\Core\Exception\UsernameNotFoundException;
 use Symfony\Component\Security\Core\Exception\UnsupportedUserException;
-#use xrow\restBundle\Repository\UserRepository;
-use xrow\restBundle\CRM\LoadCRMPlugin;
 use Doctrine\Common\Persistence\ObjectRepository;
 use Doctrine\ORM\NoResultException;
+use xrow\restBundle\CRM\LoadCRMPlugin;
 
 class UserProvider implements UserProviderInterface
 {

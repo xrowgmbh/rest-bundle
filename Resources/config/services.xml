@@ -4,23 +4,27 @@
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:schemaLocation="http://symfony.com/schema/dic/services http://symfony.com/schema/dic/services/services-1.0.xsd">
 
-    <services>
+    <parameters>
+        <parameter key="xrowsso.platform.entity.user.class">xrow\restBundle\Entity\User</parameter>
+        <parameter key="xrowsso.platform.user.provider.class">xrow\restBundle\Provider\UserProvider</parameter>
+    </parameters>
 
+    <services>
         <service id="xrowsso.platform.user.manager" class="Doctrine\ORM\EntityManager"
-                 factory-service="doctrine" factory-method="getManagerForClass">
-            <argument>xrow\restBundle\Entity\User</argument>
+                    factory-service="doctrine" factory-method="getManagerForClass">
+            <argument>%xrowsso.platform.entity.user.class%</argument>
         </service>
 
         <service id="xrowsso.platform.user.repository" class="xrow\restBundle\Repository\UserRepository"
-                 factory-service="xrowsso.platform.user.manager" factory-method="getRepository">
-            <argument>xrow\restBundle\Entity\User</argument>
+                    factory-service="xrowsso.platform.user.manager" factory-method="getRepository">
+            <argument>%xrowsso.platform.entity.user.class%</argument>
         </service>
-
+ 
         <service id="xrow_rest.loadcrm.plugin" class="xrow\restBundle\CRM\LoadCRMPlugin">
             <argument type="service" id="service_container" /> 
         </service>
 
-        <service id="xrowsso.platform.user.provider" class="xrow\restBundle\Provider\UserProvider">
+        <service id="xrowsso.platform.user.provider" class="%xrowsso.platform.user.provider.class%">
             <argument type="service" id="xrowsso.platform.user.repository" />
             <argument type="service" id="xrow_rest.loadcrm.plugin" />
         </service>
