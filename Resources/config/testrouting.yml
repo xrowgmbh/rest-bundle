@@ -1,0 +1,5 @@
+xrow_rest_test:
+    path:     /call
+    defaults:
+        _controller: xrow_rest.controller.testapi:testApiAction
+    methods: [GET]

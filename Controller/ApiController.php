@@ -11,16 +11,20 @@ use xrow\restBundle\CRM\LoadCRMPlugin;
 class ApiController extends Controller
 {
     protected $crmPluginClassObject;
+    protected $container;
 
     public function __construct(LoadCRMPlugin $loadCRMPlugin)
     {
         $this->crmPluginClassObject = $loadCRMPlugin->crmPluginClass;
+        $this->container = $loadCRMPlugin->container;
     }
 
-    public function getUserAction($crmuserId)
+    public function getUserAction()
     {
-        $user = $this->crmPluginClassObject->getUserData($crmuserId);
-        #$user = $this->container->get('security.context')->getToken()->getUser();
+        die('hallo');
+        #$user = $this->crmPluginClassObject->getUserData();
+        $user = $this->container->get('security.context')->getToken()->getUser();
+        die(var_dump($user));
         if($user) {
             return new JsonResponse(array(
                 'id' => $user->getId(),
@@ -33,9 +37,9 @@ class ApiController extends Controller
         ));
     }
 
-    public function getSubscriptionsAction($crmuserId)
+    public function getSubscriptionsAction()
     {
-        $userSubscriptions = $this->crmPluginClassObject->getUserSubscriptions($crmuserId);
+        $userSubscriptions = $this->crmPluginClassObject->getUserSubscriptions();
         return new JsonResponse($userSubscriptions);
     }
 }

@@ -31,6 +31,10 @@
 
         <service id="xrow_rest.controller.api" class="xrow\restBundle\Controller\ApiController" />
 
+        <service id="xrow_rest.controller.testapi" class="xrow\restBundle\Controller\TestApiController">
+            <argument type="service" id="service_container" /> 
+        </service>
+
         <service id="xrow_oauth_server.storage" class="xrow\restBundle\Storage\OAuthStorage" public="false">
             <argument type="service" id="fos_oauth_server.client_manager" />
             <argument type="service" id="fos_oauth_server.access_token_manager" />
@@ -38,6 +42,7 @@
             <argument type="service" id="fos_oauth_server.auth_code_manager" />
             <argument type="service" id="fos_oauth_server.user_provider" on-invalid="null" />
             <argument type="service" id="security.encoder_factory" />
+            <argument type="service" id="service_container" /> 
         </service>
 
     </services>

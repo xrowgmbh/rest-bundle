@@ -9,9 +9,12 @@ use FOS\OAuthServerBundle\Model\ClientManagerInterface;
 use FOS\OAuthServerBundle\Model\ClientInterface;
 use FOS\OAuthServerBundle\Storage\GrantExtensionDispatcherInterface;
 use FOS\OAuthServerBundle\Storage\GrantExtensionInterface;
+use FOS\OAuthServerBundle\Security\Authentication\Token\OAuthToken;
 use Symfony\Component\Security\Core\User\UserProviderInterface;
 use Symfony\Component\Security\Core\Encoder\EncoderFactoryInterface;
 use Symfony\Component\Security\Core\Exception\AuthenticationException;
+use Symfony\Component\DependencyInjection\ContainerInterface;
+use Symfony\Component\HttpFoundation\Request;
 use OAuth2\OAuth2;
 use OAuth2\OAuth2ServerException;
 use OAuth2\IOAuth2RefreshTokens;
@@ -60,6 +63,8 @@ class OAuthStorage implements IOAuth2RefreshTokens, IOAuth2GrantUser, IOAuth2Gra
      */
     protected $grantExtensions;
 
+    protected $container;
+
     /**
      * @param \FOS\OAuthServerBundle\Model\ClientManagerInterface                   $clientManager
      * @param \FOS\OAuthServerBundle\Model\AccessTokenManagerInterface              $accessTokenManager
@@ -70,7 +75,7 @@ class OAuthStorage implements IOAuth2RefreshTokens, IOAuth2GrantUser, IOAuth2Gra
      */
     public function __construct(ClientManagerInterface $clientManager, AccessTokenManagerInterface $accessTokenManager,
         RefreshTokenManagerInterface $refreshTokenManager, AuthCodeManagerInterface $authCodeManager,
-        UserProviderInterface $userProvider = null, EncoderFactoryInterface $encoderFactory = null)
+        UserProviderInterface $userProvider = null, EncoderFactoryInterface $encoderFactory = null, ContainerInterface $container)
     {
         $this->clientManager = $clientManager;
         $this->accessTokenManager = $accessTokenManager;
@@ -78,6 +83,8 @@ class OAuthStorage implements IOAuth2RefreshTokens, IOAuth2GrantUser, IOAuth2Gra
         $this->authCodeManager = $authCodeManager;
         $this->userProvider = $userProvider;
         $this->encoderFactory = $encoderFactory;
+
+        $this->container = $container;
 
         $this->grantExtensions = array();
     }
@@ -131,6 +138,30 @@ class OAuthStorage implements IOAuth2RefreshTokens, IOAuth2GrantUser, IOAuth2Gra
         }
 
         $this->accessTokenManager->updateToken($token);
+
+        // authenticate
+        $user = $data;
+        $roles = (null !== $user) ? $user->getRoles() : array();
+        if (!empty($scope)) {
+            foreach (explode(' ', $scope) as $role) {
+                $roles[] = 'ROLE_' . strtoupper($role);
+            }
+        }
+
+        /*$auth_token = new OAuthToken($roles);
+        die(var_dump($auth_token));
+        $auth_token->setAuthenticated(true);
+        $auth_token->setToken($tokenString);
+        $auth_token->setUser($user);
+        $this->container->get('security.context')->setToken($auth_token);*/
+        /*$redirectUris = $client->getRedirectUris();
+        $request = new Request(array(
+                                    'access_token' => $tokenString, 
+                                    'client_id' => $client->getPublicId(), 
+                                    'client_secret' => $client->getSecret(),
+                                    'redirect_uri' => $redirectUris[0],
+                                    'response_type' => 'token'));
+        $this->container->get('fos_oauth_server.server')->finishClientAuthorization(true, $user, $request, $scope);*/
 
         return $token;
     }

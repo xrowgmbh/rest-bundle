@@ -30,6 +30,11 @@ class User implements UserInterface
     */
     private $crmuserId;
 
+    public function __construct($crmuserId)
+    {
+        $this->crmuserId = $crmuserId;
+    }
+
     public function getId(){
         return $this->id;
     }
@@ -84,7 +89,7 @@ class User implements UserInterface
     */
     public function getRoles()
     {
-        return array('ROLE_USER');
+        return array('ROLE_API', 'ROLE_OAUTH_USER');
     }
 
     /**
@@ -92,5 +97,6 @@ class User implements UserInterface
     */
     public function eraseCredentials()
     {
+        return true;
     }
 }
