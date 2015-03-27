@@ -18,8 +18,8 @@ class RestRequest
         $params = array(
             'client_id'=>$this->client_id,
             'client_secret'=>$this->client_secret,
-            'username'=>'schaller',
-            'password'=>'cschall',
+            'username'=>'',
+            'password'=>'',
             'grant_type'=>'password'
         );
 
