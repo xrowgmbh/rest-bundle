@@ -11,15 +11,16 @@ class RestRequest
     private $client_secret;
 
     public function __construct(){
-        $this->client_id = "1_3ywnyc0ky64g8w8gk4kkgcwgogkss4408kc8kowwocckwogss8";
-        $this->client_secret = "2h54ah7402sk0k08wkog8cw0kko44o448scswo0wkgw0wkg8cs"; 
+        $this->client_id = "2_5lllq55whpwccoggws4oc04g80w0048s4g4408g8o4kocc8o4g";
+        $this->client_secret = "3gvizbpyviww8wog48gooo8ccwwgwo48go04s8kwcokwosk4w8"; 
         $this->token_url = "http://abo.example.com/oauth/v2/token";
+        $this->auth_url = "http://abo.example.com/oauth/v2/auth";
 
         $params = array(
             'client_id'=>$this->client_id,
             'client_secret'=>$this->client_secret,
-            'username'=>'',
-            'password'=>'',
+            'username'=>'schaller',
+            'password'=>'cschall',
             'grant_type'=>'password'
         );
 
@@ -28,14 +29,18 @@ class RestRequest
         $this->access_token = $result->access_token;
         $this->refresh_token = $result->refresh_token;
 
-        /*$params = array(
-                'client_id'=>$this->client_id,
-                'client_secret'=>$this->client_secret,
-                "access_token"=>$this->access_token,
-                "grant_type"=>"client_credentials"
+        $params = array(
+                'client_id' => $this->client_id,
+                'client_secret' => $this->client_secret,
+                'response_type' => 'token',
+                'access_token' => $this->access_token,
+                'grant_type' => 'client_credentials',
+                'scope' => 'user',
+                'accepted' => true
         );
-        $result = $this->call($this->token_url, 'GET', $params);
-        $this->access_token = $result->access_token;*/
+        $result = $this->call($this->auth_url, 'POST', array(), $params);
+        die(var_dump($params));
+        $this->access_token = $result->access_token;
     }
 
     public function getToken(){

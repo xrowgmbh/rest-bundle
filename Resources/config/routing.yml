@@ -1,13 +1,17 @@
-xrow_rest_api:
-    type: rest
+xrow_rest_api_user:
     path: /user
     defaults: 
         _controller: xrow_rest.controller.api:getUserAction
     methods: [GET]
 
 xrow_rest_user_subscriptions:
-    type: rest
     path:     /user/subscriptions
     defaults:
         _controller: xrow_rest.controller.api:getSubscriptionsAction
+    methods: [GET]
+
+xrow_rest_user_logout:
+    path:     /user/logout
+    defaults:
+        _controller: xrow_rest.controller.api:logoutAction
     methods: [GET]

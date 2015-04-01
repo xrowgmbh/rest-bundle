@@ -22,7 +22,7 @@ class AuthCode extends BaseAuthCode
 
     /**
      * @ORM\ManyToOne(targetEntity="Client")
-     * @ORM\JoinColumn(nullable=false)
+     * @ORM\JoinColumn(name="client_id", referencedColumnName="id")
      */
     protected $client;
 
