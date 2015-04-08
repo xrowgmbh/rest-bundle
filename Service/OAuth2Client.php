@@ -68,22 +68,27 @@ class OAuth2Client
                     $parameters = $request->request->all();
                 else 
                     $parameters = $request->query->all();
-                if(isset($parameters['url']))
-                    $url = $this->getCurrentUrl($parameters['url']);
-                else
-                    $url = $this->getCurrentUrl();
-                $fullTokenURL = $url . $this->token_uri;
-                $params = array('grant_type' => 'password',
-                                'client_id' => $this->client_id,
-                                'client_secret' => $this->client_secret,
-                                'username' => $parameters['username'],
-                                'password' => $parameters['password']);
-                $accessTokenCall = json_decode($this->makeRequest($fullTokenURL, 'POST', $params), true);
-                if (isset($accessTokenCall['access_token'])) {
-                    return $accessTokenCall;
+                if(isset($parameters['username']) && isset($parameters['password'])) {
+                    if(isset($parameters['url']))
+                        $url = $this->getCurrentUrl($parameters['url']);
+                    else
+                        $url = $this->getCurrentUrl();
+                    $fullTokenURL = $url . $this->token_uri;
+                    $params = array('grant_type' => 'password',
+                                    'client_id' => $this->client_id,
+                                    'client_secret' => $this->client_secret,
+                                    'username' => $parameters['username'],
+                                    'password' => $parameters['password']);
+                    $accessTokenCall = json_decode($this->makeRequest($fullTokenURL, 'POST', $params), true);
+                    if (isset($accessTokenCall['access_token'])) {
+                        return $accessTokenCall;
+                    }
+                    else {
+                        throw new InvalidArgumentException('not enough parameters in accessTokenCall, ' . __METHOD__);
+                    }
                 }
                 else {
-                    throw new InvalidArgumentException('not enough parameters in accessTokenCall, ' . __METHOD__);
+                    throw new OAuth2ServerException(self::HTTP_BAD_REQUEST, self::ERROR_INVALID_GRANT, "Invalid username and password combination");
                 }
             }
             else {
