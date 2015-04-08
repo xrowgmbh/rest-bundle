@@ -27,22 +27,28 @@ class CredentialsCommand extends ContainerAwareCommand
             $request = new Request(array(), $parameters);
             $request->setMethod('POST');
             $OAuth2Client = $this->getContainer()->get('xrow_rest.oauth2.client');
-            $accessTokenArray = $OAuth2Client->requestAccessTokenWithUserCredentials($request);
+            $accessTokenArray = $OAuth2Client->requestAccessTokenWithUserCredentials($request, $output);
             $accessToken = $accessTokenArray['access_token'];
             $output->writeln(sprintf('Obtained Access Token: <info>%s</info>', $accessToken));
             $output->writeln('');
             $parameters = array('access_token' => $accessToken,
                                 'grant_type' => 'client_credentials');
-            // User data
-            $userDataUri = '/xrowapi/user';
-            $output->writeln(sprintf('Get user data: <info>%s</info>', $userDataUri));
-            $userDataResponse = $OAuth2Client->getApiDataWithPath($userDataUri, $accessToken);
-            $output->writeln(sprintf('Response: <info>%s</info>', var_export($userDataResponse, true)));
-            // Subscription data
-            $userDataSubscrUri = '/xrowapi/user/subscriptions';
-            $output->writeln(sprintf('Get user subscriptions: <info>%s</info>', $userDataSubscrUri));
-            $userDataSubscrResponse = $OAuth2Client->getApiDataWithPath($userDataSubscrUri, $accessToken);
-            $output->writeln(sprintf('Response: <info>%s</info>', var_export($userDataSubscrResponse, true)));
+            // $session = $request->getSession();
+            // User
+            $userUri = '/xrowapi/v1/user';
+            $output->writeln(sprintf('Get user: <info>%s</info>', $userUri));
+            $userResponse = $OAuth2Client->getApiDataWithPath($userUri, $accessToken);
+            $output->writeln(sprintf('Response: <info>%s</info>', var_export($userResponse, true)));
+            // Account
+            $accountUri = '/xrowapi/v1/account';
+            $output->writeln(sprintf('Get account: <info>%s</info>', $accountUri));
+            $accountResponse = $OAuth2Client->getApiDataWithPath($accountUri, $accessToken);
+            $output->writeln(sprintf('Response: <info>%s</info>', var_export($accountResponse, true)));
+            // Subscriptions
+            $subscriptionsUri = '/xrowapi/v1/subscriptions';
+            $output->writeln(sprintf('Get subscriptions: <info>%s</info>', $subscriptionsUri));
+            $subscriptionsResponse = $OAuth2Client->getApiDataWithPath($subscriptionsUri, $accessToken);
+            $output->writeln(sprintf('Response: <info>%s</info>', var_export($subscriptionsResponse, true)));
         }
         catch (Exception $e)
         {

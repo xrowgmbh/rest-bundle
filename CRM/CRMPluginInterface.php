@@ -6,9 +6,11 @@ interface CRMPluginInterface
 {
     public function loadUser($username, $password, $userRepository);
 
-    public function getUserData($userId);
+    public function getUserData($user);
 
-    public function getUserSubscriptions($userId);
+    public function getAccountData($user);
 
-    public function getUserSubscription($userId, $subscriptionId);
+    public function getUserSubscriptions($user);
+
+    public function getUserSubscription($user, $subscriptionId);
 }

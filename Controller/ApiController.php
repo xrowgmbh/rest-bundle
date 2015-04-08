@@ -95,6 +95,37 @@ class ApiController extends Controller
                     'error_description' => $exception['error_description']), $exception['httpCode']);
         }
     }
+    
+    public function getAccountAction(Request $request)
+    {
+        try {
+            $oauthToken = $this->checkAccessGranted($request);
+            $user = $oauthToken->getUser();
+            if (!$user instanceof APIUser) {
+                return new JsonResponse(array(
+                        'error' => 'invalid_grant',
+                        'error_type' => 'NOUSER',
+                        'error_description' => 'This user does not have access to this section.'), 403);
+            }
+            $CRMAccount = $this->crmPluginClassObject->getAccountData($user);
+            if($CRMAccount) {
+                return new JsonResponse(array(
+                        'result' => $CRMAccount,
+                        'type' => 'CONTENT',
+                        'message' => 'Account data'));
+            }
+            return new JsonResponse(array(
+                    'result' => null,
+                    'type' => 'NOCONTENT',
+                    'message' => 'User not found'), 204);
+        } catch (AuthenticationException $e) {
+            $exception = $this->errorHandling($e);
+            return new JsonResponse(array(
+                    'error' => $exception['error'],
+                    'error_type' => $exception['type'],
+                    'error_description' => $exception['error_description']), $exception['httpCode']);
+        }
+    }
 
     /**
      * 

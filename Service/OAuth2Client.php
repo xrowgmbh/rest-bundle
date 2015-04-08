@@ -5,6 +5,7 @@ namespace xrow\restBundle\Service;
 use Symfony\Component\HttpFoundation\Request;
 use OAuth2\OAuth2;
 use OAuth2\OAuth2Client as FOSOAuth2Client;
+use Symfony\Component\Console\Output\OutputInterface;
 use OAuth2\OAuth2ServerException;
 use OAuth2\OAuth2Exception;
 use Symfony\Component\DependencyInjection\Exception\InvalidArgumentException;
@@ -60,7 +61,7 @@ class OAuth2Client
      * @throws OAuth2Exception
      * @return array|null A valid OAuth2.0 JSON decoded access token in associative array, and null if not enough parameters or JSON decode failed.
      */
-    public function requestAccessTokenWithUserCredentials(Request $request)
+    public function requestAccessTokenWithUserCredentials(Request $request, OutputInterface $output)
     {
         try {
             if ($this->token_uri && $this->client_id && $this->client_secret) {
@@ -79,7 +80,7 @@ class OAuth2Client
                                     'client_secret' => $this->client_secret,
                                     'username' => $parameters['username'],
                                     'password' => $parameters['password']);
-                    $accessTokenCall = json_decode($this->makeRequest($fullTokenURL, 'POST', $params), true);
+                    $accessTokenCall = json_decode($this->makeRequest($fullTokenURL, 'GET', $params, null, $output), true);
                     if (isset($accessTokenCall['access_token'])) {
                         return $accessTokenCall;
                     }
@@ -127,7 +128,7 @@ class OAuth2Client
      * @throws OAuth2Exception
      * @return string The JSON decoded response object.
      */
-    protected function makeRequest($path, $method = 'GET', $params = array(), $ch = null)
+    protected function makeRequest($path, $method = 'GET', $params = array(), $ch = null, $output = null)
     {
         if (!$ch) {
             $ch = curl_init();
@@ -145,7 +146,8 @@ class OAuth2Client
             }
         }
         $opts[CURLOPT_URL] = $path;
-
+        if($output)
+            $output->writeln(sprintf('Path: <info>%s</info>', $path));
         // Disable the 'Expect: 100-continue' behaviour. This causes CURL to wait
         // for 2 seconds if the server does not support this header.
         if (isset($opts[CURLOPT_HTTPHEADER])) {
@@ -162,11 +164,10 @@ class OAuth2Client
         if (curl_errno($ch) == 60) { // CURLE_SSL_CACERT
             error_log('Invalid or no certificate authority found, using bundled information');
             curl_setopt(
-            $ch,
-            CURLOPT_CAINFO,
-            dirname(__FILE__) . '/fb_ca_chain_bundle.crt'
-                    );
-                    $result = curl_exec($ch);
+                $ch,
+                CURLOPT_CAINFO,
+                dirname(__FILE__) . '/fb_ca_chain_bundle.crt');
+            $result = curl_exec($ch);
         }
 
         if ($result === false) {
