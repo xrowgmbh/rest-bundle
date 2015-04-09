@@ -76,7 +76,7 @@ class ApiController extends Controller
                         'error_type' => 'NOUSER',
                         'error_description' => 'This user does not have access to this section.'), 403);
             }
-            $CRMUser = $this->crmPluginClassObject->getUserData($user);
+            $CRMUser = $this->crmPluginClassObject->getUser($user);
             if($CRMUser) {
                 return new JsonResponse(array(
                             'result' => $CRMUser,
@@ -107,7 +107,7 @@ class ApiController extends Controller
                         'error_type' => 'NOUSER',
                         'error_description' => 'This user does not have access to this section.'), 403);
             }
-            $CRMAccount = $this->crmPluginClassObject->getAccountData($user);
+            $CRMAccount = $this->crmPluginClassObject->getAccount($user);
             if($CRMAccount) {
                 return new JsonResponse(array(
                         'result' => $CRMAccount,
@@ -144,7 +144,7 @@ class ApiController extends Controller
                         'error_type' => 'NOUSER',
                         'error_description' => 'This user does not have access to this section.'), 403);
             }
-            $CRMUserSubscriptions = $this->crmPluginClassObject->getUserSubscriptions($user);
+            $CRMUserSubscriptions = $this->crmPluginClassObject->getSubscriptions($user);
             if($CRMUserSubscriptions) {
                 return new JsonResponse(array(
                             'result' => $CRMUserSubscriptions,
