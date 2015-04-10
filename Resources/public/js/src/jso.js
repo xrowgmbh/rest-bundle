@@ -274,7 +274,7 @@ define(function(require, exports, module) {
 		utils.log("Successfully obtain a token, now call the callback, and may be the window closes", callback);
 
 		if (typeof callback === 'function') {
-			callback(atoken);
+			//callback(atoken);
 		}
 
 		// utils.log(atoken);
@@ -421,7 +421,25 @@ define(function(require, exports, module) {
 		utils.log(JSON.parse(JSON.stringify(request)));
 
 		store.saveState(request.state, request);
-		this.gotoAuthorizeURL(authurl, callback);
+		for(item in opts) {
+			request[item] = opts[item];
+		}
+		$.ajax({
+	        type    : 'post',
+	        url     : authurl,
+	        data    : request,
+	        success : function(data) {
+	            var responseQuery = "#state=" + request.state + "&";
+	            for(index in data) {
+	                responseQuery = responseQuery + index + '=' + data[index];
+	                if((index + 1) != data.length) {
+                        responseQuery = responseQuery + "&";
+                    }
+	            }
+	            callback( responseQuery );
+	        }
+	    });
+		//this.gotoAuthorizeURL(authurl, callback);
 	};
 
 
@@ -604,7 +622,7 @@ define(function(require, exports, module) {
 	// 		co;
 		
 	// 	providerid = settings.jso_provider;
-	// 	allowia = settings.jso_allowia || false;
+	// 	allowia = settings.jso_allowia || false;
 	// 	scopes = settings.jso_scopes;
 	// 	token = api_storage.getToken(providerid, scopes);
 	// 	co = config[providerid];
