@@ -5,7 +5,8 @@
     "description": "REST bundle for CRM interfaces",
     "require": {
         "friendsofsymfony/oauth-server-bundle": "1.4.2",
-        "doctrine/orm": "~2.4"
+        "doctrine/orm": "~2.4",
+        "hearsay/require-js-bundle": "2.0.*@dev"
     },
     "autoload": {
         "psr-4": { "xrow\\restBundle\\": "" }
