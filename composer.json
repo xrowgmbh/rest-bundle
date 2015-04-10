@@ -6,7 +6,7 @@
     "require": {
         "friendsofsymfony/oauth-server-bundle": "1.4.2",
         "doctrine/orm": "~2.4",
-        "hearsay/require-js-bundle": "2.0.*@dev"
+        "hearsay/require-js-bundle": "1.0.6"
     },
     "autoload": {
         "psr-4": { "xrow\\restBundle\\": "" }
