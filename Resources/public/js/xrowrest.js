@@ -1,17 +1,19 @@
 var client_id = "1_2drb6li5jocgg8w0sk4kk004osw8sw0scggwgws440kgs0sgs4",
     client_secret = "281kns8en15w80sw8oo0k0w4448w8so48w04cc0s48ggg40kk4",
-    tokenURL = "http://www.wuv-abo.de.example.com/oauth/v2/token";
+    mainUrl = "http://www.wuv-abo.de.example.com",
+    tokenURL = mainUrl + "/oauth/v2/token",
+    authURL = mainUrl + "/xrowapi/v1/auth";
 require(["jso/jso"], function(JSO) {
     var jsoObj = new JSO({
         client_id: client_id,
         scopes: "user",
-        authorization: tokenURL
+        authorization: authURL
     });
     JSO.enablejQuery($);
     var token = jsoObj.checkToken();
     if(typeof token === "object" && token !== null) {
         if(token.access_token)
-            showUserData();
+            //showUserData();
     }
     /**
      * you need a form with id sfloginform 
@@ -24,11 +26,11 @@ require(["jso/jso"], function(JSO) {
                 if(typeof response === "object"){
                     showUserData();
                 } else if(typeof response === "string"){
-                    jsoObj.callback(response, function(token){
-                        showUserData()
+                    var queryHash = "#" + response.split("?"); 
+                    jsoObj.callback(queryHash, function(token){
+                        showUserData();
                     });
                 }
-                window.console.log("responseQuery: ", response);
             });
         });
     });
@@ -41,14 +43,21 @@ require(["jso/jso"], function(JSO) {
         });
         request.client_id = client_id;
         request.client_secret = client_secret;
-        jsoObj.getToken(function(token) {
-            callback( token );
-        }, request);
+        $.ajax({
+            type    : 'post',
+            url     : tokenURL,
+            data    : request,
+            success : function(requestData) {
+                jsoObj.getToken(function(data) {
+                    callback( data );
+                }, requestData);
+            }
+        });
     }
 
     function showUserData(){
         jsoObj.ajax({
-            url: "http://www.wuv-abo.de.example.com/xrowapi/v1/user",
+            url: mainUrl +"/xrowapi/v1/user",
             dataType: 'json',
             success: function(data) {
                 // show overlay div, hide loginform
@@ -84,6 +93,7 @@ require(["jso/jso"], function(JSO) {
                 htmlContent.click(function() { 
                     htmlContent.hide();
                     overlay.hide();
+                    //showAccountData();
                 });
             }
         });

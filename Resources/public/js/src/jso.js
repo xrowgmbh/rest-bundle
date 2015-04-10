@@ -13,7 +13,7 @@ define(function(require, exports, module) {
 	var 
 		default_config = {
 			"lifetime": 3600,
-			"debug": true,
+			"debug": false,
 			"foo": {
 				"bar": "lsdkjf"
 			}
@@ -274,7 +274,7 @@ define(function(require, exports, module) {
 		utils.log("Successfully obtain a token, now call the callback, and may be the window closes", callback);
 
 		if (typeof callback === 'function') {
-			//callback(atoken);
+			callback(atoken);
 		}
 
 		// utils.log(atoken);
@@ -401,6 +401,9 @@ define(function(require, exports, module) {
 			request.scope = utils.scopeList(scopes);
 		}
 
+        if(opts.access_token !== "undefined")
+			request.access_token = opts.access_token;
+
 		utils.log("DEBUG REQUEST"); utils.log(request);
 
 		authurl = utils.encodeURL(authorization, request);
@@ -421,22 +424,11 @@ define(function(require, exports, module) {
 		utils.log(JSON.parse(JSON.stringify(request)));
 
 		store.saveState(request.state, request);
-		for(item in opts) {
-			request[item] = opts[item];
-		}
-		$.ajax({
-	        type    : 'post',
+        $.ajax({
+	        type    : 'get',
 	        url     : authurl,
-	        data    : request,
 	        success : function(data) {
-	            var responseQuery = "#state=" + request.state + "&";
-	            for(index in data) {
-	                responseQuery = responseQuery + index + '=' + data[index];
-	                if((index + 1) != data.length) {
-                        responseQuery = responseQuery + "&";
-                    }
-	            }
-	            callback( responseQuery );
+	            callback( authurl );
 	        }
 	    });
 		//this.gotoAuthorizeURL(authurl, callback);

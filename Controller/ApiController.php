@@ -10,6 +10,7 @@ use Symfony\Component\Security\Core\Authentication\AuthenticationManagerInterfac
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 use Symfony\Component\Security\Core\Exception\AuthenticationException;
 use Symfony\Component\Security\Core\SecurityContextInterface;
+use Symfony\Component\Security\Core\Authentication\Token\AnonymousToken;
 use FOS\OAuthServerBundle\Security\Authentication\Token\OAuthToken;
 use OAuth2\OAuth2;
 use OAuth2\OAuth2AuthenticateException;
@@ -60,6 +61,42 @@ class ApiController extends Controller
     }
 
     /**
+     *
+     * @param Request $request
+     * @throws AccessDeniedException
+     */
+    public function setAuthenticationAction(Request $request)
+    {
+        $user = false;
+        $oauthToken = $this->securityContext->getToken();
+        if($oauthToken instanceof AnonymousToken) {
+            $oauthTokenString = $this->serverService->getBearerToken($request, true);
+            $oauthToken = new OAuthToken();
+            $oauthToken->setToken($oauthTokenString);
+            if($oauthToken instanceof OAuthToken) {
+                $tokenString = $oauthToken->getToken();
+                $returnValue = $this->authenticationManager->authenticate($oauthToken);
+                if ($returnValue instanceof TokenInterface) {
+                    $this->securityContext->setToken($returnValue);
+                }
+            }
+        }
+        if ($oauthToken instanceof OAuthToken) {
+            $user = $oauthToken->getUser();
+            if (!$user instanceof APIUser) {
+                return new JsonResponse(array(
+                        'error' => 'invalid_grant',
+                        'error_type' => 'NOUSER',
+                        'error_description' => 'This user does not have access to this section.'), 403);
+            }
+            return new JsonResponse(array(
+                    'result' => $user->getId(),
+                    'type' => 'CONTENT',
+                    'message' => 'Authentication successfully'));
+        }
+    }
+
+    /**
      * 
      * @param Request $request
      * @throws AccessDeniedException
@@ -68,8 +105,7 @@ class ApiController extends Controller
     public function getUserAction(Request $request)
     {
         try {
-            $oauthToken = $this->checkAccessGranted($request);
-            $user = $oauthToken->getUser();
+            $user = $this->checkAccessGranted($request);
             if (!$user instanceof APIUser) {
                 return new JsonResponse(array(
                         'error' => 'invalid_grant',
@@ -99,8 +135,7 @@ class ApiController extends Controller
     public function getAccountAction(Request $request)
     {
         try {
-            $oauthToken = $this->checkAccessGranted($request);
-            $user = $oauthToken->getUser();
+            $user = $this->checkAccessGranted($request);
             if (!$user instanceof APIUser) {
                 return new JsonResponse(array(
                         'error' => 'invalid_grant',
@@ -136,8 +171,7 @@ class ApiController extends Controller
     public function getSubscriptionsAction(Request $request)
     {
         try {
-            $oauthToken = $this->checkAccessGranted($request);
-            $user = $oauthToken->getUser();
+            $user = $this->checkAccessGranted($request);
             if (!$user instanceof APIUser) {
                 return new JsonResponse(array(
                         'error' => 'invalid_grant',
@@ -181,24 +215,13 @@ class ApiController extends Controller
      */
     private function checkAccessGranted(Request $request)
     {
-        if(null === $this->bearerToken){
-            $oauthToken = $this->securityContext->getToken();
-            $oauthTokenString = $this->serverService->getBearerToken($request, true);
-            $oauthToken = new OAuthToken();
-            $oauthToken->setToken($oauthTokenString);
-            if($oauthToken instanceof OAuthToken) {
-                $tokenString = $oauthToken->getToken();
-                $returnValue = $this->authenticationManager->authenticate($oauthToken);
-                if ($returnValue instanceof TokenInterface) {
-                    $this->securityContext->setToken($returnValue);
-                    $this->bearerToken = $this->securityContext->getToken();
-                    return $this->bearerToken;
-                }
-            }
+        $user = false;
+        $oauthToken = $this->securityContext->getToken();
+        if ($oauthToken instanceof OAuthToken)
+        {
+            $user = $oauthToken->getUser();
         }
-        else {
-            return $this->bearerToken;
-        }
+        return $user;
     }
 
     function errorHandling($e)

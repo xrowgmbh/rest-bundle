@@ -1,3 +1,9 @@
+xrow_rest_api_auth:
+    path: /auth
+    defaults: 
+        _controller: xrow_rest.controller.api:setAuthenticationAction
+    methods: [GET|POST]
+
 xrowapi_user:
     path: /user
     defaults: 
