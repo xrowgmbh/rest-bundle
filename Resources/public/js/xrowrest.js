@@ -1,8 +1,9 @@
-var client_id = "1_2drb6li5jocgg8w0sk4kk004osw8sw0scggwgws440kgs0sgs4",
-    client_secret = "281kns8en15w80sw8oo0k0w4448w8so48w04cc0s48ggg40kk4",
-    mainUrl = "http://www.wuv-abo.de.example.com",
+var client_id = "1_49cgf41l9u80wo0g0sggw80wk8cc0cwsss8skk0cs0kcg8so40",
+    client_secret = "5xltt114rhs8o0c0sc088wkccg4o0ww04sk004kg8wgkos4w8s",
+    mainUrl = window.location.hostname,
     tokenURL = mainUrl + "/oauth/v2/token",
-    authURL = mainUrl + "/xrowapi/v1/auth";
+    authURL = mainUrl + "/xrowapi/v1/auth",
+    apiUserURL = mainUrl + "/xrowapi/v1/user";
 require(["jso/jso"], function(JSO) {
     var jsoObj = new JSO({
         client_id: client_id,
@@ -10,11 +11,11 @@ require(["jso/jso"], function(JSO) {
         authorization: authURL
     });
     JSO.enablejQuery($);
-    var token = jsoObj.checkToken();
-    if(typeof token === "object" && token !== null) {
-        if(token.access_token)
+    //var token = jsoObj.checkToken();
+    //if(typeof token === "object" && token !== null) {
+    //    if(token.access_token)
             //showUserData();
-    }
+    //}
     /**
      * you need a form with id sfloginform 
      * and two login fields: username and password
@@ -24,11 +25,11 @@ require(["jso/jso"], function(JSO) {
             e.preventDefault();
             sfLoginForm($(this), function(response){
                 if(typeof response === "object"){
-                    showUserData();
+                    window.location = apiUserURL;
                 } else if(typeof response === "string"){
                     var queryHash = "#" + response.split("?"); 
                     jsoObj.callback(queryHash, function(token){
-                        showUserData();
+                        window.location = apiUserURL;
                     });
                 }
             });
@@ -100,7 +101,7 @@ require(["jso/jso"], function(JSO) {
     }
     function showAccountData(){
         jsoObj.ajax({
-            url: "http://www.wuv-abo.de.example.com/xrowapi/v1/account",
+            url: mainUrl + "/xrowapi/v1/account",
             dataType: 'json',
             success: function(data) {
                 var outputString = "";
@@ -124,7 +125,7 @@ require(["jso/jso"], function(JSO) {
     }
     function showSubscriptionsData(){
         jsoObj.ajax({
-            url: "http://www.wuv-abo.de.example.com/xrowapi/v1/subscriptions",
+            url: mainUrl + "/xrowapi/v1/subscriptions",
             dataType: 'json',
             success: function(data) {
                 var outputString = "";
