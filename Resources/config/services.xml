@@ -7,7 +7,6 @@
     <parameters>
         <parameter key="xrowsso.platform.entity.user.class">xrow\restBundle\Entity\User</parameter>
         <parameter key="xrowsso.platform.user.provider.class">xrow\restBundle\Provider\UserProvider</parameter>
-        <parameter key="xrow_rest.oauth2.client.class">xrow\restBundle\Service\OAuth2Client</parameter>
     </parameters>
 
     <services>
@@ -51,14 +50,6 @@
             <argument type="service" id="service_container" /> 
         </service>
 
-        <service id="xrow_rest.oauth2.client" class="%xrow_rest.oauth2.client.class%">
-            <argument type="service" id="fos_oauth_server.server" />
-            <argument type="collection">
-                <argument key="token_uri">%oauth2_token_uri%</argument>
-                <argument key="client_id">%oauth2_client_id%</argument>
-                <argument key="client_secret">%oauth2_client_secret%</argument>
-            </argument>
-        </service>
     </services>
 
 </container>
