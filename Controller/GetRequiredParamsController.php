@@ -23,10 +23,16 @@ class GetRequiredParamsController extends Controller
      */
     public function getClientParamsAction(Request $request)
     {
-        $client_id = $this->container->getParameter('oauth2_client_id');
-        $client_secret = $this->container->getParameter('oauth2_client_secret');
+        $client_id = $this->container->getParameter('oauth_client_id');
+        $client_secret = $this->container->getParameter('oauth_client_secret');
+        $loginform_id = $this->container->getParameter('oauth_loginform_id');
+        $callbackFunctionIfTokenIsSet = '';
+        if ($this->container->hasParameter('oauth_callback_function_if_token_is_set'))
+            $callbackFunctionIfTokenIsSet = $this->container->getParameter('oauth_callback_function_if_token_is_set');
         return new JsonResponse(array(
                 'client_id' => $client_id,
-                'client_secret' => $client_secret));
+                'client_secret' => $client_secret,
+                'loginform_id' => $loginform_id,
+                'callbackFunctionIfTokenIsSet'' => $callbackFunctionIfTokenIsSet));
     }
 }
