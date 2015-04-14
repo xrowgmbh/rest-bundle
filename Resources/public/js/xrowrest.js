@@ -16,30 +16,32 @@ $.ajax({
 }).done(function (data) {
     // if required data is set
     if (typeof data.client_id != "undefined" && typeof data.client_secret != "undefined" && typeof data.loginform_id != "undefined") {
-        var client_id = data.client_id,
-            client_secret = data.client_secret,
+        var settings = {"client_id": data.client_id,
+                        "client_secret": data.client_secret,
+                        "tokenURL": "/oauth/v2/token",
+                        "authURL": "/xrowapi/v1/auth",
+                        "apiUserURL": "/xrowapi/v1/user",
+                        "apiLogoutURL": "/xrowapi/v1/logout"},
             loginform_id = data.loginform_id,
-            callbackFunctionIfTokenIsSet = data.callbackFunctionIfTokenIsSet,
-            tokenURL = "/oauth/v2/token",
-            authURL = "/xrowapi/v1/auth",
-            apiUserURL = "/xrowapi/v1/user";
+            callbackFunctionIfTokenIsSet = data.callbackFunctionIfTokenIsSet;
         require(["jso/jso"], function(JSO) {
             var jsoObj = new JSO({
-                client_id: client_id,
-                scopes: "user",
-                authorization: authURL
+                client_id: settings.client_id,
+                scopes: ["user"],
+                authorization: settings.authURL
             });
             JSO.enablejQuery($);
             if(callbackFunctionIfTokenIsSet != '') {
-                if(typeof eval('callbackFunctionIfTokenIsSet') == "function") {
-                    var token = jsoObj.checkToken();
-                    if(typeof token === "object" && token !== null) {
-                        if(token.access_token) {
-                            eval('callbackFunctionIfTokenIsSet('+jsoObj+')');
-                        }
-                    }
-                }
+               if (typeof window[callbackFunctionIfTokenIsSet] == "function" ) {
+                   var token = jsoObj.checkToken();
+                   if(typeof token === "object" && token !== null) {
+                       if(token.access_token) {
+                           window[callbackFunctionIfTokenIsSet](jsoObj, settings);
+                       }
+                   }
+               }
             }
+
             /**
              * you need a form with id sfloginform 
              * and two login fields: username and password
@@ -49,11 +51,11 @@ $.ajax({
                     e.preventDefault();
                     sfLoginForm($(this), function(response){
                         if(typeof response === "object"){
-                            window.location = apiUserURL;
+                            window.location = settings.apiUserURL;
                         } else if(typeof response === "string"){
                             var queryHash = "#" + response.split("?"); 
                             jsoObj.callback(queryHash, function(token){
-                                window.location = apiUserURL;
+                                window.location = settings.apiUserURL;
                             });
                         }
                     });
@@ -63,19 +65,18 @@ $.ajax({
             function sfLoginForm($form, callback){
                 var request = {"grant_type": "password",
                                "scope": "user"};
-                $.each( $form.serializeArray(), function(i, field) {
+                $.each($form.serializeArray(), function(i, field) {
                     request[field.name] = encodeURIComponent(field.value);
                 });
-                request.client_id = client_id;
-                request.client_secret = client_secret;
-                window.console.log(request);
+                request.client_id = settings.client_id;
+                request.client_secret = settings.client_secret;
                 $.ajax({
                     type    : 'post',
-                    url     : tokenURL,
+                    url     : settings.tokenURL,
                     data    : request
                 }).done(function (requestData) {
                     jsoObj.getToken(function(data) {
-                        callback( data );
+                        callback(data);
                     }, requestData);
                 });
             }

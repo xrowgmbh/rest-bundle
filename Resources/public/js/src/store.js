@@ -110,7 +110,7 @@ define(function(require, exports, module) {
 		var tokens = JSON.parse(localStorage.getItem("tokens-" + provider));
 		if (!tokens) tokens = [];
 
-		log("Token received", tokens);
+		//log("Token received", tokens);
 		return tokens;
 	};
 	store.wipeTokens = function(provider) {

@@ -33,6 +33,6 @@ class GetRequiredParamsController extends Controller
                 'client_id' => $client_id,
                 'client_secret' => $client_secret,
                 'loginform_id' => $loginform_id,
-                'callbackFunctionIfTokenIsSet'' => $callbackFunctionIfTokenIsSet));
+                'callbackFunctionIfTokenIsSet' => $callbackFunctionIfTokenIsSet));
     }
 }
