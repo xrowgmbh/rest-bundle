@@ -4,13 +4,14 @@ namespace xrow\restBundle\Controller;
 
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Symfony\Component\Security\Core\Exception\AccessDeniedException;
-use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Security\Core\Authentication\AuthenticationManagerInterface;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 use Symfony\Component\Security\Core\Exception\AuthenticationException;
 use Symfony\Component\Security\Core\SecurityContextInterface;
 use Symfony\Component\Security\Core\Authentication\Token\AnonymousToken;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 use FOS\OAuthServerBundle\Security\Authentication\Token\OAuthToken;
 use OAuth2\OAuth2;
 use OAuth2\OAuth2AuthenticateException;
@@ -22,7 +23,7 @@ class ApiController extends Controller
     protected $crmPluginClassObject;
 
     /**
-     * @var \Symfony\Bundle\FrameworkBundle\Controller\Controller
+     * @var \Symfony\Component\DependencyInjection\ContainerInterface
      */
     protected $container;
 
@@ -40,11 +41,6 @@ class ApiController extends Controller
      * @var \OAuth2\OAuth2
      */
     protected $serverService;
-
-    /**
-     * @var \AuthToken
-     */
-    protected $bearerToken;
 
     /**
      * @param \Symfony\Component\Security\Core\SecurityContextInterface                      $securityContext       The security context.
@@ -68,31 +64,45 @@ class ApiController extends Controller
     public function setAuthenticationAction(Request $request)
     {
         $user = false;
-        $oauthToken = $this->securityContext->getToken();
-        if($oauthToken instanceof AnonymousToken) {
-            $oauthTokenString = $this->serverService->getBearerToken($request, true);
-            $oauthToken = new OAuthToken();
-            $oauthToken->setToken($oauthTokenString);
-            if($oauthToken instanceof OAuthToken) {
-                $tokenString = $oauthToken->getToken();
-                $returnValue = $this->authenticationManager->authenticate($oauthToken);
-                if ($returnValue instanceof TokenInterface) {
-                    $this->securityContext->setToken($returnValue);
+        try {
+            $oauthToken = $this->securityContext->getToken();
+            if ($oauthToken instanceof AnonymousToken) {
+                $oauthTokenString = $this->serverService->getBearerToken($request, true);
+                $oauthToken = new OAuthToken();
+                $oauthToken->setToken($oauthTokenString);
+                if ($oauthToken instanceof OAuthToken) {
+                    $tokenString = $oauthToken->getToken();
+                    $returnValue = $this->authenticationManager->authenticate($oauthToken);
+                    if ($returnValue instanceof TokenInterface) {
+                        $session = $request->getSession();
+                        if ($session->isStarted() === false) {
+                            $session->start();
+                        }
+                        $session->set('athash', $oauthTokenString);
+                        $this->securityContext->setToken($returnValue);
+                    }
                 }
             }
-        }
-        if ($oauthToken instanceof OAuthToken) {
-            $user = $oauthToken->getUser();
-            if (!$user instanceof APIUser) {
+            $oauthToken = $this->securityContext->getToken();
+            if ($oauthToken instanceof OAuthToken) {
+                $user = $oauthToken->getUser();
+                if (!$user instanceof APIUser) {
+                    return new JsonResponse(array(
+                            'error' => 'invalid_grant',
+                            'error_type' => 'NOUSER',
+                            'error_description' => 'This user does not have access to this section.'), 403);
+                }
                 return new JsonResponse(array(
-                        'error' => 'invalid_grant',
-                        'error_type' => 'NOUSER',
-                        'error_description' => 'This user does not have access to this section.'), 403);
+                        'result' => $user->getId(),
+                        'type' => 'CONTENT',
+                        'message' => 'Authentication successfully'));
             }
+        } catch (AuthenticationException $e) {
+            $exception = $this->errorHandling($e);
             return new JsonResponse(array(
-                    'result' => $user->getId(),
-                    'type' => 'CONTENT',
-                    'message' => 'Authentication successfully'));
+                    'error' => $exception['error'],
+                    'error_type' => $exception['type'],
+                    'error_description' => $exception['error_description']), $exception['httpCode']);
         }
     }
 
@@ -131,7 +141,12 @@ class ApiController extends Controller
                     'error_description' => $exception['error_description']), $exception['httpCode']);
         }
     }
-    
+
+    /**
+     * 
+     * @param Request $request
+     * @return \Symfony\Component\HttpFoundation\JsonResponse
+     */
     public function getAccountAction(Request $request)
     {
         try {
@@ -198,6 +213,10 @@ class ApiController extends Controller
         }
     }
 
+    /**
+     * 
+     * @return \Symfony\Component\HttpFoundation\JsonResponse
+     */
     public function logoutAction()
     {
         $this->securityContext->setToken(null);
@@ -217,21 +236,35 @@ class ApiController extends Controller
     {
         $user = false;
         $oauthToken = $this->securityContext->getToken();
-        if ($oauthToken instanceof OAuthToken)
-        {
-            $user = $oauthToken->getUser();
+        $session = $request->getSession();
+        $accessTokenString = $session->get('athash');
+        try {
+            $accessToken = $this->serverService->verifyAccessToken($accessTokenString);
+            if ($oauthToken instanceof OAuthToken) {
+                $user = $oauthToken->getUser();
+            }
+            return $user;
+        } catch (OAuth2AuthenticateException $e) {
+            throw new AuthenticationException('OAuth2 authentication failed', 0, $e);
         }
-        return $user;
     }
 
+    /**
+     * 
+     * @param unknown $e
+     * @return array $result
+     */
     function errorHandling($e)
     {
         $result = array('type' => 'ERROR');
-        if($e->getPrevious() instanceof OAuth2AuthenticateException) {
-            $previousException = $e->getPrevious();
-            $result['error'] = $e->getCode();
-            $result['error_description'] = $previousException->getDescription();
-            $errorCode = $previousException->getHttpCode();
+        if ($e instanceof OAuth2AuthenticateException || $e->getPrevious() instanceof OAuth2AuthenticateException) {
+            if ($e instanceof OAuth2AuthenticateException)
+                $exception = $e;
+            else 
+                $exception = $e->getPrevious();
+            $result['error'] = $exception->getCode();
+            $result['error_description'] = $exception->getDescription();
+            $errorCode = $exception->getHttpCode();
             if($errorCode == OAuth2::HTTP_BAD_REQUEST)
                 $result['httpCode'] = 400;
             elseif($errorCode == OAuth2::HTTP_FORBIDDEN)
@@ -239,7 +272,7 @@ class ApiController extends Controller
             elseif($errorCode == OAuth2::HTTP_UNAUTHORIZED)
             {
                 $result['httpCode'] = 401;
-                if(strpos($previousException->getDescription(), 'has expired') !== false)
+                if(strpos($exception->getDescription(), 'has expired') !== false)
                     $result['type'] = 'TOKENEXPIREDERROR';
             }
         }

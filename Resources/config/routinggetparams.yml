@@ -1,0 +1,5 @@
+xrow_rest_get_client_params:
+    path: /client
+    defaults: 
+        _controller: xrow_rest.controller.get_params:getClientParamsAction
+    methods: [GET]

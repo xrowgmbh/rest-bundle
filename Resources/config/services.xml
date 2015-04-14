@@ -37,6 +37,10 @@
             <argument type="service" id="fos_oauth_server.server" />
         </service>
 
+        <service id="xrow_rest.controller.get_params" class="xrow\restBundle\Controller\GetRequiredParamsController">
+            <argument type="service" id="service_container" />
+        </service>
+
         <service id="xrow_oauth_server.storage" class="xrow\restBundle\Storage\OAuthStorage" public="false">
             <argument type="service" id="fos_oauth_server.client_manager" />
             <argument type="service" id="fos_oauth_server.access_token_manager" />
