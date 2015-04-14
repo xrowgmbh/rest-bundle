@@ -9,7 +9,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 
 class GetRequiredParamsController extends Controller
 {
-    private $container;
+    protected $container;
 
     public function __construct(ContainerInterface $container)
     {
@@ -23,8 +23,8 @@ class GetRequiredParamsController extends Controller
      */
     public function getClientParamsAction(Request $request)
     {
-        $client_id = $container->getParameter('oauth2_client_id');
-        $client_secret = $container->getParameter('oauth2_client_secret');
+        $client_id = $this->container->getParameter('oauth2_client_id');
+        $client_secret = $this->container->getParameter('oauth2_client_secret');
         return new JsonResponse(array(
                 'client_id' => $client_id,
                 'client_secret' => $client_secret));
