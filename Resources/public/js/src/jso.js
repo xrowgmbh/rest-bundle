@@ -14,9 +14,6 @@ define(function(require, exports, module) {
         default_config = {
             "lifetime": 3600,
             "debug": false,
-            "foo": {
-                "bar": "lsdkjf"
-            }
         };
 
     var store = require('./store');
@@ -53,7 +50,6 @@ define(function(require, exports, module) {
         var that = this;
         return function(url, callback) {
 
-
             var onNewURLinspector = function(ref) {
                 return function(inAppBrowserEvent) {
 
@@ -67,16 +63,14 @@ define(function(require, exports, module) {
                         setTimeout(function() {
                             ref.close();
                         }, 500);
-                        
 
                         that.callback(url, function() {
                             // When we've found OAuth credentials, we close the inappbrowser...
                             if(this.config.get('debug') !== "false")
                                 utils.log("Closing window ", ref);
                             if (typeof callback === 'function') callback();
-                        });                    
+                        });
                     }
-                    
                 };
             };
 
@@ -95,12 +89,6 @@ define(function(require, exports, module) {
             ref.addEventListener('loadstart', onNewURLinspector(ref));
             if(this.config.get('debug') !== "false")
                 utils.log("Event listeren ardded... ", ref);
-            
-
-            // Everytime the Phonegap InAppBrowsers moves to a new URL,
-            
-
-
         };
     };
 
@@ -140,10 +128,8 @@ define(function(require, exports, module) {
     JSO.prototype.URLcontainsToken = function(url) {
         // If a url is provided 
         if (url) {
-            // utils.log('Hah, I got the url and it ' + url);
             if(url.indexOf('#') === -1) return false;
             h = url.substring(url.indexOf('#'));
-            // utils.log('Hah, I got the hash and it is ' +  h);
         }
 
         /*
@@ -176,10 +162,8 @@ define(function(require, exports, module) {
 
         // If a url is provided 
         if (url) {
-            // utils.log('Hah, I got the url and it ' + url);
             if(url.indexOf('#') === -1) return;
             h = url.substring(url.indexOf('#'));
-            // utils.log('Hah, I got the hash and it is ' +  h);
         }
 
         /*
@@ -197,11 +181,10 @@ define(function(require, exports, module) {
             state = {providerID: providerID};
         }
 
-        
         if (!state) throw "Could not retrieve state";
         if (!state.providerID) throw "Could not get providerid from state";
         if (!JSO.instances[state.providerID]) throw "Could not retrieve JSO.instances for this provider.";
-        
+
         instance = JSO.instances[state.providerID];
 
         /**
@@ -210,11 +193,11 @@ define(function(require, exports, module) {
          */
         if (!atoken.state && co.scope) {
             state.scopes = instance._getRequestScopes();
-            if(this.config.get('debug') !== "false")
-                utils.log("Setting state: ", state);
+            //if(this.config.get('debug') !== "false")
+            //    utils.log("Setting state: ", state);
         }
-        if(this.config.get('debug') !== "false")
-            utils.log("Checking atoken ", atoken, " and instance ", instance);
+        //if(this.config.get('debug') !== "false")
+        //    utils.log("Checking atoken ", atoken, " and instance ", instance);
 
         /*
          * Decide when this token should expire.
@@ -255,31 +238,27 @@ define(function(require, exports, module) {
             window.location.hash = '';
         }
 
-        if(this.config.get('debug') !== "false") {
+        /*if(this.config.get('debug') !== "false") {
             utils.log(atoken);
             utils.log("Looking up internalStates storage for a stored callback... ", "state=" + atoken.state, JSO.internalStates);
-        }
+        }*/
 
         if (JSO.internalStates[atoken.state] && typeof JSO.internalStates[atoken.state] === 'function') {
-            if(this.config.get('debug') !== "false")
-                utils.log("InternalState is set, calling it now!");
+            //if(this.config.get('debug') !== "false")
+            //    utils.log("InternalState is set, calling it now!");
             JSO.internalStates[atoken.state](atoken);
             delete JSO.internalStates[atoken.state];
         }
 
-        if(this.config.get('debug') !== "false")
-            utils.log("Successfully obtain a token, now call the callback, and may be the window closes", callback);
+        //if(this.config.get('debug') !== "false")
+        //    utils.log("Successfully obtain a token, now call the callback, and may be the window closes", callback);
 
         if (typeof callback === 'function') {
             callback(atoken);
         }
-
-        // utils.log(atoken);
-
     };
 
     JSO.prototype.dump = function() {
-
         var txt = '';
         var tokens = store.getTokens(this.providerID);
         txt += 'Tokens: ' + "\n" + JSON.stringify(tokens, undefined, 4) + '\n\n';
@@ -316,8 +295,6 @@ define(function(require, exports, module) {
     };
 
     JSO.prototype.getToken = function(callback, opts) {
-        // var scopesRequest  = this._getRequestScopes(opts);
-        
         var scopesRequire = this._getRequiredScopes(opts);
         var token = store.getToken(this.providerID, scopesRequire);
 
@@ -330,32 +307,9 @@ define(function(require, exports, module) {
     };
 
     JSO.prototype.checkToken = function(opts) {
-        // var scopesRequest  = this._getRequestScopes(opts);
-        
         var scopesRequire = this._getRequiredScopes(opts);
         return store.getToken(this.providerID, scopesRequire);
     };
-
-
-    // exp.jso_ensureTokens = function (ensure) {
-    //     var providerid, scopes, token;
-    //     for(providerid in ensure) {
-    //         scopes = undefined;
-    //         if (ensure[providerid]) scopes = ensure[providerid];
-    //         token = store.getToken(providerid, scopes);
-
-    //         utils.log("Ensure token for provider [" + providerid + "] ");
-    //         utils.log(token);
-
-    //         if (token === null) {
-    //             jso_authrequest(providerid, scopes);
-    //         }
-    //     }
-
-
-    //     return true;
-    // }
-
 
     JSO.prototype._authorize = function(callback, opts) {
         var 
@@ -366,21 +320,19 @@ define(function(require, exports, module) {
         var authorization = this.config.get('authorization', null, true);
         var client_id = this.config.get('client_id', null, true);
 
-        if(this.config.get('debug') !== "false") {
+        /*if(this.config.get('debug') !== "false") {
             utils.log("About to send an authorization request to this entry:", authorization);
             utils.log("Options", opts, "callback", callback);
-        }
+        }*/
 
         request = {
             "response_type": "token",
             "state": utils.uuid()
         };
 
-
-
         if (callback && typeof callback === 'function') {
-            if(this.config.get('debug') !== "false")
-                utils.log("About to store a callback for later with state=" + request.state, callback);
+            //if(this.config.get('debug') !== "false")
+            //    utils.log("About to store a callback for later with state=" + request.state, callback);
             JSO.internalStates[request.state] = callback;
         }
 
@@ -389,8 +341,6 @@ define(function(require, exports, module) {
         }
 
         request.client_id = client_id;
-
-
 
         /*
          * Calculate which scopes to request, based upon provider config and request config.
@@ -402,9 +352,10 @@ define(function(require, exports, module) {
 
         if(opts.access_token !== "undefined")
             request.access_token = opts.access_token;
-
-        if(this.config.get('debug') !== "false")
-            utils.log("DEBUG REQUEST"); utils.log(request);
+        else
+            return false;
+        //if(this.config.get('debug') !== "false")
+        //    utils.log("DEBUG REQUEST"); utils.log(request);
 
         authurl = utils.encodeURL(authorization, request);
 
@@ -419,26 +370,34 @@ define(function(require, exports, module) {
             request.scopes = scopes;
         }
 
-
-        if(this.config.get('debug') !== "false") {
+        /*if(this.config.get('debug') !== "false") {
             utils.log("Saving state [" + request.state + "]");
             utils.log(JSON.parse(JSON.stringify(request)));
-        }
+        }*/
 
         store.saveState(request.state, request);
         $.ajax({
             type    : 'get',
-            url     : authurl,
-            success : function(data) {
+            url     : authurl
+        }).done(function (data) {
+            if(typeof data.result != "undefined")
                 callback( authurl );
+            else {
+                if(typeof data.responseJSON != "undefined") {
+                    if (typeof data.responseJSON.error_description != "undefined") 
+                        alert(data.responseJSON.error_description);
+                }
+                else
+                    window.console.log("An unexpeded error occured xrjs00.");
             }
+        }).fail(function (jqXHR) {
+            window.console.log("An unexpeded error occured: " + jqXHR.statusText + ", HTTP Code " + jqXHR.status + ":xrjs3.");
         });
         //this.gotoAuthorizeURL(authurl, callback);
     };
 
 
     JSO.prototype.gotoAuthorizeURL = function(url, callback) {
-
 
         if (!this.callbacks.redirect || typeof this.callbacks.redirect !== 'function') 
             throw new Error('Cannot redirect to authorization endpoint because of missing redirect handler');
@@ -464,23 +423,23 @@ define(function(require, exports, module) {
         var that = this;
 
         if (!JSO.hasOwnProperty('$')) throw new Error("JQuery support not enabled.");
-        
+
         oauthOptions = settings.oauth || {};
 
         var errorOverridden = settings.error || null;
         settings.error = function(jqXHR, textStatus, errorThrown) {
-            if(this.config.get('debug') !== "false") {
+            /*if(this.config.get('debug') !== "false") {
                 utils.log('error(jqXHR, textStatus, errorThrown)');
                 utils.log(jqXHR);
                 utils.log(textStatus);
                 utils.log(errorThrown);
-            }
+            }*/
 
             if (jqXHR.status === 401) {
-                if(this.config.get('debug') !== "false") {
+                /*if(this.config.get('debug') !== "false") {
                     utils.log("Token expired. About to delete this token");
                     utils.log(token);
-                }
+                }*/
                 that.wipeTokens();
 
             }
@@ -491,8 +450,8 @@ define(function(require, exports, module) {
 
 
         return this.getToken(function(token) {
-            if(this.config.get('debug') !== "false")
-                utils.log("Ready. Got an token, and ready to perform an AJAX call", token);
+            //if(this.config.get('debug') !== "false")
+            //    utils.log("Ready. Got an token, and ready to perform an AJAX call", token);
 
             if (that.config.get('presenttoken', null) === 'qs') {
                 // settings.url += ((h.indexOf("?") === -1) ? '?' : '&') + "access_token=" + encodeURIComponent(token["access_token"]);
@@ -502,8 +461,8 @@ define(function(require, exports, module) {
                 if (!settings.headers) settings.headers = {};
                 settings.headers.Authorization = "Bearer " + token.access_token;
             }
-            if(this.config.get('debug') !== "false")
-                utils.log('$.ajax settings', settings);
+            //if(this.config.get('debug') !== "false")
+            //    utils.log('$.ajax settings', settings);
             return JSO.$.ajax(settings);
 
         }, oauthOptions);

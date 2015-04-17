@@ -66,7 +66,7 @@ $.ajax({
                 var request = {"grant_type": "password",
                                "scope": "user"};
                 $.each($form.serializeArray(), function(i, field) {
-                    request[field.name] = encodeURIComponent(field.value);
+                    request[field.name] = field.value;
                 });
                 request.client_id = settings.client_id;
                 request.client_secret = settings.client_secret;
@@ -75,15 +75,31 @@ $.ajax({
                     url     : settings.tokenURL,
                     data    : request
                 }).done(function (requestData) {
-                    jsoObj.getToken(function(data) {
-                        callback(data);
-                    }, requestData);
+                    if(typeof requestData.access_token != "undefined") {
+                        jsoObj.getToken(function(data) {
+                            callback(data);
+                        }, requestData);
+                    } else {
+                        if(typeof requestData.responseJSON != "undefined") {
+                            if (typeof requestData.responseJSON.error_description != "undefined") 
+                                alert(requestData.responseJSON.error_description);
+                        }
+                        else
+                            window.console.log("An unexpeded error occured xrjs0.");
+                    }
+                }).fail(function (jqXHR) {
+                    if(typeof jqXHR.responseJSON != "undefined") {
+                        if (typeof jqXHR.responseJSON.error_description != "undefined") 
+                            alert(jqXHR.responseJSON.error_description);
+                    }
+                    else
+                        window.console.log("An unexpeded error occured: " + jqXHR.statusText + ", HTTP Code " + jqXHR.status + ":xrjs1.");
                 });
             }
         });
     } else {
-        alert("Please set oauth_client_id, oauth_client_secret and oauth_loginform_id in parameters.yml for xrowrest.js.");
+        window.console.log("Please set oauth_client_id, oauth_client_secret and oauth_loginform_id in parameters.yml for xrowrest.js.");
     }
-}).fail(function (jqXHR, textStatus) {
-    alert("An unexpeded error occured in xrowrest.js during get parameters via ajax.");
+}).fail(function (jqXHR) {
+    window.console.log("An unexpeded error occured: " + jqXHR.statusText + ", HTTP Code " + jqXHR.status + ":xrjs2.");
 });
