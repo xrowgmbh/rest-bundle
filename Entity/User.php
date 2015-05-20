@@ -92,6 +92,11 @@ class User implements UserInterface
         return array('ROLE_API', 'ROLE_OAUTH_USER');
     }
 
+    public function getCurrency()
+    {
+        return 'EUR';
+    }
+
     /**
     * @inheritDoc
     */

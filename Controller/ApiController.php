@@ -17,9 +17,13 @@ use OAuth2\OAuth2;
 use OAuth2\OAuth2AuthenticateException;
 use xrow\restBundle\CRM\LoadCRMPlugin;
 use xrow\restBundle\Entity\User as APIUser;
+use eZ\Publish\Core\MVC\Symfony\Event\InteractiveLoginEvent;
 
 class ApiController extends Controller
 {
+    /**
+     * @var xrow\restBundle\CRM\LoadCRMPlugin
+     */
     protected $crmPluginClassObject;
 
     /**
@@ -43,6 +47,7 @@ class ApiController extends Controller
     protected $serverService;
 
     /**
+     * @param xrow\restBundle\CRM\LoadCRMPlugin                                             $loadCRMPlugin
      * @param \Symfony\Component\Security\Core\SecurityContextInterface                      $securityContext       The security context.
      * @param \Symfony\Component\Security\Core\Authentication\AuthenticationManagerInterface $authenticationManager The authentication manager.
      * @param \OAuth2\OAuth2                                                                 $serverService
@@ -80,6 +85,8 @@ class ApiController extends Controller
                         }
                         $session->set('athash', $oauthTokenString);
                         $this->securityContext->setToken($returnValue);
+                        // login new eZ User: siehe Bemerkung in der Funktion loginAPIUser
+                        #$this->loginAPIUser($request, $returnValue);
                     }
                 }
             }
@@ -104,6 +111,40 @@ class ApiController extends Controller
                     'error_type' => $exception['type'],
                     'error_description' => $exception['error_description']), $exception['httpCode']);
         }
+    }
+
+    /**
+     * Problem: der eZ User hat nicht die Daten des SF-Users. 
+     * Das muss noch mal etwas überdacht werden und dann erst darf der 
+     * neue "zusammengelegte" User mit $this->securityContext->setUser($user) auch gesetzt werden
+     * 
+     * @param Symfony\Component\HttpFoundation\Request $request
+     * @param Symfony\Component\Security\Core\Authentication\Token\TokenInterface $returnValue
+     */
+    function loginAPIUser($request, $returnValue)
+    {
+        // Get eZUserID from user with read-rights
+        $eZUserID = $this->container->getParameter('eZUserWithAbo');
+        // Get some eZ services
+        $repository = $this->container->get('ezpublish.api.repository');
+        $legacyKernel = $this->container->get('ezpublish_legacy.kernel');
+        // Load the eZ User
+        $currentEzUser = $repository->getUserService()->loadUser($eZUserID);
+        // Set user in repository
+        $repository->setCurrentUser($currentEzUser);
+        // Login user for eZ new stack
+        $event = new InteractiveLoginEvent($request, $returnValue);
+        $event->setApiUser($currentEzUser);
+        // Login user for eZ legacy stack
+        $result = $legacyKernel()->runCallback(
+                function () use ( $currentEzUser )
+                {
+                    $legacyUser = \eZUser::fetch( $currentEzUser->id );
+                    \eZUser::setCurrentlyLoggedInUser( $legacyUser, $legacyUser->attribute( 'contentobject_id' ), \eZUser::NO_SESSION_REGENERATE );
+                },
+                false,
+                false
+        );
     }
 
     /**
