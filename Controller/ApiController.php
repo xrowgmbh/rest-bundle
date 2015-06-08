@@ -277,24 +277,17 @@ class ApiController extends Controller
     {
         $user = false;
         $oauthToken = $this->securityContext->getToken();
-        if ($request->hasSession()) {
-            $session = $request->getSession();
-        }
-        else {
-            $session = $this->container->get('session');
-        }
-        if(is_object($session) && $session->has('athash')) {
-            $accessTokenString = $session->get('athash');
-            try {
-                $accessToken = $this->serverService->verifyAccessToken($accessTokenString);
-                if ($oauthToken instanceof OAuthToken) {
-                    $user = $oauthToken->getUser();
-                }
-            } catch (OAuth2AuthenticateException $e) {
-                throw new AuthenticationException('OAuth2 authentication failed', 0, $e);
+        $session = $request->getSession();
+        $accessTokenString = $session->get('athash');
+        try {
+            $accessToken = $this->serverService->verifyAccessToken($accessTokenString);
+            if ($oauthToken instanceof OAuthToken) {
+                $user = $oauthToken->getUser();
             }
+            return $user;
+        } catch (OAuth2AuthenticateException $e) {
+            throw new AuthenticationException('OAuth2 authentication failed', 0, $e);
         }
-        return $user;
     }
 
     /**
