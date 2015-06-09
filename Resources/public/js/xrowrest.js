@@ -76,9 +76,14 @@ $.ajax({
                     data    : request
                 }).done(function (requestData) {
                     if(typeof requestData.access_token != "undefined") {
-                        jsoObj.getToken(function(data) {
-                            callback(data);
-                        }, requestData);
+                        $.ajax({
+                            type    : 'get',
+                            url     : settings.authURL+'?access_token='+requestData.access_token
+                        }).done(function (data) {
+                            jsoObj.getToken(function(data) {
+                                callback(data);
+                            }, requestData);
+                        });
                     } else {
                         if(typeof requestData.responseJSON != "undefined") {
                             if (typeof requestData.responseJSON.error_description != "undefined") 

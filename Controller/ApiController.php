@@ -13,6 +13,7 @@ use Symfony\Component\Security\Core\SecurityContextInterface;
 use Symfony\Component\Security\Core\Authentication\Token\AnonymousToken;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use FOS\OAuthServerBundle\Security\Authentication\Token\OAuthToken;
+use FOS\OAuthServerBundle\Model\AccessTokenInterface;
 use OAuth2\OAuth2;
 use OAuth2\OAuth2AuthenticateException;
 use xrow\restBundle\CRM\LoadCRMPlugin;
@@ -258,8 +259,10 @@ class ApiController extends Controller
      * 
      * @return \Symfony\Component\HttpFoundation\JsonResponse
      */
-    public function logoutAction()
+    public function logoutAction(Request $request)
     {
+        $oauthTokenString = $this->serverService->getBearerToken($request, true);
+        $oauthTokenString->setExpiresAt(time());
         $this->securityContext->setToken(null);
         $this->container->get('session')->invalidate();
         return new JsonResponse(array(
@@ -276,19 +279,13 @@ class ApiController extends Controller
     private function checkAccessGranted(Request $request)
     {
         $user = false;
-        $oauthToken = $this->securityContext->getToken();
-        if ($request->hasSession()) {
-            $session = $request->getSession();
-        }
-        else {
-            $session = $this->container->get('session');
-        }
-        if (is_object($session) && $session->has('athash', false) !== false) {
-            $accessTokenString = $session->get('athash');
+        $oauthTokenString = $this->serverService->getBearerToken($request, true);
+        if ($oauthTokenString !== null) {
             try {
-                $accessToken = $this->serverService->verifyAccessToken($accessTokenString);
-                if ($oauthToken instanceof OAuthToken) {
-                    $user = $oauthToken->getUser();
+                // throw Exceptions like expired (401) or bad request (400) or forbidden (403)
+                $accessToken = $this->serverService->verifyAccessToken($oauthTokenString);
+                if ($accessToken instanceof AccessTokenInterface) {
+                    $user = $accessToken->getUser();
                 }
             } catch (OAuth2AuthenticateException $e) {
                 throw new AuthenticationException('OAuth2 authentication failed', 0, $e);
