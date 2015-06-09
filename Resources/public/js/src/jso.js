@@ -13,7 +13,7 @@ define(function(require, exports, module) {
 	var 
 		default_config = {
 			"lifetime": 3600,
-			"debug": true,
+			"debug": false,
 			"foo": {
 				"bar": "lsdkjf"
 			}
@@ -48,7 +48,7 @@ define(function(require, exports, module) {
 	JSO.store = store;
 	JSO.utils = utils;
 
-	console.log("RESET internalStates array");
+	//console.log("RESET internalStates array");
 
 
 	JSO.enablejQuery = function($) {
@@ -70,7 +70,7 @@ define(function(require, exports, module) {
 
 		            //  we'll check the URL for oauth fragments...
 		            var url = inAppBrowserEvent.url;
-		            utils.log("loadstop event triggered, and the url is now " + url);
+		            //utils.log("loadstop event triggered, and the url is now " + url);
 
 		            if (that.URLcontainsToken(url)) {
 		                // ref.removeEventListener('loadstop', onNewURLinspector);
@@ -81,7 +81,7 @@ define(function(require, exports, module) {
 
 			            that.callback(url, function() {
 			                // When we've found OAuth credentials, we close the inappbrowser...
-			                utils.log("Closing window ", ref);
+			                //utils.log("Closing window ", ref);
 			                if (typeof callback === 'function') callback();
 			            });	            	
 		            }
@@ -95,12 +95,12 @@ define(function(require, exports, module) {
 			}
 			var options = {};
 
-			utils.log("About to open url " + url);
+			//utils.log("About to open url " + url);
 
 			var ref = window.open(url, target, options);
-			utils.log("URL Loaded... ");
+			//utils.log("URL Loaded... ");
 	        ref.addEventListener('loadstart', onNewURLinspector(ref));
-	        utils.log("Event listeren ardded... ", ref);
+	        //utils.log("Event listeren ardded... ", ref);
 	        
 
 	        // Everytime the Phonegap InAppBrowsers moves to a new URL,
@@ -177,7 +177,7 @@ define(function(require, exports, module) {
 			state,
 			instance;
 
-		utils.log("JSO.prototype.callback() " + url + " callback=" + typeof callback);
+		//utils.log("JSO.prototype.callback() " + url + " callback=" + typeof callback);
 
 		// If a url is provided 
 		if (url) {
@@ -215,9 +215,9 @@ define(function(require, exports, module) {
 		 */
 		if (!atoken.state && co.scope) {
 			state.scopes = instance._getRequestScopes();
-			utils.log("Setting state: ", state);
+			//utils.log("Setting state: ", state);
 		}
-		utils.log("Checking atoken ", atoken, " and instance ", instance);
+		//utils.log("Checking atoken ", atoken, " and instance ", instance);
 
 		/*
 		 * Decide when this token should expire.
@@ -261,18 +261,18 @@ define(function(require, exports, module) {
 		}
 
 
-		utils.log(atoken);
+		//utils.log(atoken);
 
-		utils.log("Looking up internalStates storage for a stored callback... ", "state=" + atoken.state, JSO.internalStates);
+		//utils.log("Looking up internalStates storage for a stored callback... ", "state=" + atoken.state, JSO.internalStates);
 
 		if (JSO.internalStates[atoken.state] && typeof JSO.internalStates[atoken.state] === 'function') {
-			utils.log("InternalState is set, calling it now!");
+			//utils.log("InternalState is set, calling it now!");
 			JSO.internalStates[atoken.state](atoken);
 			delete JSO.internalStates[atoken.state];
 		}
 
 
-		utils.log("Successfully obtain a token, now call the callback, and may be the window closes", callback);
+		//utils.log("Successfully obtain a token, now call the callback, and may be the window closes", callback);
 
 		if (typeof callback === 'function') {
 			callback(atoken);
@@ -370,8 +370,8 @@ define(function(require, exports, module) {
 		var authorization = this.config.get('authorization', null, true);
 		var client_id = this.config.get('client_id', null, true);
 
-		utils.log("About to send an authorization request to this entry:", authorization);
-		utils.log("Options", opts, "callback", callback);
+		//utils.log("About to send an authorization request to this entry:", authorization);
+		//utils.log("Options", opts, "callback", callback);
 
 
 		request = {
@@ -382,7 +382,7 @@ define(function(require, exports, module) {
 
 
 		if (callback && typeof callback === 'function') {
-			utils.log("About to store a callback for later with state=" + request.state, callback);
+			//utils.log("About to store a callback for later with state=" + request.state, callback);
 			JSO.internalStates[request.state] = callback;
 		}
 
@@ -407,7 +407,7 @@ define(function(require, exports, module) {
         else
             return false;
 
-		utils.log("DEBUG REQUEST"); utils.log(request);
+		//utils.log("DEBUG REQUEST"); utils.log(request);
 
 		authurl = utils.encodeURL(authorization, request);
 
@@ -423,12 +423,33 @@ define(function(require, exports, module) {
 		}
 
 
-		utils.log("Saving state [" + request.state + "]");
-		utils.log(JSON.parse(JSON.stringify(request)));
+		//utils.log("Saving state [" + request.state + "]");
+		//utils.log(JSON.parse(JSON.stringify(request)));
 
 		store.saveState(request.state, request);
+
 		// we do not have an authorize endpoint
-		return authurl;
+		if(opts.setSession) {
+			$.ajax({
+	            type    : 'get',
+	            url     : authurl
+	        }).done(function (data) {
+	            if(typeof data.result != "undefined")
+	                callback( authurl );
+	            else {
+	                if(typeof data.responseJSON != "undefined") {
+	                    if (typeof data.responseJSON.error_description != "undefined") 
+	                    	window.console.log(data.responseJSON.error_description);
+	                }
+	                else
+	                    window.console.log("An unexpeded error occured xrjs00.");
+	            }
+	        }).fail(function (jqXHR) {
+	            window.console.log("An unexpeded error occured: " + jqXHR.statusText + ", HTTP Code " + jqXHR.status + ":xrjs3.");
+	        });
+		} else {
+			callback( authurl );
+		}
 		//this.gotoAuthorizeURL(authurl, callback);
 	};
 
@@ -484,7 +505,7 @@ define(function(require, exports, module) {
 
 
 		return this.getToken(function(token) {
-			utils.log("Ready. Got an token, and ready to perform an AJAX call", token);
+			//utils.log("Ready. Got an token, and ready to perform an AJAX call", token);
 
 			if (that.config.get('presenttoken', null) === 'qs') {
 				// settings.url += ((h.indexOf("?") === -1) ? '?' : '&') + "access_token=" + encodeURIComponent(token["access_token"]);

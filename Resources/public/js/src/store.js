@@ -101,7 +101,7 @@ define(function(require, exports, module) {
 		  * scopes: an array with the scopes (not string)
 	 */
 	store.saveTokens = function(provider, tokens) {
-		// log("Save Tokens (" + provider+ ")");
+		//log("Save Tokens (" + provider+ ")");
 		localStorage.setItem("tokens-" + provider, JSON.stringify(tokens));
 	};
 
@@ -110,7 +110,7 @@ define(function(require, exports, module) {
 		var tokens = JSON.parse(localStorage.getItem("tokens-" + provider));
 		if (!tokens) tokens = [];
 
-		log("Token received", tokens);
+		//log("Token received", tokens);
 		return tokens;
 	};
 	store.wipeTokens = function(provider) {

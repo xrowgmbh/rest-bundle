@@ -262,7 +262,16 @@ class ApiController extends Controller
     public function logoutAction(Request $request)
     {
         $oauthTokenString = $this->serverService->getBearerToken($request, true);
-        $oauthTokenString->setExpiresAt(time());
+        if ($oauthTokenString !== null) {
+            try {
+                $accessToken = $this->serverService->verifyAccessToken($oauthTokenString);
+                if ($accessToken instanceof AccessTokenInterface) {
+                    $user = $accessToken->setExpiresAt(time());
+                }
+            } catch (OAuth2AuthenticateException $e) {
+                $walk = true;
+            }
+        }
         $this->securityContext->setToken(null);
         $this->container->get('session')->invalidate();
         return new JsonResponse(array(
@@ -289,6 +298,13 @@ class ApiController extends Controller
                 }
             } catch (OAuth2AuthenticateException $e) {
                 throw new AuthenticationException('OAuth2 authentication failed', 0, $e);
+            }
+        }
+        else {
+            // Check if user is from same domaine
+            $oauthToken = $this->securityContext->getToken();
+            if ($oauthToken instanceof OAuthToken) {
+                $user = $oauthToken->getUser();
             }
         }
         return $user;

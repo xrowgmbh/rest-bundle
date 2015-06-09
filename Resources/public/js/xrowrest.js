@@ -80,6 +80,7 @@ $.ajax({
                             type    : 'get',
                             url     : settings.authURL+'?access_token='+requestData.access_token
                         }).done(function (data) {
+                            requestData.setSession = true;
                             jsoObj.getToken(function(data) {
                                 callback(data);
                             }, requestData);
