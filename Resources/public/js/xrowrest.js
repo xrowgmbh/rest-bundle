@@ -77,10 +77,10 @@ $.ajax({
                 }).done(function (requestData) {
                     if(typeof requestData.access_token != "undefined") {
                         $.ajax({
-                            type    : 'get',
-                            url     : settings.authURL+'?access_token='+requestData.access_token
+                            type    : 'post',
+                            url     : settings.authURL+'?access_token='+requestData.access_token,
+                            async   : false
                         }).done(function (data) {
-                            requestData.setSession = true;
                             jsoObj.getToken(function(data) {
                                 callback(data);
                             }, requestData);

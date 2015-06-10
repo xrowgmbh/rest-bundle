@@ -429,27 +429,7 @@ define(function(require, exports, module) {
 		store.saveState(request.state, request);
 
 		// we do not have an authorize endpoint
-		if(opts.setSession) {
-			$.ajax({
-	            type    : 'get',
-	            url     : authurl
-	        }).done(function (data) {
-	            if(typeof data.result != "undefined")
-	                callback( authurl );
-	            else {
-	                if(typeof data.responseJSON != "undefined") {
-	                    if (typeof data.responseJSON.error_description != "undefined") 
-	                    	window.console.log(data.responseJSON.error_description);
-	                }
-	                else
-	                    window.console.log("An unexpeded error occured xrjs00.");
-	            }
-	        }).fail(function (jqXHR) {
-	            window.console.log("An unexpeded error occured: " + jqXHR.statusText + ", HTTP Code " + jqXHR.status + ":xrjs3.");
-	        });
-		} else {
-			callback( authurl );
-		}
+		callback( authurl );
 		//this.gotoAuthorizeURL(authurl, callback);
 	};
 
