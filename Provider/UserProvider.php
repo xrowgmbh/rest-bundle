@@ -43,7 +43,7 @@ class UserProvider implements UserProviderInterface
     public function loadUserByUsername($username)
     {
         try {
-            $user = null;
+            $user = $this->userRepository->findOneBy(array('username' => $username));
         } catch (NoResultException $e) {
             $message = sprintf(
                 'Unable to find an active api user object identified by "%s".',
@@ -66,8 +66,12 @@ class UserProvider implements UserProviderInterface
                 )
             );
         }
+        $refreshedUser = $this->userRepository->find($user->getId());
+        if (null === $refreshedUser) {
+            throw new UsernameNotFoundException(sprintf('User with id %s not found', json_encode($user->getId())));
+        }
 
-        return $this->userRepository->find($user->getId());
+        return $refreshedUser;
     }
 
     public function supportsClass($class)

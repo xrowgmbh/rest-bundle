@@ -2,7 +2,7 @@
 
 namespace xrow\restBundle\Entity;
 
-use Symfony\Component\Security\Core\User\UserInterface;
+use Symfony\Component\Security\Core\User\User;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
@@ -11,20 +11,8 @@ use Doctrine\ORM\Mapping as ORM;
 * @ORM\Table(name="api_Users")
 * @ORM\Entity(repositoryClass="xrow\restBundle\Repository\UserRepository")
 */
-class User implements UserInterface
+class User extends User
 {
-    /**
-    * @ORM\Column(type="integer")
-    * @ORM\Id
-    * @ORM\GeneratedValue(strategy="AUTO")
-    */
-    private $id;
-
-    /**
-    * @ORM\Column(type="string", length=25, unique=true)
-    */
-    private $username;
-
     /**
     * @ORM\Column(type="string", length=25, unique=true)
     */
@@ -33,26 +21,6 @@ class User implements UserInterface
     public function __construct($crmuserId)
     {
         $this->crmuserId = $crmuserId;
-    }
-
-    public function getId(){
-        return $this->id;
-    }
-
-    /**
-    * @inheritDoc
-    */
-    public function getUsername()
-    {
-        return $this->username;
-    }
-
-    /**
-    * @inheritDoc
-    */
-    public function setUsername($username)
-    {
-        $this->username = $username;
     }
 
     /**
@@ -69,22 +37,6 @@ class User implements UserInterface
     }
 
     /**
-     * @inheritDoc
-     */
-    public function getSalt()
-    {
-        return null;
-    }
-
-    /**
-     * @inheritDoc
-     */
-    public function getPassword()
-    {
-        return null;
-    }
-
-    /**
     * @inheritDoc
     */
     public function getRoles()
@@ -95,13 +47,5 @@ class User implements UserInterface
     public function getCurrency()
     {
         return 'EUR';
-    }
-
-    /**
-    * @inheritDoc
-    */
-    public function eraseCredentials()
-    {
-        return true;
     }
 }

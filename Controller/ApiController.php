@@ -84,7 +84,6 @@ class ApiController extends Controller
                         if ($session->isStarted() === false) {
                             $session->start();
                         }
-                        $session->set('athash', $oauthTokenString);
                         $this->securityContext->setToken($returnValue);
                         // login new eZ User: siehe Bemerkung in der Funktion loginAPIUser
                         #$this->loginAPIUser($request, $returnValue);
