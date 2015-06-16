@@ -4,7 +4,6 @@
  * -> parameters.yml:
  *        oauth_client_id: 1_49cgf41l9u80wo0g0sggw80wk8cc0cwsss8skk0cs0kcg8so40
           oauth_client_secret: 5xltt114rhs8o0c0sc088wkccg4o0ww04sk004kg8wgkos4w8s
-          oauth_loginform_id: sfloginform
  * 
  * you can define a callback function after generating and saving an access token
  * -> parameters.yml
@@ -43,23 +42,50 @@ $.ajax({
             }
 
             /**
-             * you need a form with id sfloginform 
+             * you need a form with class use-api-logn 
              * and two login fields: username and password
+             * you can also define a redirect url after the login in your template like this
+             * <input type="hidden" value="/redirect/onthis/server/with/ssl" data-protocol="https" />
              */
             $(document).ready(function(){
-                $('form#'+loginform_id).submit( function( e ){
-                    e.preventDefault();
-                    sfLoginForm($(this), function(response){
-                        if(typeof response === "object"){
-                            window.location = settings.apiUserURL;
-                        } else if(typeof response === "string"){
-                            var queryHash = "#" + response.split("?"); 
-                            jsoObj.callback(queryHash, function(token){
-                                window.location = settings.apiUserURL;
+                if ($('form.use-api-login').length) {
+                    $('form.use-api-login').each(loginForm, function() {
+                        loginForm.submit(function(e){
+                            e.preventDefault();
+                            sfLoginForm($(this), function(getTokenData){
+                                if (typeof getTokenData === "string") {
+                                    var queryHash = "#" + getTokenData.split("?"); 
+                                    jsoObj.callback(queryHash);
+                                }
+                                var token = jsoObj.checkToken();
+                                if (token !== null) {
+                                    if (typeof token.access_token != "undefined") {
+                                        var redirectAfterApiLoginObject = loginForm.find('input[name="redirectAfterApiLogin"]');
+                                        if (redirectAfterApiLoginObject.length) {
+                                            var redirectAfterApiLogin = redirectAfterApiLoginObject.val();
+                                            // if value of redirect does not have /
+                                            if (!redirectAfterApiLogin.match(/^http/) && !redirectAfterApiLogin.match(/^\//))
+                                                redirectAfterApiLogin = '/'+redirectAfterApiLogin;
+                                            // <input type="hidden" value="/redirect/onthis/server/with/ssl" data-protocol="https" />
+                                            if (redirectAfterApiLogin.hasData('protocol') && !redirectAfterApiLogin.match(/^http/))
+                                                redirectAfterApiLogin = redirectAfterApiLogin.data('protocol')+'//'+document.location.hostname+redirectAfterApiLogin;
+                                            // <input type="hidden" value="http(s)://redirect-to-another-server.com/with/protocol" data-protocol="http(s)" />
+                                            else if (redirectAfterApiLogin.hasData('protocol') && redirectAfterApiLogin.match(/^http/)) {
+                                                // <input type="hidden" value="http://redirect-to-another-server.com/with/protocol" data-protocol="https" />
+                                                if (redirectAfterApiLogin.match(/^https:/) && redirectAfterApiLogin.data('protocol') != 'https')
+                                                    redirectAfterApiLogin = redirectAfterApiLogin.replace(/^https:/, 'http:');
+                                                // <input type="hidden" value="https://redirect-to-another-server.com/with/protocol" data-protocol="http" />
+                                                else if (redirectAfterApiLogin.match(/^http:/) && redirectAfterApiLogin.data('protocol') != 'http')
+                                                    redirectAfterApiLogin = redirectAfterApiLogin.replace(/^http:/, 'https:');
+                                            window.location.href = redirectAfterApiLogin;
+                                        }
+                                        location.reload();
+                                    }
+                                }
                             });
-                        }
+                        });
                     });
-                });
+                }
             });
 
             function sfLoginForm($form, callback){
@@ -104,7 +130,7 @@ $.ajax({
             }
         });
     } else {
-        window.console.log("Please set oauth_client_id, oauth_client_secret and oauth_loginform_id in parameters.yml for xrowrest.js.");
+        window.console.log("Please set oauth_client_id, oauth_client_secret in parameters.yml for xrowrest.js.");
     }
 }).fail(function (jqXHR) {
     window.console.log("An unexpeded error occured: " + jqXHR.statusText + ", HTTP Code " + jqXHR.status + ":xrjs2.");
