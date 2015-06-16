@@ -2,7 +2,7 @@
 
 namespace xrow\restBundle\Entity;
 
-use Symfony\Component\Security\Core\User\User;
+use Symfony\Component\Security\Core\User\User as SecurityUser;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
@@ -11,7 +11,7 @@ use Doctrine\ORM\Mapping as ORM;
 * @ORM\Table(name="api_Users")
 * @ORM\Entity(repositoryClass="xrow\restBundle\Repository\UserRepository")
 */
-class User extends User
+class User extends SecurityUser
 {
     /**
     * @ORM\Column(type="string", length=25, unique=true)
