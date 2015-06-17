@@ -14,14 +14,13 @@ $.ajax({
     url     : '/getparams/client',
 }).done(function (data) {
     // if required data is set
-    if (typeof data.client_id != "undefined" && typeof data.client_secret != "undefined" && typeof data.loginform_id != "undefined") {
+    if (typeof data.client_id != "undefined" && typeof data.client_secret != "undefined") {
         var settings = {"client_id": data.client_id,
                         "client_secret": data.client_secret,
                         "tokenURL": "/oauth/v2/token",
                         "authURL": "/xrowapi/v1/auth",
                         "apiUserURL": "/xrowapi/v1/user",
                         "apiLogoutURL": "/xrowapi/v1/logout"},
-            loginform_id = data.loginform_id,
             callbackFunctionIfTokenIsSet = data.callbackFunctionIfTokenIsSet;
         require(["jso/jso"], function(JSO) {
             var jsoObj = new JSO({
@@ -30,11 +29,11 @@ $.ajax({
                 authorization: settings.authURL
             });
             JSO.enablejQuery($);
-            if(callbackFunctionIfTokenIsSet != '') {
-               if (typeof window[callbackFunctionIfTokenIsSet] == "function" ) {
-                   var token = jsoObj.checkToken();
-                   if(typeof token === "object" && token !== null) {
-                       if(token.access_token) {
+            var token = jsoObj.checkToken();
+            if (token !== null) {
+                if (token.access_token) {
+                    if(callbackFunctionIfTokenIsSet != '') {
+                        if (typeof window[callbackFunctionIfTokenIsSet] == "function" ) {
                            window[callbackFunctionIfTokenIsSet](jsoObj, settings);
                        }
                    }
@@ -49,37 +48,48 @@ $.ajax({
              */
             $(document).ready(function(){
                 if ($('form.use-api-login').length) {
-                    $('form.use-api-login').each(loginForm, function() {
-                        loginForm.submit(function(e){
+                    $('form.use-api-login').each(function() {
+                        $(this).submit(function(e){
                             e.preventDefault();
-                            sfLoginForm($(this), function(getTokenData){
+                            var loginForm = $(this),
+                                counterGetToken = 0;
+                            sfLoginForm(loginForm, function(getTokenData){
                                 if (typeof getTokenData === "string") {
                                     var queryHash = "#" + getTokenData.split("?"); 
-                                    jsoObj.callback(queryHash);
+                                    jsoObj.callback(queryHash, false);
                                 }
-                                var token = jsoObj.checkToken();
-                                if (token !== null) {
-                                    if (typeof token.access_token != "undefined") {
-                                        var redirectAfterApiLoginObject = loginForm.find('input[name="redirectAfterApiLogin"]');
-                                        if (redirectAfterApiLoginObject.length) {
-                                            var redirectAfterApiLogin = redirectAfterApiLoginObject.val();
-                                            // if value of redirect does not have /
-                                            if (!redirectAfterApiLogin.match(/^http/) && !redirectAfterApiLogin.match(/^\//))
-                                                redirectAfterApiLogin = '/'+redirectAfterApiLogin;
-                                            // <input type="hidden" value="/redirect/onthis/server/with/ssl" data-protocol="https" />
-                                            if (redirectAfterApiLogin.hasData('protocol') && !redirectAfterApiLogin.match(/^http/))
-                                                redirectAfterApiLogin = redirectAfterApiLogin.data('protocol')+'//'+document.location.hostname+redirectAfterApiLogin;
-                                            // <input type="hidden" value="http(s)://redirect-to-another-server.com/with/protocol" data-protocol="http(s)" />
-                                            else if (redirectAfterApiLogin.hasData('protocol') && redirectAfterApiLogin.match(/^http/)) {
-                                                // <input type="hidden" value="http://redirect-to-another-server.com/with/protocol" data-protocol="https" />
-                                                if (redirectAfterApiLogin.match(/^https:/) && redirectAfterApiLogin.data('protocol') != 'https')
-                                                    redirectAfterApiLogin = redirectAfterApiLogin.replace(/^https:/, 'http:');
-                                                // <input type="hidden" value="https://redirect-to-another-server.com/with/protocol" data-protocol="http" />
-                                                else if (redirectAfterApiLogin.match(/^http:/) && redirectAfterApiLogin.data('protocol') != 'http')
-                                                    redirectAfterApiLogin = redirectAfterApiLogin.replace(/^http:/, 'https:');
-                                            window.location.href = redirectAfterApiLogin;
+                                if (counterGetToken == 0) {
+                                    counterGetToken++;
+                                    var token = jsoObj.checkToken();
+                                    if (token !== null) {
+                                        if (typeof token.access_token != "undefined") {
+                                            var redirectAfterApiLoginObject = loginForm.find('input[name="redirectAfterApiLogin"]');
+                                            if (redirectAfterApiLoginObject.length) {
+                                                var redirectAfterApiLogin = redirectAfterApiLoginObject.val();
+                                                // if value of redirect does not have /
+                                                if (!redirectAfterApiLogin.match(/^http/) && !redirectAfterApiLogin.match(/^\//))
+                                                    redirectAfterApiLogin = '/'+redirectAfterApiLogin;
+                                                // <input type="hidden" value="/redirect/onthis/server/with/ssl" data-protocol="https" />
+                                                if (redirectAfterApiLoginObject.data('protocol') && !redirectAfterApiLogin.match(/^http/))
+                                                    redirectAfterApiLogin = redirectAfterApiLoginObject.data('protocol')+'//'+document.location.hostname+redirectAfterApiLogin;
+                                                // <input type="hidden" value="http(s)://redirect-to-another-server.com/with/protocol" data-protocol="http(s)" />
+                                                else if (redirectAfterApiLoginObject.data('protocol') && redirectAfterApiLogin.match(/^http/)) {
+                                                    // <input type="hidden" value="http://redirect-to-another-server.com/with/protocol" data-protocol="https" />
+                                                    if (redirectAfterApiLogin.match(/^https:/) && redirectAfterApiLoginObject.data('protocol') != 'https')
+                                                        redirectAfterApiLogin = redirectAfterApiLogin.replace(/^https:/, 'http:');
+                                                    // <input type="hidden" value="https://redirect-to-another-server.com/with/protocol" data-protocol="http" />
+                                                    else if (redirectAfterApiLogin.match(/^http:/) && redirectAfterApiLoginObject.data('protocol') != 'http')
+                                                        redirectAfterApiLogin = redirectAfterApiLogin.replace(/^http:/, 'https:');
+                                                }
+                                                // <input type="hidden" value="/redirect/onthis/server" />
+                                                if (!redirectAfterApiLogin.match(/^http/))
+                                                    redirectAfterApiLogin = document.location.protocol+'//'+document.location.hostname+redirectAfterApiLogin;
+                                                window.location.href = redirectAfterApiLogin;
+                                            }
+                                            else {
+                                                location.reload();
+                                            }
                                         }
-                                        location.reload();
                                     }
                                 }
                             });
@@ -114,7 +124,7 @@ $.ajax({
                     } else {
                         if(typeof requestData.responseJSON != "undefined") {
                             if (typeof requestData.responseJSON.error_description != "undefined") 
-                                alert(requestData.responseJSON.error_description);
+                                window.console.log(requestData.responseJSON.error_description);
                         }
                         else
                             window.console.log("An unexpeded error occured xrjs0.");
@@ -122,7 +132,7 @@ $.ajax({
                 }).fail(function (jqXHR) {
                     if(typeof jqXHR.responseJSON != "undefined") {
                         if (typeof jqXHR.responseJSON.error_description != "undefined") 
-                            alert(jqXHR.responseJSON.error_description);
+                            window.console.log(jqXHR.responseJSON.error_description);
                     }
                     else
                         window.console.log("An unexpeded error occured: " + jqXHR.statusText + ", HTTP Code " + jqXHR.status + ":xrjs1.");

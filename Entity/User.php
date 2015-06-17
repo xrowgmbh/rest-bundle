@@ -14,21 +14,21 @@ use Doctrine\ORM\Mapping as ORM;
 class User implements UserInterface
 {
     /**
-    * @ORM\Column(type="integer")
-    * @ORM\Id
-    * @ORM\GeneratedValue(strategy="AUTO")
-    */
-    private $id;
+     * @ORM\Column(type="integer")
+     * @ORM\Id
+     * @ORM\GeneratedValue(strategy="AUTO")
+     */
+    protected $id;
 
     /**
-    * @ORM\Column(type="string", length=25, unique=true)
-    */
-    private $username;
+     * @ORM\Column(type="string", length=25, unique=true)
+     */
+    protected $username;
 
     /**
-    * @ORM\Column(type="string", length=25, unique=true)
-    */
-    private $crmuserId;
+     * @ORM\Column(type="string", length=25, unique=true)
+     */
+    protected $crmuserId;
 
     public function __construct($crmuserId)
     {
@@ -85,8 +85,8 @@ class User implements UserInterface
     }
 
     /**
-    * @inheritDoc
-    */
+     * @inheritDoc
+     */
     public function getRoles()
     {
         return array('ROLE_OAUTH_USER', 'ROLE_USER');
@@ -98,9 +98,40 @@ class User implements UserInterface
     }
 
     /**
-    * @inheritDoc
-    */
+     * @inheritDoc
+     */
     public function eraseCredentials()
+    {
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function isAccountNonExpired()
+    {
+        return true;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function isAccountNonLocked()
+    {
+        return true;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function isCredentialsNonExpired()
+    {
+        return true;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function isEnabled()
     {
         return true;
     }
