@@ -2,6 +2,9 @@
 
 namespace xrow\restBundle\Controller;
 
+use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
+use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
+
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 use Symfony\Component\HttpFoundation\Request;
@@ -12,14 +15,21 @@ use Symfony\Component\Security\Core\Exception\AuthenticationException;
 use Symfony\Component\Security\Core\SecurityContextInterface;
 use Symfony\Component\Security\Core\Authentication\Token\AnonymousToken;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+
 use FOS\OAuthServerBundle\Security\Authentication\Token\OAuthToken;
 use FOS\OAuthServerBundle\Model\AccessTokenInterface;
+
 use OAuth2\OAuth2;
 use OAuth2\OAuth2AuthenticateException;
+
 use xrow\restBundle\CRM\LoadCRMPlugin;
 use xrow\restBundle\Entity\User as APIUser;
+
 use eZ\Publish\Core\MVC\Symfony\Event\InteractiveLoginEvent;
 
+/**
+ * @Route("/xrowapi/v1")
+ */
 class ApiController extends Controller
 {
     /**
@@ -63,7 +73,9 @@ class ApiController extends Controller
     }
 
     /**
-     *
+     * @Route("/auth")
+     * @Method({"GET", "POST"})
+     * 
      * @param Request $request
      * @throws AccessDeniedException
      */
@@ -148,6 +160,8 @@ class ApiController extends Controller
     }
 
     /**
+     * @Route("/user")
+     * @Method({"GET", "PATCH"})
      * 
      * @param Request $request
      * @throws AccessDeniedException
@@ -163,7 +177,13 @@ class ApiController extends Controller
                         'error_type' => 'NOUSER',
                         'error_description' => 'This user does not have access to this section.'), 403);
             }
-            $CRMUser = $this->crmPluginClassObject->getUser($user);
+            $httpMethod = $request->getMethod();
+            if ($httpMethod == 'GET') {
+                $CRMUser = $this->crmPluginClassObject->getUser($user);
+            }
+            elseif ($httpMethod == 'PATCH') {
+                $CRMUser = $this->crmPluginClassObject->updateUser($user, $request);
+            }
             if($CRMUser) {
                 return new JsonResponse(array(
                             'result' => $CRMUser,
@@ -184,6 +204,8 @@ class ApiController extends Controller
     }
 
     /**
+     * @Route("/account")
+     * @Method({"GET"})
      * 
      * @param Request $request
      * @return \Symfony\Component\HttpFoundation\JsonResponse
@@ -219,6 +241,8 @@ class ApiController extends Controller
     }
 
     /**
+     * @Route("/subscriptions")
+     * @Method({"GET"})
      * 
      * @param Request $request
      * @throws AccessDeniedException
@@ -255,6 +279,52 @@ class ApiController extends Controller
     }
 
     /**
+     * @Route("/chekpassword")
+     * @Method({"GET"})
+     * 
+     * @param Request $request
+     * @throws AccessDeniedException
+     * @return \Symfony\Component\HttpFoundation\JsonResponse
+     */
+    public function checkPasswordAction(Request $request)
+    {
+        try {
+            $user = $this->checkAccessGranted($request);
+            if (!$user instanceof APIUser) {
+                return new JsonResponse(array(
+                    'error' => 'invalid_grant',
+                    'error_type' => 'NOUSER',
+                    'error_description' => 'This user does not have access to this section.'), 403);
+            }
+            $username = $request->get('username', null);
+            $password = $request->get('password', null);
+            if ($username !== null && $password !== null) {
+                $loginData = array('username' => $username, 
+                                   'password' => $password);
+                $return = $this->crmPluginClassObject->checkPassword($loginData);
+                if($this->crmPluginClassObject->checkPassword($loginData) === true) {
+                    return new JsonResponse(array(
+                        'result' => true,
+                        'type' => 'CONTENT',
+                        'message' => 'User data'));
+                }
+            }
+            return new JsonResponse(array(
+                'result' => null,
+                'type' => 'NOCONTENT',
+                'message' => 'User not found'), 204);
+        } catch (AuthenticationException $e) {
+            $exception = $this->errorHandling($e);
+            return new JsonResponse(array(
+                'error' => $exception['error'],
+                'error_type' => $exception['type'],
+                'error_description' => $exception['error_description']), $exception['httpCode']);
+        }
+    }
+
+    /**
+     * @Route("/logout")
+     * @Method({"GET"})
      * 
      * @return \Symfony\Component\HttpFoundation\JsonResponse
      */
