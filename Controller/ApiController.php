@@ -46,19 +46,15 @@ class ApiController extends Controller
     protected $serverService;
 
     /**
-     * @param \Symfony\Component\DependencyInjection\ContainerInterface                      $container
-     * @param \Symfony\Component\Security\Core\SecurityContextInterface                      $securityContext       The security context.
-     * @param \Symfony\Component\Security\Core\Authentication\AuthenticationManagerInterface $authenticationManager The authentication manager.
-     * @param \OAuth2\OAuth2                                                                 $serverService
+     * @param \Symfony\Component\DependencyInjection\ContainerInterface $container
      */
-    public function __construct(ContainerInterface $container, SecurityContextInterface $securityContext, AuthenticationManagerInterface $authenticationManager, OAuth2 $serverService)
+    public function __construct(ContainerInterface $container)
     {
         $this->container = $container;
-        $crmClassName = $this->container->getParameter('xrow_rest.plugins.crmclass');
-        $this->crmPluginClassObject = new $crmClassName();
-        $this->securityContext = $securityContext;
-        $this->authenticationManager = $authenticationManager;
-        $this->serverService = $serverService;
+        $this->crmPluginClassObject = $this->container->get('xrow_rest.crm.plugin');
+        $this->securityContext = $this->container->get('security.context');
+        $this->authenticationManager = $this->container->get('security.authentication.manager');
+        $this->serverService = $this->container->get('fos_oauth_server.server');
     }
 
     /**

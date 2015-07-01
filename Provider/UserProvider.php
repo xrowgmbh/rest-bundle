@@ -12,23 +12,39 @@ use Doctrine\ORM\NoResultException;
 
 class UserProvider implements UserProviderInterface
 {
-    public $userRepository;
+    /**
+     * @var \Symfony\Component\DependencyInjection\ContainerInterface
+     */
     protected $container;
+
+    /**
+     * @var \xrow\restBundle\CRM\CRMPluginInterface
+     */
     protected $crmPluginClassObject;
 
     /**
-     * 
+     * @var Doctrine\Common\Persistence\ObjectRepository
+     */
+    protected $userRepository;
+
+    /**
      * @param \Symfony\Component\DependencyInjection\ContainerInterface $container
      * @param \Doctrine\Common\Persistence\ObjectRepository $userRepository
      */
     public function __construct(ContainerInterface $container, ObjectRepository $userRepository){
         $this->container = $container;
-        $crmClassName = $this->container->getParameter('xrow_rest.plugins.crmclass');
-        $this->crmPluginClassObject = new $crmClassName();
+        $this->crmPluginClassObject = $this->container->get('xrow_rest.crm.plugin');
         $this->userRepository = $userRepository;
-        $this->crmPluginClassObject->connect($this->container);
     }
 
+    /**
+     * Get user with username and password
+     * 
+     * @param string $username
+     * @param string $password
+     * @throws UsernameNotFoundException
+     * @return \xrow\restBundle\Entity\User
+     */
     public function loadUserFromCRM($username, $password)
     {
         try {

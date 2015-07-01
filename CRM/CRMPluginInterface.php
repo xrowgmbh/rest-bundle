@@ -12,9 +12,9 @@ interface CRMPluginInterface
 
     public function getSubscriptions($user);
 
+    public function getSubscription($user, $subscriptionId);
+
     public function checkPassword($loginData);
 
     public function updateUser($user, $newData);
-
-    public function getSubscription($user, $subscriptionId);
 }

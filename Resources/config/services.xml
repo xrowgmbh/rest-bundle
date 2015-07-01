@@ -27,12 +27,9 @@
 
         <service id="xrow_rest.controller.api" class="xrow\restBundle\Controller\ApiController">
             <argument type="service" id="service_container" />
-            <argument type="service" id="security.context"/>
-            <argument type="service" id="security.authentication.manager" />
-            <argument type="service" id="fos_oauth_server.server" />
         </service>
 
-        <service id="xrow_rest.controller.get_params" class="xrow\restBundle\Controller\GetRequiredParamsController">
+        <service id="xrow_rest.crm.plugin" class="%xrow_rest.plugins.crmclass%">
             <argument type="service" id="service_container" />
         </service>
 
