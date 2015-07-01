@@ -9,9 +9,10 @@
  * -> parameters.yml
  *        oauth_callback_function_if_token_is_set: logoutUser
  */
-if (typeof oa_params_cl != "undefined" && typeof oa_params_clsc != "undefined") {
+if (typeof oa_params_cl != "undefined" && typeof oa_params_clsc != "undefined" && typeof oa_params_clba != "undefined") {
     var settings = {"client_id": oa_params_cl,
                     "client_secret": oa_params_clsc,
+                    "base_url": oa_params_clba,
                     "tokenURL": "/oauth/v2/token",
                     "authURL": "/xrowapi/v1/auth",
                     "apiUserURL": "/xrowapi/v1/user",
@@ -31,7 +32,7 @@ if (typeof oa_params_cl != "undefined" && typeof oa_params_clsc != "undefined") 
             if (token.access_token) {
                 if(callbackFunctionIfTokenIsSet != '') {
                     if (typeof window[callbackFunctionIfTokenIsSet] == "function" ) {
-                       window[callbackFunctionIfTokenIsSet](jsoObj, settings);
+                       window[callbackFunctionIfTokenIsSet](jsoObj, settings,token.access_token);
                    }
                }
            }
