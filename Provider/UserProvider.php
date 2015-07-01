@@ -2,23 +2,31 @@
 
 namespace xrow\restBundle\Provider;
 
+use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
 use Symfony\Component\Security\Core\User\UserProviderInterface;
 use Symfony\Component\Security\Core\Exception\UsernameNotFoundException;
 use Symfony\Component\Security\Core\Exception\UnsupportedUserException;
 use Doctrine\Common\Persistence\ObjectRepository;
 use Doctrine\ORM\NoResultException;
-use xrow\restBundle\CRM\LoadCRMPlugin;
 
 class UserProvider implements UserProviderInterface
 {
     public $userRepository;
+    protected $container;
     protected $crmPluginClassObject;
 
-    public function __construct(ObjectRepository $userRepository, LoadCRMPlugin $loadCRMPlugin){
+    /**
+     * 
+     * @param \Symfony\Component\DependencyInjection\ContainerInterface $container
+     * @param \Doctrine\Common\Persistence\ObjectRepository $userRepository
+     */
+    public function __construct(ContainerInterface $container, ObjectRepository $userRepository){
+        $this->container = $container;
+        $crmClassName = $this->container->getParameter('xrow_rest.plugins.crmclass');
+        $this->crmPluginClassObject = new $crmClassName();
         $this->userRepository = $userRepository;
-        $this->crmPluginClassObject = $loadCRMPlugin->crmPluginClass;
-        $this->crmPluginClassObject->connect($loadCRMPlugin->container);
+        $this->crmPluginClassObject->connect($this->container);
     }
 
     public function loadUserFromCRM($username, $password)

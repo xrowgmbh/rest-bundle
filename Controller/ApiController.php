@@ -2,9 +2,6 @@
 
 namespace xrow\restBundle\Controller;
 
-use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
-use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
-
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 use Symfony\Component\HttpFoundation\Request;
@@ -22,21 +19,12 @@ use FOS\OAuthServerBundle\Model\AccessTokenInterface;
 use OAuth2\OAuth2;
 use OAuth2\OAuth2AuthenticateException;
 
-use xrow\restBundle\CRM\LoadCRMPlugin;
 use xrow\restBundle\Entity\User as APIUser;
 
 use eZ\Publish\Core\MVC\Symfony\Event\InteractiveLoginEvent;
 
-/**
- * @Route("/xrowapi/v1")
- */
 class ApiController extends Controller
 {
-    /**
-     * @var xrow\restBundle\CRM\LoadCRMPlugin
-     */
-    protected $crmPluginClassObject;
-
     /**
      * @var \Symfony\Component\DependencyInjection\ContainerInterface
      */
@@ -58,23 +46,23 @@ class ApiController extends Controller
     protected $serverService;
 
     /**
-     * @param xrow\restBundle\CRM\LoadCRMPlugin                                             $loadCRMPlugin
+     * @param \Symfony\Component\DependencyInjection\ContainerInterface                      $container
      * @param \Symfony\Component\Security\Core\SecurityContextInterface                      $securityContext       The security context.
      * @param \Symfony\Component\Security\Core\Authentication\AuthenticationManagerInterface $authenticationManager The authentication manager.
      * @param \OAuth2\OAuth2                                                                 $serverService
      */
-    public function __construct(LoadCRMPlugin $loadCRMPlugin, SecurityContextInterface $securityContext, AuthenticationManagerInterface $authenticationManager, OAuth2 $serverService)
+    public function __construct(ContainerInterface $container, SecurityContextInterface $securityContext, AuthenticationManagerInterface $authenticationManager, OAuth2 $serverService)
     {
-        $this->crmPluginClassObject = $loadCRMPlugin->crmPluginClass;
-        $this->container = $loadCRMPlugin->container;
+        $this->container = $container;
+        $crmClassName = $this->container->getParameter('xrow_rest.plugins.crmclass');
+        $this->crmPluginClassObject = new $crmClassName();
         $this->securityContext = $securityContext;
         $this->authenticationManager = $authenticationManager;
         $this->serverService = $serverService;
     }
 
     /**
-     * @Route("/auth")
-     * @Method({"GET", "POST"})
+     * For authentication of an user
      * 
      * @param Request $request
      * @throws AccessDeniedException
@@ -160,8 +148,7 @@ class ApiController extends Controller
     }
 
     /**
-     * @Route("/user")
-     * @Method({"GET", "PATCH"})
+     * Get or update user data
      * 
      * @param Request $request
      * @throws AccessDeniedException
@@ -204,8 +191,7 @@ class ApiController extends Controller
     }
 
     /**
-     * @Route("/account")
-     * @Method({"GET"})
+     * Get account data
      * 
      * @param Request $request
      * @return \Symfony\Component\HttpFoundation\JsonResponse
@@ -241,8 +227,7 @@ class ApiController extends Controller
     }
 
     /**
-     * @Route("/subscriptions")
-     * @Method({"GET"})
+     * Get subscriptions
      * 
      * @param Request $request
      * @throws AccessDeniedException
@@ -279,8 +264,7 @@ class ApiController extends Controller
     }
 
     /**
-     * @Route("/chekpassword")
-     * @Method({"GET"})
+     * Check password to allow an update of portal_profile_data
      * 
      * @param Request $request
      * @throws AccessDeniedException
@@ -323,8 +307,7 @@ class ApiController extends Controller
     }
 
     /**
-     * @Route("/logout")
-     * @Method({"GET"})
+     * Logout user
      * 
      * @return \Symfony\Component\HttpFoundation\JsonResponse
      */
@@ -350,6 +333,7 @@ class ApiController extends Controller
     }
 
     /**
+     * Check the access token
      * 
      * @param Request $request
      * @throws AccessDeniedException
@@ -380,6 +364,7 @@ class ApiController extends Controller
     }
 
     /**
+     * Get the right error message and code
      * 
      * @param unknown $e
      * @return array $result

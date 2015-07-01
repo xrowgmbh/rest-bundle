@@ -1,0 +1,35 @@
+xrow_rest_api_auth:
+    path:   /auth
+    defaults: 
+        _controller: xrow_rest.controller.api:setAuthenticationAction
+    methods: [GET|POST]
+
+xrowapi_user:
+    path:   /user
+    defaults: 
+        _controller: xrow_rest.controller.api:getUserAction
+    methods: [GET|PATCH]
+
+xrowapi_account:
+    path:   /account
+    defaults:
+        _controller: xrow_rest.controller.api:getAccountAction
+    methods: [GET]
+
+xrowapi_subscriptions:
+    path:   /subscriptions
+    defaults:
+        _controller: xrow_rest.controller.api:getSubscriptionsAction
+    methods: [GET]
+
+xrowapi_chekpassword:
+    path:   /chekpassword
+    defaults:
+        _controller: xrow_rest.controller.api:checkPasswordAction
+    methods: [GET]
+
+xrowapi_logout:
+    path:   /logout
+    defaults:
+        _controller: xrow_rest.controller.api:logoutAction
+    methods: [GET]
