@@ -276,13 +276,11 @@ class ApiController extends Controller
                     'error_type' => 'NOUSER',
                     'error_description' => 'This user does not have access to this section.'), 403);
             }
-            $username = $request->get('username', null);
-            $password = $request->get('password', null);
-            if ($username !== null && $password !== null) {
-                $loginData = array('username' => $username, 
-                                   'password' => $password);
-                $return = $this->crmPluginClassObject->checkPassword($loginData);
-                if($this->crmPluginClassObject->checkPassword($loginData) === true) {
+            $edituser = $request->get('edituser', null);
+            if (isset($edituser['username']) && isset($edituser['password']) && trim($edituser['username']) != '' && trim($edituser['password']) != '') {
+                $loginData = array('username' => $edituser['username'], 
+                                   'password' => $edituser['password']);
+                if ($this->crmPluginClassObject->checkPassword($loginData) === true) {
                     return new JsonResponse(array(
                         'result' => true,
                         'type' => 'CONTENT',

@@ -22,8 +22,8 @@ xrowapi_subscriptions:
         _controller: xrow_rest.controller.api:getSubscriptionsAction
     methods: [GET]
 
-xrowapi_chekpassword:
-    path:   /chekpassword
+xrowapi_checkpassword:
+    path:   /checkpassword
     defaults:
         _controller: xrow_rest.controller.api:checkPasswordAction
     methods: [GET]
