@@ -4,7 +4,7 @@ namespace xrow\restBundle\Storage;
 
 header("Access-Control-Allow-Origin: *", true );
 header("Access-Control-Allow-Credentials: true", true );
-header("Access-Control-Allow-Methods: GET, POST, OPTIONS", true );
+header("Access-Control-Allow-Methods: GET, POST, OPTIONS, PATCH", true );
 header("Access-Control-Expose-Headers: Content-Type", true );
 
 use FOS\OAuthServerBundle\Model\AccessTokenManagerInterface;
