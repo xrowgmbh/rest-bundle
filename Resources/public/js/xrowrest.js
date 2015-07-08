@@ -106,13 +106,13 @@ if (typeof oa_params_cl != "undefined" && typeof oa_params_clsc != "undefined" &
             request.client_secret = settings.client_secret;
             $.ajax({
                 type    : 'post',
-                url     : settings.tokenURL,
+                url     : settings.base_url+settings.tokenURL,
                 data    : request
             }).done(function (requestData) {
                 if(typeof requestData.access_token != "undefined") {
                     $.ajax({
                         type    : 'post',
-                        url     : settings.authURL+'?access_token='+requestData.access_token,
+                        url     : settings.base_url+settings.authURL+'?access_token='+requestData.access_token,
                         async   : false
                     }).done(function (data) {
                         jsoObj.getToken(function(data) {

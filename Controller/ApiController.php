@@ -260,6 +260,49 @@ class ApiController extends Controller
     }
 
     /**
+     * Get subscription
+     *
+     * @param Request $request $subscriptionId
+     * @throws AccessDeniedException
+     * @return \Symfony\Component\HttpFoundation\JsonResponse
+     */
+    public function getSubscriptionAction(Request $request, $subscriptionId)
+    {
+        try {
+            $user = $this->checkAccessGranted($request);
+            if (!$user instanceof APIUser) {
+                return new JsonResponse(array(
+                    'error' => 'invalid_grant',
+                    'error_type' => 'NOUSER',
+                    'error_description' => 'This user does not have access to this section.'), 403);
+            }
+            $httpMethod = $request->getMethod();
+            if ($httpMethod == 'GET') {
+                $CRMUserSubscription = $this->crmPluginClassObject->getSubscription($user, $subscriptionId);
+            }
+            elseif ($httpMethod == 'PATCH') {
+                $CRMUserSubscription = $this->crmPluginClassObject->updateSubscription($user, $request);
+            }
+            if($CRMUserSubscription) {
+                return new JsonResponse(array(
+                    'result' => $CRMUserSubscription,
+                    'type' => 'CONTENT',
+                    'message' => 'User subscription'));
+            }
+            return new JsonResponse(array(
+                'result' => null,
+                'type' => 'NOCONTENT',
+                'message' => 'User does not have subscriptions'), 204);
+        } catch (AuthenticationException $e) {
+            $exception = $this->errorHandling($e);
+            return new JsonResponse(array(
+                'error' => $exception['error'],
+                'error_type' => $exception['type'],
+                'error_description' => $exception['error_description']), $exception['httpCode']);
+        }
+    }
+
+    /**
      * Check password to allow an update of portal_profile_data
      * 
      * @param Request $request
