@@ -169,6 +169,9 @@ class OAuthStorage implements IOAuth2RefreshTokens, IOAuth2GrantUser, IOAuth2Gra
                 'data' => $user,
             );
         }
+        else {
+            throw new \OAuth2\OAuth2ServerException(\OAuth2\OAuth2::HTTP_BAD_REQUEST, \OAuth2\OAuth2::ERROR_INVALID_GRANT, $this->container->get('translator')->trans("Invalid username and password combination"));
+        }
 
         return false;
     }

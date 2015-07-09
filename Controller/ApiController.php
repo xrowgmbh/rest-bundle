@@ -45,6 +45,8 @@ class ApiController extends Controller
      */
     protected $serverService;
 
+    protected $translator;
+
     /**
      * @param \Symfony\Component\DependencyInjection\ContainerInterface $container
      */
@@ -55,6 +57,7 @@ class ApiController extends Controller
         $this->securityContext = $this->container->get('security.context');
         $this->authenticationManager = $this->container->get('security.authentication.manager');
         $this->serverService = $this->container->get('fos_oauth_server.server');
+        $this->translator = $this->container->get('translator');
     }
 
     /**
@@ -415,7 +418,7 @@ class ApiController extends Controller
             else 
                 $exception = $e->getPrevious();
             $result['error'] = $exception->getCode();
-            $result['error_description'] = $exception->getDescription();
+            $result['error_description'] = $this->translator->trans($exception->getDescription());
             $errorCode = $exception->getHttpCode();
             if($errorCode == OAuth2::HTTP_BAD_REQUEST)
                 $result['httpCode'] = 400;
@@ -429,7 +432,7 @@ class ApiController extends Controller
             }
         }
         else {
-            $result['error_description'] = $e->getMessage();
+            $result['error_description'] = $this->translator->trans($e->getMessage());
             $result['httpCode'] = $e->getCode();
         }
         return $result;

@@ -99,7 +99,7 @@ if (typeof oa_params_cl != "undefined" && typeof oa_params_clsc != "undefined" &
         function sfLoginForm($form, callback){
             var request = {"grant_type": "password",
                            "scope": "user"};
-            var errorOutputBoxId = $(this).attr('id')+'-error';
+            var errorOutputBoxId = $form.attr('id')+'-error';
             if ($('#'+errorOutputBoxId).length)
                 $('#'+errorOutputBoxId).hide();
             $.each($form.serializeArray(), function(i, field) {
@@ -139,21 +139,22 @@ if (typeof oa_params_cl != "undefined" && typeof oa_params_clsc != "undefined" &
             }).fail(function (jqXHR) {
                 if(typeof jqXHR.responseJSON != "undefined") {
                     if (typeof jqXHR.responseJSON.error_description != "undefined") {
-                        if ($('#'+errorOutputBoxId).length) {
-                            $('#'+errorOutputBoxId).text(jqXHR.responseJSON.error_description).show();
-                        }
-                        else {
-                            window.console.log(jqXHR.responseJSON.error_description);
-                        }
+                        var errortext = jqXHR.responseJSON.error_description;
+                    }
                 }
                 else {
                     var errortext = "An unexpeded error occured: " + jqXHR.statusText + ", HTTP Code " + jqXHR.status + ":xrjs1.";
+                }
+                if (typeof errortext !== 'undefined') {
                     if ($('#'+errorOutputBoxId).length) {
                         $('#'+errorOutputBoxId).text(errortext).show();
                     }
                     else {
                         window.console.log(errortext);
                     }
+                }
+                else {
+                    window.console.log('Unknowen error in xrowrest.js:', jqXHR);
                 }
             });
         }
