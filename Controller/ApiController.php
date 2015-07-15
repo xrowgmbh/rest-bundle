@@ -26,41 +26,6 @@ use eZ\Publish\Core\MVC\Symfony\Event\InteractiveLoginEvent;
 class ApiController extends Controller
 {
     /**
-     * @var \Symfony\Component\DependencyInjection\ContainerInterface
-     */
-    protected $container;
-
-    /**
-     * @var \Symfony\Component\Security\Core\SecurityContextInterface
-     */
-    protected $securityContext;
-    
-    /**
-     * @var \Symfony\Component\Security\Core\Authentication\AuthenticationManagerInterface
-     */
-    protected $authenticationManager;
-    
-    /**
-     * @var \OAuth2\OAuth2
-     */
-    protected $serverService;
-
-    protected $translator;
-
-    /**
-     * @param \Symfony\Component\DependencyInjection\ContainerInterface $container
-     */
-    public function __construct(ContainerInterface $container)
-    {
-        $this->container = $container;
-        $this->crmPluginClassObject = $this->container->get('xrow_rest.crm.plugin');
-        $this->securityContext = $this->container->get('security.context');
-        $this->authenticationManager = $this->container->get('security.authentication.manager');
-        $this->serverService = $this->container->get('fos_oauth_server.server');
-        $this->translator = $this->container->get('translator');
-    }
-
-    /**
      * For authentication of an user
      * 
      * @param Request $request
@@ -70,26 +35,26 @@ class ApiController extends Controller
     {
         $user = false;
         try {
-            $oauthToken = $this->securityContext->getToken();
+            $oauthToken = $this->get('security.context')->getToken();
             if ($oauthToken instanceof AnonymousToken) {
-                $oauthTokenString = $this->serverService->getBearerToken($request, true);
+                $oauthTokenString = $this->get('fos_oauth_server.server')->getBearerToken($request, true);
                 $oauthToken = new OAuthToken();
                 $oauthToken->setToken($oauthTokenString);
                 if ($oauthToken instanceof OAuthToken) {
                     $tokenString = $oauthToken->getToken();
-                    $returnValue = $this->authenticationManager->authenticate($oauthToken);
+                    $returnValue = $this->get('security.authentication.manager')->authenticate($oauthToken);
                     if ($returnValue instanceof TokenInterface) {
                         $session = $request->getSession();
                         if ($session->isStarted() === false) {
                             $session->start();
                         }
-                        $this->securityContext->setToken($returnValue);
+                        $this->get('security.context')->setToken($returnValue);
                         // login new eZ User: siehe Bemerkung in der Funktion loginAPIUser
                         #$this->loginAPIUser($request, $returnValue);
                     }
                 }
             }
-            $oauthToken = $this->securityContext->getToken();
+            $oauthToken = $this->get('security.context')->getToken();
             if ($oauthToken instanceof OAuthToken) {
                 $user = $oauthToken->getUser();
                 if (!$user instanceof APIUser) {
@@ -115,7 +80,7 @@ class ApiController extends Controller
     /**
      * Problem: der eZ User hat nicht die Daten des SF-Users. 
      * Das muss noch mal etwas überdacht werden und dann erst darf der 
-     * neue "zusammengelegte" User mit $this->securityContext->setUser($user) auch gesetzt werden
+     * neue "zusammengelegte" User mit $this->get('security.context')->setUser($user) auch gesetzt werden
      * 
      * @param Symfony\Component\HttpFoundation\Request $request
      * @param Symfony\Component\Security\Core\Authentication\Token\TokenInterface $returnValue
@@ -123,10 +88,10 @@ class ApiController extends Controller
     function loginAPIUser($request, $returnValue)
     {
         // Get eZUserID from user with read-rights
-        $eZUserID = $this->container->getParameter('eZUserWithAbo');
+        $eZUserID = $this->getParameter('eZUserWithAbo');
         // Get some eZ services
-        $repository = $this->container->get('ezpublish.api.repository');
-        $legacyKernel = $this->container->get('ezpublish_legacy.kernel');
+        $repository = $this->get('ezpublish.api.repository');
+        $legacyKernel = $this->get('ezpublish_legacy.kernel');
         // Load the eZ User
         $currentEzUser = $repository->getUserService()->loadUser($eZUserID);
         // Set user in repository
@@ -165,10 +130,10 @@ class ApiController extends Controller
             }
             $httpMethod = $request->getMethod();
             if ($httpMethod == 'GET') {
-                $CRMUser = $this->crmPluginClassObject->getUser($user);
+                $CRMUser = $this->get('xrow_rest.crm.plugin')->getUser($user);
             }
             elseif ($httpMethod == 'PATCH') {
-                $CRMUser = $this->crmPluginClassObject->updateUser($user, $request);
+                $CRMUser = $this->get('xrow_rest.crm.plugin')->updateUser($user, $request);
             }
             if($CRMUser) {
                 return new JsonResponse(array(
@@ -205,7 +170,7 @@ class ApiController extends Controller
                         'error_type' => 'NOUSER',
                         'error_description' => 'This user does not have access to this section.'), 403);
             }
-            $CRMAccount = $this->crmPluginClassObject->getAccount($user);
+            $CRMAccount = $this->get('xrow_rest.crm.plugin')->getAccount($user);
             if($CRMAccount) {
                 return new JsonResponse(array(
                         'result' => $CRMAccount,
@@ -242,7 +207,7 @@ class ApiController extends Controller
                         'error_type' => 'NOUSER',
                         'error_description' => 'This user does not have access to this section.'), 403);
             }
-            $CRMUserSubscriptions = $this->crmPluginClassObject->getSubscriptions($user);
+            $CRMUserSubscriptions = $this->get('xrow_rest.crm.plugin')->getSubscriptions($user);
             if($CRMUserSubscriptions) {
                 return new JsonResponse(array(
                             'result' => $CRMUserSubscriptions,
@@ -280,12 +245,7 @@ class ApiController extends Controller
                     'error_description' => 'This user does not have access to this section.'), 403);
             }
             $httpMethod = $request->getMethod();
-            if ($httpMethod == 'GET') {
-                $CRMUserSubscription = $this->crmPluginClassObject->getSubscription($user, $subscriptionId);
-            }
-            elseif ($httpMethod == 'PATCH') {
-                $CRMUserSubscription = $this->crmPluginClassObject->updateSubscription($user, $request);
-            }
+            $CRMUserSubscription = $this->get('xrow_rest.crm.plugin')->getSubscription($user, $subscriptionId);
             if($CRMUserSubscription) {
                 return new JsonResponse(array(
                     'result' => $CRMUserSubscription,
@@ -326,7 +286,7 @@ class ApiController extends Controller
             if (isset($edituser['username']) && isset($edituser['password']) && trim($edituser['username']) != '' && trim($edituser['password']) != '') {
                 $loginData = array('username' => $edituser['username'], 
                                    'password' => $edituser['password']);
-                if ($this->crmPluginClassObject->checkPassword($loginData) === true) {
+                if ($this->get('xrow_rest.crm.plugin')->checkPassword($loginData) === true) {
                     return new JsonResponse(array(
                         'result' => true,
                         'type' => 'CONTENT',
@@ -353,10 +313,10 @@ class ApiController extends Controller
      */
     public function logoutAction(Request $request)
     {
-        $oauthTokenString = $this->serverService->getBearerToken($request, true);
+        $oauthTokenString = $this->get('fos_oauth_server.server')->getBearerToken($request, true);
         if ($oauthTokenString !== null) {
             try {
-                $accessToken = $this->serverService->verifyAccessToken($oauthTokenString);
+                $accessToken = $this->get('fos_oauth_server.server')->verifyAccessToken($oauthTokenString);
                 if ($accessToken instanceof AccessTokenInterface) {
                     $user = $accessToken->setExpiresAt(time());
                 }
@@ -364,8 +324,8 @@ class ApiController extends Controller
                 $walk = true;
             }
         }
-        $this->securityContext->setToken(null);
-        $this->container->get('session')->invalidate();
+        $this->get('security.context')->setToken(null);
+        $this->get('session')->invalidate();
         return new JsonResponse(array(
                 'result' => null,
                 'type' => 'LOGOUT',
@@ -381,11 +341,11 @@ class ApiController extends Controller
     private function checkAccessGranted(Request $request)
     {
         $user = false;
-        $oauthTokenString = $this->serverService->getBearerToken($request, true);
+        $oauthTokenString = $this->get('fos_oauth_server.server')->getBearerToken($request, true);
         if ($oauthTokenString !== null) {
             try {
                 // throw Exceptions like expired (401) or bad request (400) or forbidden (403)
-                $accessToken = $this->serverService->verifyAccessToken($oauthTokenString);
+                $accessToken = $this->get('fos_oauth_server.server')->verifyAccessToken($oauthTokenString);
                 if ($accessToken instanceof AccessTokenInterface) {
                     $user = $accessToken->getUser();
                 }
@@ -395,7 +355,7 @@ class ApiController extends Controller
         }
         else {
             // Check if user is from same domaine
-            $oauthToken = $this->securityContext->getToken();
+            $oauthToken = $this->get('security.context')->getToken();
             if ($oauthToken instanceof OAuthToken) {
                 $user = $oauthToken->getUser();
             }
@@ -418,7 +378,7 @@ class ApiController extends Controller
             else 
                 $exception = $e->getPrevious();
             $result['error'] = $exception->getCode();
-            $result['error_description'] = $this->translator->trans($exception->getDescription());
+            $result['error_description'] = $this->get('translator')->trans($exception->getDescription());
             $errorCode = $exception->getHttpCode();
             if($errorCode == OAuth2::HTTP_BAD_REQUEST)
                 $result['httpCode'] = 400;
@@ -432,7 +392,7 @@ class ApiController extends Controller
             }
         }
         else {
-            $result['error_description'] = $this->translator->trans($e->getMessage());
+            $result['error_description'] = $this->get('translator')->trans($e->getMessage());
             $result['httpCode'] = $e->getCode();
         }
         return $result;
