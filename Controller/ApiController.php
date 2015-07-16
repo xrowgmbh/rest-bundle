@@ -338,7 +338,7 @@ class ApiController extends Controller
      * @param Request $request
      * @throws AccessDeniedException
      */
-    private function checkAccessGranted(Request $request)
+    public function checkAccessGranted(Request $request)
     {
         $user = false;
         $oauthTokenString = $this->get('fos_oauth_server.server')->getBearerToken($request, true);
