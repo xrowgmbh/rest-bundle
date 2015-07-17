@@ -12,6 +12,7 @@ use Symfony\Component\Security\Core\Exception\AuthenticationException;
 use Symfony\Component\Security\Core\SecurityContextInterface;
 use Symfony\Component\Security\Core\Authentication\Token\AnonymousToken;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use Symfony\Component\HttpFoundation\Session\Session;
 
 use FOS\OAuthServerBundle\Security\Authentication\Token\OAuthToken;
 use FOS\OAuthServerBundle\Model\AccessTokenInterface;
@@ -151,6 +152,39 @@ class ApiController extends Controller
                     'error' => $exception['error'],
                     'error_type' => $exception['type'],
                     'error_description' => $exception['error_description']), $exception['httpCode']);
+        }
+    }
+
+    /**
+     * Get session data
+     *
+     * @param Request $request
+     * @return \Symfony\Component\HttpFoundation\JsonResponse
+     */
+    public function getSessionAction(Request $request)
+    {
+        try {
+            $user = $this->checkAccessGranted($request);
+            if (!$user instanceof APIUser) {
+                return new JsonResponse(array(
+                    'error' => 'invalid_grant',
+                    'error_type' => 'NOUSER',
+                    'error_description' => 'This user does not have access to this section.'), 403);
+            }
+
+            $session = $request->getSession();
+            if ($session->isStarted() === false) {
+                $session->start();
+            }
+            
+            return new JsonResponse( array( "session_id" => $session->getId(), "session_name" => $session->getName() ) );
+
+        } catch (AuthenticationException $e) {
+            $exception = $this->errorHandling($e);
+            return new JsonResponse(array(
+                'error' => $exception['error'],
+                'error_type' => $exception['type'],
+                'error_description' => $exception['error_description']), $exception['httpCode']);
         }
     }
 

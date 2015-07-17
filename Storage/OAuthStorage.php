@@ -25,6 +25,7 @@ use OAuth2\IOAuth2GrantImplicit;
 use OAuth2\IOAuth2GrantClient;
 use OAuth2\IOAuth2GrantExtension;
 use OAuth2\Model\IOAuth2Client;
+use Symfony\Component\HttpFoundation\Session\Session;
 
 class OAuthStorage implements IOAuth2RefreshTokens, IOAuth2GrantUser, IOAuth2GrantCode, IOAuth2GrantImplicit,
     IOAuth2GrantClient, IOAuth2GrantExtension, GrantExtensionDispatcherInterface
@@ -139,7 +140,16 @@ class OAuthStorage implements IOAuth2RefreshTokens, IOAuth2GrantUser, IOAuth2Gra
         }
 
         $this->accessTokenManager->updateToken($token);
-
+        //set session UserID
+        $session = new Session();
+        // Here has to decide AboUser or normal user !
+        /* if ( $is_abo_user )
+                $_SESSION['UserID'] = $container->getParameter('eZUserWithAbo');
+            else
+                $_SESSION['UserID'] = $container->getParameter('eZUserWithoutAbo');
+        */
+        $eZUserID = "165105";
+        $session->set('UserID',$eZUserID);
         return $token;
     }
 
