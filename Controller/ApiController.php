@@ -37,6 +37,10 @@ class ApiController extends Controller
         $user = false;
         try {
             $oauthToken = $this->get('security.context')->getToken();
+            $session = $request->getSession();
+            if ($session->isStarted() === false) {
+                $session->start();
+            }
             if ($oauthToken instanceof AnonymousToken) {
                 $oauthTokenString = $this->get('fos_oauth_server.server')->getBearerToken($request, true);
                 $oauthToken = new OAuthToken();
@@ -45,13 +49,7 @@ class ApiController extends Controller
                     $tokenString = $oauthToken->getToken();
                     $returnValue = $this->get('security.authentication.manager')->authenticate($oauthToken);
                     if ($returnValue instanceof TokenInterface) {
-                        $session = $request->getSession();
-                        if ($session->isStarted() === false) {
-                            $session->start();
-                        }
                         $this->get('security.context')->setToken($returnValue);
-                        // Get subscriptions for permissions
-                        $this->getSubscriptionsAction($request);
                         // eZ legacy login does not work
                         #$this->loginAPIUser($request, $returnValue);
                     }
@@ -66,6 +64,8 @@ class ApiController extends Controller
                             'error_type' => 'NOUSER',
                             'error_description' => 'This user does not have access to this section.'), 403);
                 }
+                // Set subscriptions to session for permissions
+                $this->get('xrow_rest.crm.plugin')->getSubscriptions($user);
                 return new JsonResponse(array(
                         'result' => $user->getId(),
                         'type' => 'CONTENT',
@@ -130,7 +130,6 @@ class ApiController extends Controller
                     'error_type' => 'NOUSER',
                     'error_description' => 'This user does not have access to this section.'), 403);
             }
-
             $session = $request->getSession();
             if ($session->isStarted() === false) {
                 $session->start();
