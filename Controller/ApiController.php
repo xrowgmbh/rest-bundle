@@ -50,7 +50,9 @@ class ApiController extends Controller
                             $session->start();
                         }
                         $this->get('security.context')->setToken($returnValue);
-                        // login new eZ User: siehe Bemerkung in der Funktion loginAPIUser
+                        // Get subscriptions for permissions
+                        $this->getSubscriptionsAction($request);
+                        // eZ legacy login does not work
                         #$this->loginAPIUser($request, $returnValue);
                     }
                 }
@@ -113,6 +115,38 @@ class ApiController extends Controller
     }
 
     /**
+     * Get session data
+     *
+     * @param Request $request
+     * @return \Symfony\Component\HttpFoundation\JsonResponse
+     */
+    public function getSessionAction(Request $request)
+    {
+        try {
+            $user = $this->checkAccessGranted($request);
+            if (!$user instanceof APIUser) {
+                return new JsonResponse(array(
+                    'error' => 'invalid_grant',
+                    'error_type' => 'NOUSER',
+                    'error_description' => 'This user does not have access to this section.'), 403);
+            }
+
+            $session = $request->getSession();
+            if ($session->isStarted() === false) {
+                $session->start();
+            }
+            return new JsonResponse( array( "session_id" => $session->getId(), "session_name" => $session->getName() ) );
+
+        } catch (AuthenticationException $e) {
+            $exception = $this->errorHandling($e);
+            return new JsonResponse(array(
+                'error' => $exception['error'],
+                'error_type' => $exception['type'],
+                'error_description' => $exception['error_description']), $exception['httpCode']);
+        }
+    }
+
+    /**
      * Get or update user data
      * 
      * @param Request $request
@@ -152,39 +186,6 @@ class ApiController extends Controller
                     'error' => $exception['error'],
                     'error_type' => $exception['type'],
                     'error_description' => $exception['error_description']), $exception['httpCode']);
-        }
-    }
-
-    /**
-     * Get session data
-     *
-     * @param Request $request
-     * @return \Symfony\Component\HttpFoundation\JsonResponse
-     */
-    public function getSessionAction(Request $request)
-    {
-        try {
-            $user = $this->checkAccessGranted($request);
-            if (!$user instanceof APIUser) {
-                return new JsonResponse(array(
-                    'error' => 'invalid_grant',
-                    'error_type' => 'NOUSER',
-                    'error_description' => 'This user does not have access to this section.'), 403);
-            }
-
-            $session = $request->getSession();
-            if ($session->isStarted() === false) {
-                $session->start();
-            }
-            
-            return new JsonResponse( array( "session_id" => $session->getId(), "session_name" => $session->getName() ) );
-
-        } catch (AuthenticationException $e) {
-            $exception = $this->errorHandling($e);
-            return new JsonResponse(array(
-                'error' => $exception['error'],
-                'error_type' => $exception['type'],
-                'error_description' => $exception['error_description']), $exception['httpCode']);
         }
     }
 
