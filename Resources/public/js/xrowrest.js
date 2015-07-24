@@ -28,11 +28,21 @@ if (typeof oa_params_cl != "undefined" && typeof oa_params_clsc != "undefined" &
         });
         JSO.enablejQuery($);
         var token = jsoObj.checkToken();
+        // If login was via php
+        if (token === null) {
+            if ($('#ahash').length) {
+                jsoObj.providerID = settings.authURL + '|' + settings.client_id;
+                jsoObj.state = "user";
+                var queryHash = "#access_token="+$('#ahash').val();
+                jsoObj.callback(queryHash, false);
+                var token = jsoObj.checkToken();
+            }
+        }
         if (token !== null) {
             if (token.access_token) {
                 if(callbackFunctionIfTokenIsSet != '') {
                     if (typeof window[callbackFunctionIfTokenIsSet] == "function" ) {
-                       window[callbackFunctionIfTokenIsSet](jsoObj, settings,token.access_token);
+                       window[callbackFunctionIfTokenIsSet](jsoObj, settings, token.access_token);
                    }
                }
            }

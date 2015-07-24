@@ -6,10 +6,8 @@ use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\JsonResponse;
-use Symfony\Component\Security\Core\Authentication\AuthenticationManagerInterface;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 use Symfony\Component\Security\Core\Exception\AuthenticationException;
-use Symfony\Component\Security\Core\SecurityContextInterface;
 use Symfony\Component\Security\Core\Authentication\Token\AnonymousToken;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -42,6 +40,7 @@ class ApiController extends Controller
             }
             if ($oauthToken instanceof AnonymousToken) {
                 $oauthTokenString = $this->get('fos_oauth_server.server')->getBearerToken($request, true);
+                $session->set('access_token', $oauthTokenString);
                 $oauthToken = new OAuthToken();
                 $oauthToken->setToken($oauthTokenString);
                 if ($oauthToken instanceof OAuthToken) {
