@@ -124,7 +124,7 @@ if (typeof oa_params_cl != "undefined" && typeof oa_params_clsc != "undefined" &
                     withCredentials: true
                 },
                 crossDomain: true,
-                url        : settings.baseurl+settings.tokenURL,
+                url        : settings.base_url+settings.tokenURL,
                 data       : request
             }).done(function (requestData) {
                 if(typeof requestData.access_token != "undefined") {
@@ -135,7 +135,7 @@ if (typeof oa_params_cl != "undefined" && typeof oa_params_clsc != "undefined" &
                             withCredentials: true
                         },
                         crossDomain: true,
-                        url        : settings.baseurl+settings.authURL+"?access_token="+requestData.access_token
+                        url        : settings.base_url+settings.authURL+"?access_token="+requestData.access_token
                     }).done(function (authRequest) {
                         if (authRequest.result !== null) {
                             // Request 3 --- Session Request
@@ -145,7 +145,7 @@ if (typeof oa_params_cl != "undefined" && typeof oa_params_clsc != "undefined" &
                                     withCredentials: true
                                 },
                                 crossDomain: true,
-                                url        : settings.baseurl+settings.apiSessionURL+"?access_token="+requestData.access_token
+                                url        : settings.base_url+settings.apiSessionURL+"?access_token="+requestData.access_token
                             }).done(function(sessionRequest){
                                 document.cookie = sessionRequest.session_name+"="+sessionRequest.session_id+"; path=/";
                                 jsoObj.getToken(function(data) {
