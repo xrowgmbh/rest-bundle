@@ -15,7 +15,7 @@ if (typeof oa_params_cl != "undefined" && typeof oa_params_clsc != "undefined" &
                     "base_url": oa_params_clba,
                     "tokenURL": "/oauth/v2/token",
                     "authURL": "/xrowapi/v1/auth",
-                    "apiUserURL": "/xrowapi/v1/user",
+                    "apiSessionURL": "/xrowapi/v1/session",
                     "apiLogoutURL": "/xrowapi/v1/logout"},
         callbackFunctionIfTokenIsSet = '';
     if (typeof callbackFunctionIfToken != "undefined")
@@ -107,20 +107,42 @@ if (typeof oa_params_cl != "undefined" && typeof oa_params_clsc != "undefined" &
             });
             request.client_id = settings.client_id;
             request.client_secret = settings.client_secret;
+             // Request 1 --- AccessToken Request
             $.ajax({
-                type    : 'post',
-                url     : settings.base_url+settings.tokenURL,
-                data    : request
+                type       : 'POST',
+                xhrFields  : {
+                    withCredentials: true
+                },
+                crossDomain: true,
+                url        : settings.baseurl+settings.tokenURL,
+                data       : request
             }).done(function (requestData) {
                 if(typeof requestData.access_token != "undefined") {
+                    // Request 2 --- Authenticate Request
                     $.ajax({
-                        type    : 'post',
-                        url     : settings.base_url+settings.authURL+'?access_token='+requestData.access_token,
-                        async   : false
-                    }).done(function (data) {
-                        jsoObj.getToken(function(data) {
-                            callback(data);
-                        }, requestData);
+                        type       : 'GET',
+                        xhrFields  : {
+                            withCredentials: true
+                        },
+                        crossDomain: true,
+                        url        : settings.baseurl+settings.authURL+"?access_token="+requestData.access_token
+                    }).done(function (authRequest) {
+                        if (authRequest.result !== null) {
+                            // Request 3 --- Session Request
+                            $.ajax({
+                                type       : 'GET',
+                                xhrFields  : {
+                                    withCredentials: true
+                                },
+                                crossDomain: true,
+                                url        : settings.baseurl+settings.apiSessionURL+"?access_token="+requestData.access_token
+                            }).done(function(sessionRequest){
+                                document.cookie = sessionRequest.session_name+"="+sessionRequest.session_id+"; path=/";
+                                jsoObj.getToken(function(data) {
+                                    callback(data);
+                                }, requestData);
+                            });
+                        }
                     });
                 } else {
                     if(typeof requestData.responseJSON != "undefined") {
