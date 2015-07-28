@@ -15,6 +15,7 @@ if (typeof oa_params_cl != "undefined" && typeof oa_params_clsc != "undefined" &
                     "client_secret": oa_params_clsc,
                     "base_url": oa_params_clba,
                     "isDefault": true,
+                    "permanent_scope": true,
                     "tokenURL": "/oauth/v2/token",
                     "authURL": "/xrowapi/v1/auth",
                     "apiSessionURL": "/xrowapi/v1/session",
