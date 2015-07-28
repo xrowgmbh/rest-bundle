@@ -65,8 +65,10 @@ class ApiController extends Controller
                 // Set subscriptions to session for permissions
                 $this->get('xrow_rest.crm.plugin')->getUser($user);
                 $this->get('xrow_rest.crm.plugin')->getSubscriptions($user);
+                $return = array('session_name' => $session->getName(),
+                                'session_id' => $session->getId());
                 return new JsonResponse(array(
-                        'result' => $user->getId(),
+                        'result' => $return,
                         'type' => 'CONTENT',
                         'message' => 'Authentication successfully'));
             }
@@ -133,7 +135,9 @@ class ApiController extends Controller
             if ($session->isStarted() === false) {
                 $session->start();
             }
-            return new JsonResponse( array( "session_id" => $session->getId(), "session_name" => $session->getName() ) );
+            return new JsonResponse(
+                            array("session_name" => $session->getName(),
+                                  "session_id" => $session->getId()));
 
         } catch (AuthenticationException $e) {
             $exception = $this->errorHandling($e);
@@ -358,7 +362,13 @@ class ApiController extends Controller
             }
         }
         $this->get('security.context')->setToken(null);
-        $this->get('session')->invalidate();
+        $session = $request->getSession();
+        $cookieName = $session->getName();
+        if (isset($_COOKIE[$cookieName])) {
+            setcookie($cookieName, null, -1, '/');
+            unset($_COOKIE[$cookieName]);
+        }
+        $session->invalidate();
         return new JsonResponse(array(
                 'result' => null,
                 'type' => 'LOGOUT',

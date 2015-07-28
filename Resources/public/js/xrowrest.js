@@ -10,9 +10,11 @@
  *        oauth_callback_function_if_token_is_set: logoutUser
  */
 if (typeof oa_params_cl != "undefined" && typeof oa_params_clsc != "undefined" && typeof oa_params_clba != "undefined") {
-    var settings = {"client_id": oa_params_cl,
+    var settings = {"providerID": "xrow",
+                    "client_id": oa_params_cl,
                     "client_secret": oa_params_clsc,
                     "base_url": oa_params_clba,
+                    "isDefault": true,
                     "tokenURL": "/oauth/v2/token",
                     "authURL": "/xrowapi/v1/auth",
                     "apiSessionURL": "/xrowapi/v1/session",
@@ -23,21 +25,32 @@ if (typeof oa_params_cl != "undefined" && typeof oa_params_clsc != "undefined" &
     require(["jso/jso"], function(JSO) {
         var jsoObj = new JSO({
             client_id: settings.client_id,
-            scopes: ["user"],
-            authorization: settings.authURL
+            authorization: settings.authURL,
+            scopes: ["user"]
         });
         JSO.enablejQuery($);
         var token = jsoObj.checkToken();
-        // If login was via php
-        if (token === null) {
-            if ($('#ahash').length) {
-                jsoObj.providerID = settings.authURL + '|' + settings.client_id;
-                jsoObj.state = "user";
-                var queryHash = "#access_token="+$('#ahash').val();
-                jsoObj.callback(queryHash, false);
-                var token = jsoObj.checkToken();
+        // Logout
+        /*if (token === null) {
+            var eZSESSIDCookie = getCookie('eZSESSID');
+            window.console.log('eZSESSID', eZSESSIDCookie);
+            document.cookie = 'eZSESSID=;expires=Thu, 01 Jan 1970 00:00:01 GMT;path=/';
+            if (eZSESSIDCookie != '') {
+                document.cookie = 'eZSESSID=;expires=Thu, 01 Jan 1970 00:00:01 GMT;path=/';
+                $.ajax({
+                    type       : 'GET',
+                    xhrFields  : {
+                        withCredentials: true
+                    },
+                    crossDomain: true,
+                    url        : settings.base_url+settings.apiLogoutURL
+                }).done(function(logoutRequest){
+                    location.reload();
+                });
             }
         }
+        window.console.log('token', token);
+        window.console.log('cookie', document.cookie);*/
         if (token !== null) {
             if (token.access_token) {
                 if(callbackFunctionIfTokenIsSet != '') {
@@ -47,9 +60,15 @@ if (typeof oa_params_cl != "undefined" && typeof oa_params_clsc != "undefined" &
                }
            }
         }
-
+        else {
+            if(callbackFunctionIfTokenIsSet != '') {
+                if (typeof window[callbackFunctionIfTokenIsSet] == "function" ) {
+                   window[callbackFunctionIfTokenIsSet](jsoObj, settings);
+               }
+           }
+        }
         /**
-         * you need a form with class use-api-logn 
+         * you need a form with class use-api-logn
          * and two login fields: username and password
          * you can also define a redirect url after the login in your template like this
          * <input type="hidden" value="/redirect/onthis/server/with/ssl" data-protocol="https" />
@@ -138,8 +157,12 @@ if (typeof oa_params_cl != "undefined" && typeof oa_params_clsc != "undefined" &
                         url        : settings.base_url+settings.authURL+"?access_token="+requestData.access_token
                     }).done(function (authRequest) {
                         if (authRequest.result !== null) {
+                            document.cookie = authRequest.result.session_name+"="+authRequest.result.session_id+"; path=/";
+                            jsoObj.getToken(function(data) {
+                                callback(data);
+                            }, requestData);
                             // Request 3 --- Session Request
-                            $.ajax({
+                            /*$.ajax({
                                 type       : 'GET',
                                 xhrFields  : {
                                     withCredentials: true
@@ -148,10 +171,11 @@ if (typeof oa_params_cl != "undefined" && typeof oa_params_clsc != "undefined" &
                                 url        : settings.base_url+settings.apiSessionURL+"?access_token="+requestData.access_token
                             }).done(function(sessionRequest){
                                 document.cookie = sessionRequest.session_name+"="+sessionRequest.session_id+"; path=/";
+                                //document.cookie = "xrowAThash="+access_token+"; path=/";
                                 jsoObj.getToken(function(data) {
                                     callback(data);
                                 }, requestData);
-                            });
+                            });*/
                         }
                     });
                 } else {
@@ -200,3 +224,14 @@ if (typeof oa_params_cl != "undefined" && typeof oa_params_clsc != "undefined" &
         window.console.log(errortext);
     }
 }
+
+function getCookie(cname) {
+    var name = cname + "=";
+    var ca = document.cookie.split(';');
+    for(var i=0; i<ca.length; i++) {
+        var c = ca[i];
+        while (c.charAt(0)==' ') c = c.substring(1);
+        if (c.indexOf(name) == 0) return c.substring(name.length,c.length);
+    }
+    return "";
+} 
