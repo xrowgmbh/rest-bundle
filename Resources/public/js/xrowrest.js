@@ -10,12 +10,9 @@
  *        oauth_callback_function_if_token_is_set: logoutUser
  */
 if (typeof oa_params_cl != "undefined" && typeof oa_params_clsc != "undefined" && typeof oa_params_clba != "undefined") {
-    var settings = {"providerID": "xrow",
-                    "client_id": oa_params_cl,
+    var settings = {"client_id": oa_params_cl,
                     "client_secret": oa_params_clsc,
-                    "base_url": oa_params_clba,
-                    "isDefault": true,
-                    "permanent_scope": true,
+                    "baseURL": oa_params_clba,
                     "tokenURL": "/oauth/v2/token",
                     "authURL": "/xrowapi/v1/auth",
                     "apiSessionURL": "/xrowapi/v1/session",
@@ -26,7 +23,9 @@ if (typeof oa_params_cl != "undefined" && typeof oa_params_clsc != "undefined" &
     require(["jso/jso"], function(JSO) {
         var jsoObj = new JSO({
             client_id: settings.client_id,
-            authorization: settings.authURL,
+            authorization: settings.baseURL+settings.authURL,
+            default_lifetime: false,
+            providerID: "xrowapi/v1",
             scopes: ["user"]
         });
         JSO.enablejQuery($);
@@ -44,7 +43,7 @@ if (typeof oa_params_cl != "undefined" && typeof oa_params_clsc != "undefined" &
                         withCredentials: true
                     },
                     crossDomain: true,
-                    url        : settings.base_url+settings.apiLogoutURL
+                    url        : settings.baseURL+settings.apiLogoutURL
                 }).done(function(logoutRequest){
                     location.reload();
                 });
@@ -80,8 +79,11 @@ if (typeof oa_params_cl != "undefined" && typeof oa_params_clsc != "undefined" &
                     $(this).submit(function(e){
                         e.preventDefault();
                         var loginForm = $(this),
-                            counterGetToken = 0;
-                        sfLoginForm(loginForm, function(getTokenData){
+                            counterGetToken = 0,
+                            dataArray = {'form': loginForm,
+                                         'settings': settings,
+                                         'jsoObj': jsoObj};
+                        sfLoginForm(dataArray, function(getTokenData){
                             if (typeof getTokenData === "string") {
                                 var queryHash = "#" + getTokenData.split("?"); 
                                 jsoObj.callback(queryHash, false);
@@ -125,96 +127,6 @@ if (typeof oa_params_cl != "undefined" && typeof oa_params_clsc != "undefined" &
                 });
             }
         });
-
-        function sfLoginForm($form, callback){
-            var request = {"grant_type": "password",
-                           "scope": "user"};
-            var errorOutputBoxId = $form.attr('id')+'-error';
-            if ($('#'+errorOutputBoxId).length)
-                $('#'+errorOutputBoxId).hide();
-            $.each($form.serializeArray(), function(i, field) {
-                request[field.name] = field.value;
-            });
-            request.client_id = settings.client_id;
-            request.client_secret = settings.client_secret;
-             // Request 1 --- AccessToken Request
-            $.ajax({
-                type       : 'POST',
-                xhrFields  : {
-                    withCredentials: true
-                },
-                crossDomain: true,
-                url        : settings.base_url+settings.tokenURL,
-                data       : request
-            }).done(function (requestData) {
-                if(typeof requestData.access_token != "undefined") {
-                    // Request 2 --- Authenticate Request
-                    $.ajax({
-                        type       : 'GET',
-                        xhrFields  : {
-                            withCredentials: true
-                        },
-                        crossDomain: true,
-                        url        : settings.base_url+settings.authURL+"?access_token="+requestData.access_token
-                    }).done(function (authRequest) {
-                        if (authRequest.result !== null) {
-                            document.cookie = authRequest.result.session_name+"="+authRequest.result.session_id+"; path=/";
-                            jsoObj.getToken(function(data) {
-                                callback(data);
-                            }, requestData);
-                            // Request 3 --- Session Request
-                            /*$.ajax({
-                                type       : 'GET',
-                                xhrFields  : {
-                                    withCredentials: true
-                                },
-                                crossDomain: true,
-                                url        : settings.base_url+settings.apiSessionURL+"?access_token="+requestData.access_token
-                            }).done(function(sessionRequest){
-                                document.cookie = sessionRequest.session_name+"="+sessionRequest.session_id+"; path=/";
-                                //document.cookie = "xrowAThash="+access_token+"; path=/";
-                                jsoObj.getToken(function(data) {
-                                    callback(data);
-                                }, requestData);
-                            });*/
-                        }
-                    });
-                } else {
-                    if(typeof requestData.responseJSON != "undefined") {
-                        if (typeof requestData.responseJSON.error_description != "undefined") {
-                            if ($('#'+errorOutputBoxId).length) {
-                                $('#'+errorOutputBoxId).text(requestData.responseJSON.error_description).show();
-                            }
-                            else {
-                                window.console.log(requestData.responseJSON.error_description);
-                            }
-                        }
-                    }
-                    else
-                        window.console.log("An unexpeded error occured xrjs0.");
-                }
-            }).fail(function (jqXHR) {
-                if(typeof jqXHR.responseJSON != "undefined") {
-                    if (typeof jqXHR.responseJSON.error_description != "undefined") {
-                        var errortext = jqXHR.responseJSON.error_description;
-                    }
-                }
-                else {
-                    var errortext = "An unexpeded error occured: " + jqXHR.statusText + ", HTTP Code " + jqXHR.status + ":xrjs1.";
-                }
-                if (typeof errortext !== 'undefined') {
-                    if ($('#'+errorOutputBoxId).length) {
-                        $('#'+errorOutputBoxId).text(errortext).show();
-                    }
-                    else {
-                        window.console.log(errortext);
-                    }
-                }
-                else {
-                    window.console.log('Unknowen error in xrowrest.js:', jqXHR);
-                }
-            });
-        }
     });
 } else {
     var errortext = "Please set oauth_client_id, oauth_client_secret in parameters.yml for xrowrest.js.";
@@ -226,13 +138,95 @@ if (typeof oa_params_cl != "undefined" && typeof oa_params_clsc != "undefined" &
     }
 }
 
-function getCookie(cname) {
-    var name = cname + "=";
-    var ca = document.cookie.split(';');
-    for(var i=0; i<ca.length; i++) {
-        var c = ca[i];
-        while (c.charAt(0)==' ') c = c.substring(1);
-        if (c.indexOf(name) == 0) return c.substring(name.length,c.length);
-    }
-    return "";
-} 
+function sfLoginForm(dataArray, callback){
+    var request = {"grant_type": "password",
+                   "scope": "user"},
+        form = dataArray.form,
+        settings = dataArray.settings,
+        jsoObj = dataArray.jsoObj;
+    var errorOutputBoxId = form.attr('id')+'-error';
+    if ($('#'+errorOutputBoxId).length)
+        $('#'+errorOutputBoxId).hide();
+    $.each(form.serializeArray(), function(i, field) {
+        request[field.name] = field.value;
+    });
+    request.client_id = settings.client_id;
+    request.client_secret = settings.client_secret;
+     // Request 1 --- AccessToken Request
+    $.ajax({
+        type       : 'POST',
+        xhrFields  : {
+            withCredentials: true
+        },
+        crossDomain: true,
+        url        : settings.baseURL+settings.tokenURL,
+        data       : request
+    }).done(function (requestData) {
+        if(typeof requestData.access_token != "undefined") {
+            // Request 2 --- Authenticate Request
+            $.ajax({
+                type       : 'GET',
+                xhrFields  : {
+                    withCredentials: true
+                },
+                crossDomain: true,
+                url        : settings.baseURL+settings.authURL+"?access_token="+requestData.access_token
+            }).done(function (authRequest) {
+                if (authRequest.result !== null) {
+                    document.cookie = authRequest.result.session_name+"="+authRequest.result.session_id+"; path=/";
+                    jsoObj.getToken(function(data) {
+                        callback(data);
+                    }, requestData);
+                    // Request 3 --- Session Request
+                    /*$.ajax({
+                        type       : 'GET',
+                        xhrFields  : {
+                            withCredentials: true
+                        },
+                        crossDomain: true,
+                        url        : settings.baseURL+settings.apiSessionURL+"?access_token="+requestData.access_token
+                    }).done(function(sessionRequest){
+                        document.cookie = sessionRequest.session_name+"="+sessionRequest.session_id+"; path=/";
+                        //document.cookie = "xrowAThash="+access_token+"; path=/";
+                        jsoObj.getToken(function(data) {
+                            callback(data);
+                        }, requestData);
+                    });*/
+                }
+            });
+        } else {
+            if(typeof requestData.responseJSON != "undefined") {
+                if (typeof requestData.responseJSON.error_description != "undefined") {
+                    if ($('#'+errorOutputBoxId).length) {
+                        $('#'+errorOutputBoxId).text(requestData.responseJSON.error_description).show();
+                    }
+                    else {
+                        window.console.log(requestData.responseJSON.error_description);
+                    }
+                }
+            }
+            else
+                window.console.log("An unexpeded error occured xrjs0.");
+        }
+    }).fail(function (jqXHR) {
+        if(typeof jqXHR.responseJSON != "undefined") {
+            if (typeof jqXHR.responseJSON.error_description != "undefined") {
+                var errortext = jqXHR.responseJSON.error_description;
+            }
+        }
+        else {
+            var errortext = "An unexpeded error occured: " + jqXHR.statusText + ", HTTP Code " + jqXHR.status + ":xrjs1.";
+        }
+        if (typeof errortext !== 'undefined') {
+            if ($('#'+errorOutputBoxId).length) {
+                $('#'+errorOutputBoxId).text(errortext).show();
+            }
+            else {
+                window.console.log(errortext);
+            }
+        }
+        else {
+            window.console.log('Unknown error in xrowrest.js:', jqXHR);
+        }
+    });
+}
