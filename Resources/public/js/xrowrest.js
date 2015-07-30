@@ -79,12 +79,21 @@ if (typeof oa_params_cl != "undefined" && typeof oa_params_clsc != "undefined" &
                     $(this).submit(function(e){
                         e.preventDefault();
                         var loginForm = $(this),
+                            errorOutputBoxId = loginForm.attr('id')+'-error';
                             counterGetToken = 0,
                             dataArray = {'form': loginForm,
                                          'settings': settings,
                                          'jsoObj': jsoObj};
                         sfLoginForm(dataArray, function(getTokenData){
-                            if (typeof getTokenData === "string") {
+                            if (typeof getTokenData.error != 'undefined') {
+                                if ($('#'+errorOutputBoxId).length) {
+                                    $('#'+errorOutputBoxId).text(getTokenData.error).show();
+                                }
+                                else {
+                                    window.console.log(getTokenData.error);
+                                }
+                            }
+                            else if (typeof getTokenData === "string") {
                                 var queryHash = "#" + getTokenData.split("?"); 
                                 jsoObj.callback(queryHash, false);
                             }
@@ -129,13 +138,7 @@ if (typeof oa_params_cl != "undefined" && typeof oa_params_clsc != "undefined" &
         });
     });
 } else {
-    var errortext = "Please set oauth_client_id, oauth_client_secret in parameters.yml for xrowrest.js.";
-    if ($('#'+errorOutputBoxId).length) {
-        $('#'+errorOutputBoxId).text(errortext).show();
-    }
-    else {
-        window.console.log(errortext);
-    }
+    window.console.log("Please set oauth_client_id, oauth_client_secret in parameters.yml for xrowrest.js.");
 }
 
 function sfLoginForm(dataArray, callback){
@@ -144,9 +147,6 @@ function sfLoginForm(dataArray, callback){
         form = dataArray.form,
         settings = dataArray.settings,
         jsoObj = dataArray.jsoObj;
-    var errorOutputBoxId = form.attr('id')+'-error';
-    if ($('#'+errorOutputBoxId).length)
-        $('#'+errorOutputBoxId).hide();
     $.each(form.serializeArray(), function(i, field) {
         request[field.name] = field.value;
     });
@@ -177,56 +177,20 @@ function sfLoginForm(dataArray, callback){
                     jsoObj.getToken(function(data) {
                         callback(data);
                     }, requestData);
-                    // Request 3 --- Session Request
-                    /*$.ajax({
-                        type       : 'GET',
-                        xhrFields  : {
-                            withCredentials: true
-                        },
-                        crossDomain: true,
-                        url        : settings.baseURL+settings.apiSessionURL+"?access_token="+requestData.access_token
-                    }).done(function(sessionRequest){
-                        document.cookie = sessionRequest.session_name+"="+sessionRequest.session_id+"; path=/";
-                        //document.cookie = "xrowAThash="+access_token+"; path=/";
-                        jsoObj.getToken(function(data) {
-                            callback(data);
-                        }, requestData);
-                    });*/
                 }
             });
         } else {
-            if(typeof requestData.responseJSON != "undefined") {
-                if (typeof requestData.responseJSON.error_description != "undefined") {
-                    if ($('#'+errorOutputBoxId).length) {
-                        $('#'+errorOutputBoxId).text(requestData.responseJSON.error_description).show();
-                    }
-                    else {
-                        window.console.log(requestData.responseJSON.error_description);
-                    }
-                }
-            }
+            if(typeof requestData.responseJSON != "undefined" && typeof requestData.responseJSON.error_description != "undefined")
+                var error = {'error': requestData.responseJSON.error_description};
             else
-                window.console.log("An unexpeded error occured xrjs0.");
+                var error = {'error': 'An unexpeded error occured xrjs0.'};
+            callback(error);
         }
     }).fail(function (jqXHR) {
-        if(typeof jqXHR.responseJSON != "undefined") {
-            if (typeof jqXHR.responseJSON.error_description != "undefined") {
-                var errortext = jqXHR.responseJSON.error_description;
-            }
-        }
-        else {
-            var errortext = "An unexpeded error occured: " + jqXHR.statusText + ", HTTP Code " + jqXHR.status + ":xrjs1.";
-        }
-        if (typeof errortext !== 'undefined') {
-            if ($('#'+errorOutputBoxId).length) {
-                $('#'+errorOutputBoxId).text(errortext).show();
-            }
-            else {
-                window.console.log(errortext);
-            }
-        }
-        else {
-            window.console.log('Unknown error in xrowrest.js:', jqXHR);
-        }
+        if(typeof jqXHR.responseJSON != "undefined" && typeof jqXHR.responseJSON.error_description != "undefined")
+            var error = {'error': jqXHR.responseJSON.error_description};
+        else
+            var error = {'error': 'An unexpeded error occured: ' + jqXHR.statusText + ', HTTP Code ' + jqXHR.status + ':xrjs1.'};
+        callback(error);
     });
 }
