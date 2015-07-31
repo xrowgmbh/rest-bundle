@@ -45,7 +45,7 @@ class UserProvider implements UserProviderInterface
      * @throws UsernameNotFoundException
      * @return \xrow\restBundle\Entity\User
      */
-    public function loadUserFromCRM($username, $password)
+    public function loadUserFromCRMWithUserCredentials($username, $password)
     {
         try {
             $user = $this->crmPluginClassObject->loadUser(trim($username), trim($password), $this->userRepository);
@@ -53,6 +53,28 @@ class UserProvider implements UserProviderInterface
             $message = sprintf(
                 'Unable to find an active api user object identified by "%s".',
                 $username
+            );
+            throw new UsernameNotFoundException($message, 0, $e);
+        }
+
+        return $user;
+    }
+
+    /**
+     * Get user with id
+     *
+     * @param string $id
+     * @throws UsernameNotFoundException
+     * @return \xrow\restBundle\Entity\User
+     */
+    public function loadUserFromCRMWithId($id)
+    {
+        try {
+            $user = $this->crmPluginClassObject->loadUserWithId(trim($id), $this->userRepository);
+        } catch (NoResultException $e) {
+            $message = sprintf(
+                'Unable to find an active api user object identified by "%s".',
+                $id
             );
             throw new UsernameNotFoundException($message, 0, $e);
         }

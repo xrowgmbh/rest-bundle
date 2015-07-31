@@ -10,6 +10,10 @@ use Symfony\Component\Console\Output\OutputInterface;
 
 class CreateClientCommand extends ContainerAwareCommand
 {
+    /**
+     * Example: 
+     * php ezpublish/console xrow:oauth-server:create-client --grant-type="password" --grant-type="refresh_token"
+     */
     protected function configure()
     {
         $this
