@@ -592,7 +592,6 @@ define('store',['require','exports','module','./utils'],function(require, export
 	var utils = require('./utils');
 	var store = {};
 
-
 	/**
 		saveState stores an object with an Identifier.
 		TODO: Ensure that both localstorage and JSON encoding has fallbacks for ancient browsers.
@@ -688,6 +687,7 @@ define('store',['require','exports','module','./utils'],function(require, export
 		  * scopes: an array with the scopes (not string)
 	 */
 	store.saveTokens = function(provider, tokens) {
+		//window.console.log('SAVE TOKENS ', JSON.stringify(tokens));
 		// log("Save Tokens (" + provider+ ")");
 		localStorage.setItem("tokens-" + provider, JSON.stringify(tokens));
 	};
@@ -849,7 +849,7 @@ define('jso',['require','exports','module','./store','./utils','./Config'],funct
 	JSO.instances = {};
 	JSO.store = store;
 
-	console.log("RESET internalStates array");
+	//console.log("RESET internalStates array");
 
 
 	JSO.enablejQuery = function($) {
@@ -871,7 +871,7 @@ define('jso',['require','exports','module','./store','./utils','./Config'],funct
 
 		            //  we'll check the URL for oauth fragments...
 		            var url = inAppBrowserEvent.url;
-		            utils.log("loadstop event triggered, and the url is now " + url);
+		            //utils.log("loadstop event triggered, and the url is now " + url);
 
 		            if (that.URLcontainsToken(url)) {
 		                // ref.removeEventListener('loadstop', onNewURLinspector);
@@ -882,7 +882,7 @@ define('jso',['require','exports','module','./store','./utils','./Config'],funct
 
 			            that.callback(url, function() {
 			                // When we've found OAuth credentials, we close the inappbrowser...
-			                utils.log("Closing window ", ref);
+			                //utils.log("Closing window ", ref);
 			                if (typeof callback === 'function') callback();
 			            });	            	
 		            }
@@ -896,12 +896,12 @@ define('jso',['require','exports','module','./store','./utils','./Config'],funct
 			}
 			var options = {};
 
-			utils.log("About to open url " + url);
+			//utils.log("About to open url " + url);
 
 			var ref = window.open(url, target, options);
-			utils.log("URL Loaded... ");
+			//utils.log("URL Loaded... ");
 	        ref.addEventListener('loadstart', onNewURLinspector(ref));
-	        utils.log("Event listeren ardded... ", ref);
+	        //utils.log("Event listeren ardded... ", ref);
 	        
 
 	        // Everytime the Phonegap InAppBrowsers moves to a new URL,
@@ -978,7 +978,7 @@ define('jso',['require','exports','module','./store','./utils','./Config'],funct
 			state,
 			instance;
 
-		utils.log("JSO.prototype.callback() " + url + " callback=" + typeof callback);
+		//utils.log("JSO.prototype.callback() " + url + " callback=" + typeof callback);
 
 		// If a url is provided 
 		if (url) {
@@ -1016,9 +1016,9 @@ define('jso',['require','exports','module','./store','./utils','./Config'],funct
 		 */
 		if (!atoken.state && co.scope) {
 			state.scopes = instance._getRequestScopes();
-			utils.log("Setting state: ", state);
+			//utils.log("Setting state: ", state);
 		}
-		utils.log("Checking atoken ", atoken, " and instance ", instance);
+		//utils.log("Checking atoken ", atoken, " and instance ", instance);
 
 		/*
 		 * Decide when this token should expire.
@@ -1062,18 +1062,18 @@ define('jso',['require','exports','module','./store','./utils','./Config'],funct
 		}
 
 
-		utils.log(atoken);
+		//utils.log(atoken);
 
-		utils.log("Looking up internalStates storage for a stored callback... ", "state=" + atoken.state, JSO.internalStates);
+		//utils.log("Looking up internalStates storage for a stored callback... ", "state=" + atoken.state, JSO.internalStates);
 
 		if (JSO.internalStates[atoken.state] && typeof JSO.internalStates[atoken.state] === 'function') {
-			utils.log("InternalState is set, calling it now!");
+			//utils.log("InternalState is set, calling it now!");
 			JSO.internalStates[atoken.state](atoken);
 			delete JSO.internalStates[atoken.state];
 		}
 
 
-		utils.log("Successfully obtain a token, now call the callback, and may be the window closes", callback);
+		//utils.log("Successfully obtain a token, now call the callback, and may be the window closes", callback);
 
 		if (typeof callback === 'function') {
 			callback(atoken);
@@ -1171,8 +1171,8 @@ define('jso',['require','exports','module','./store','./utils','./Config'],funct
 		var authorization = this.config.get('authorization', null, true);
 		var client_id = this.config.get('client_id', null, true);
 
-		utils.log("About to send an authorization request to this entry:", authorization);
-		utils.log("Options", opts, "callback", callback);
+		//utils.log("About to send an authorization request to this entry:", authorization);
+		//utils.log("Options", opts, "callback", callback);
 
 
 		request = {
@@ -1183,7 +1183,7 @@ define('jso',['require','exports','module','./store','./utils','./Config'],funct
 
 
 		if (callback && typeof callback === 'function') {
-			utils.log("About to store a callback for later with state=" + request.state, callback);
+			//utils.log("About to store a callback for later with state=" + request.state, callback);
 			JSO.internalStates[request.state] = callback;
 		}
 
@@ -1192,7 +1192,16 @@ define('jso',['require','exports','module','./store','./utils','./Config'],funct
 		}
 
 		request.client_id = client_id;
+		
+		/* HACK xrow START */
+		if(opts.access_token !== "undefined")
+            request.access_token = opts.access_token;
+        else
+            return false;
 
+		if(opts.refresh_token !== "undefined")
+            request.refresh_token = opts.refresh_token;
+		/* HACK xrow END */
 
 
 		/*
@@ -1203,7 +1212,7 @@ define('jso',['require','exports','module','./store','./utils','./Config'],funct
 			request.scope = utils.scopeList(scopes);
 		}
 
-		utils.log("DEBUG REQUEST"); utils.log(request);
+		//utils.log("DEBUG REQUEST"); //utils.log(request);
 
 		authurl = utils.encodeURL(authorization, request);
 
@@ -1219,11 +1228,12 @@ define('jso',['require','exports','module','./store','./utils','./Config'],funct
 		}
 
 
-		utils.log("Saving state [" + request.state + "]");
-		utils.log(JSON.parse(JSON.stringify(request)));
+		//utils.log("Saving state [" + request.state + "]");
+		//utils.log(JSON.parse(JSON.stringify(request)));
 
 		store.saveState(request.state, request);
-		this.gotoAuthorizeURL(authurl, callback);
+		callback( authurl );
+		//this.gotoAuthorizeURL(authurl, callback);
 	};
 
 
@@ -1259,15 +1269,15 @@ define('jso',['require','exports','module','./store','./utils','./Config'],funct
 
 		var errorOverridden = settings.error || null;
 		settings.error = function(jqXHR, textStatus, errorThrown) {
-			utils.log('error(jqXHR, textStatus, errorThrown)');
-			utils.log(jqXHR);
-			utils.log(textStatus);
-			utils.log(errorThrown);
+			//utils.log('error(jqXHR, textStatus, errorThrown)');
+			//utils.log(jqXHR);
+			//utils.log(textStatus);
+			//utils.log(errorThrown);
 
 			if (jqXHR.status === 401) {
 
-				utils.log("Token expired. About to delete this token");
-				utils.log(token);
+				//utils.log("Token expired. About to delete this token");
+				//utils.log(token);
 				that.wipeTokens();
 
 			}
@@ -1278,7 +1288,7 @@ define('jso',['require','exports','module','./store','./utils','./Config'],funct
 
 
 		return this.getToken(function(token) {
-			utils.log("Ready. Got an token, and ready to perform an AJAX call", token);
+			//utils.log("Ready. Got an token, and ready to perform an AJAX call", token);
 
 			if (that.config.get('presenttoken', null) === 'qs') {
 				// settings.url += ((h.indexOf("?") === -1) ? '?' : '&') + "access_token=" + encodeURIComponent(token["access_token"]);
@@ -1288,7 +1298,7 @@ define('jso',['require','exports','module','./store','./utils','./Config'],funct
 				if (!settings.headers) settings.headers = {};
 				settings.headers.Authorization = "Bearer " + token.access_token;
 			}
-			utils.log('$.ajax settings', settings);
+			//utils.log('$.ajax settings', settings);
 			return JSO.$.ajax(settings);
 
 		}, oauthOptions);

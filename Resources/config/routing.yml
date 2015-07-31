@@ -23,7 +23,7 @@ xrowapi_subscriptions:
     methods: [GET]
 
 xrowapi_subscription:
-    path: subscription/{subscriptionId}
+    path: /subscription/{subscriptionId}
     defaults: 
         _controller: xrowRestBundle:Api:getSubscription
     methods: [GET]
