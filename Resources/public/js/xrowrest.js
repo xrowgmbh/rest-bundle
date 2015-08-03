@@ -30,18 +30,16 @@ if (typeof oa_params_cl != "undefined" && typeof oa_params_clsc != "undefined" &
     });
     JSO.enablejQuery($);
     var token = jsoObj.checkToken();
-    if (token !== null) {
-        if (token.access_token) {
-            if(callbackFunctionIfTokenIsSet != '') {
-                if (typeof window[callbackFunctionIfTokenIsSet] == "function" ) {
-                   window[callbackFunctionIfTokenIsSet](jsoObj, settings, token);
-               }
-           }
-       }
+    if (token !== null && typeof token.access_token != 'undefined') {
+        if(callbackFunctionIfTokenIsSet != '') {
+            if (typeof window[callbackFunctionIfTokenIsSet] == "function") {
+                window[callbackFunctionIfTokenIsSet](jsoObj, settings, token);
+            }
+        }
     }
     else {
         if(callbackFunctionIfTokenIsSet != '') {
-            if (typeof window[callbackFunctionIfTokenIsSet] == "function" ) {
+            if (typeof window[callbackFunctionIfTokenIsSet] == "function") {
                window[callbackFunctionIfTokenIsSet](jsoObj, settings);
            }
        }
@@ -130,7 +128,7 @@ function restLoginForm(dataArray, callback){
     });
     request.client_id = settings.client_id;
     request.client_secret = settings.client_secret;
-     // Request 1 --- AccessToken Request
+    // Request 1 --- AccessToken Request
     $.ajax({
         type       : 'POST',
         xhrFields  : {
@@ -140,29 +138,33 @@ function restLoginForm(dataArray, callback){
         url        : settings.baseURL+settings.tokenURL,
         data       : request
     }).done(function (requestData) {
-        if(typeof requestData.access_token != "undefined") {
-            // Request 2 --- Authenticate Request
-            $.ajax({
-                type       : 'GET',
-                xhrFields  : {
-                    withCredentials: true
-                },
-                crossDomain: true,
-                url        : settings.baseURL+settings.authURL+"?access_token="+requestData.access_token
-            }).done(function (authRequest) {
-                if (authRequest.result !== null) {
-                    document.cookie = authRequest.result.session_name+"="+authRequest.result.session_id+"; path=/";
-                    jsoObj.getToken(function(data) {
-                        callback(data);
-                    }, requestData);
-                }
-            });
-        } else {
-            if(typeof requestData.responseJSON != "undefined" && typeof requestData.responseJSON.error_description != "undefined")
-                var error = {'error': requestData.responseJSON.error_description};
-            else
-                var error = {'error': 'An unexpeded error occured xrjs0.'};
-            callback(error);
+        if (typeof requestData != "undefined") {
+            if (typeof requestData.access_token != "undefined") {
+                // Request 2 --- Authenticate Request
+                $.ajax({
+                    type       : 'GET',
+                    xhrFields  : {
+                        withCredentials: true
+                    },
+                    crossDomain: true,
+                    url        : settings.baseURL+settings.authURL+"?access_token="+requestData.access_token
+                }).done(function (authRequest) {
+                    if (authRequest.result !== null) {
+                        document.cookie = authRequest.result.session_name+"="+authRequest.result.session_id+"; path=/";
+                        jsoObj.getToken(function(data) {
+                            callback(data);
+                        }, requestData);
+                    }
+                });
+            } else {
+                if (typeof requestData.error_description != "undefined")
+                    var error = {'error': requestData.error_description};
+                else if(typeof requestData.responseJSON != "undefined" && typeof requestData.responseJSON.error_description != "undefined")
+                    var error = {'error': requestData.responseJSON.error_description};
+                else
+                    var error = {'error': 'An unexpeded error occured xrjs0.'};
+                callback(error);
+            }
         }
     }).fail(function (jqXHR) {
         if(typeof jqXHR.responseJSON != "undefined" && typeof jqXHR.responseJSON.error_description != "undefined")

@@ -319,15 +319,18 @@ class ApiController extends Controller
                     'error_type' => 'NOUSER',
                     'error_description' => 'This user does not have access to this section.'), 403);
             }
-            $edituser = $request->get('edituser', null);
+            $edituser = $request->get('edituser', false);
             if (isset($edituser['username']) && isset($edituser['password']) && trim($edituser['username']) != '' && trim($edituser['password']) != '') {
                 $loginData = array('username' => $edituser['username'], 
                                    'password' => $edituser['password']);
                 if ($this->get('xrow_rest.crm.plugin')->checkPassword($loginData) === true) {
                     return new JsonResponse(array(
-                        'result' => true,
-                        'type' => 'CONTENT',
-                        'message' => 'User data'));
+                                            'result' => true,
+                                            'type' => 'CONTENT',
+                                            'message' => 'User data'));
+                }
+                else {
+                    return new JsonResponse(array('error_description' => 'Please fill in required data.'));
                 }
             }
             return new JsonResponse(array(
@@ -436,7 +439,7 @@ class ApiController extends Controller
         }
         else {
             $result['error_description'] = $this->get('translator')->trans($e->getMessage());
-            $result['httpCode'] = $e->getCode();
+            $result['httpCode'] = 500;
         }
         return $result;
     }
