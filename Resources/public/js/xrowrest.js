@@ -123,6 +123,7 @@ function restLoginForm(dataArray, callback){
         form = dataArray.form,
         settings = dataArray.settings,
         jsoObj = dataArray.jsoObj;
+    jsoObj.wipeTokens();
     $.each(form.serializeArray(), function(i, field) {
         request[field.name] = field.value;
     });

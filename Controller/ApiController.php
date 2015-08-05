@@ -353,17 +353,6 @@ class ApiController extends Controller
      */
     public function logoutAction(Request $request)
     {
-        $oauthTokenString = $this->get('fos_oauth_server.server')->getBearerToken($request, true);
-        if ($oauthTokenString !== null) {
-            try {
-                $accessToken = $this->get('fos_oauth_server.server')->verifyAccessToken($oauthTokenString);
-                if ($accessToken instanceof AccessTokenInterface) {
-                    $user = $accessToken->setExpiresAt(time());
-                }
-            } catch (OAuth2AuthenticateException $e) {
-                $walk = true;
-            }
-        }
         $this->get('security.context')->setToken(null);
         $session = $request->getSession();
         $cookieName = $session->getName();
