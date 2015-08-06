@@ -323,15 +323,18 @@ class ApiController extends Controller
             if (isset($edituser['username']) && isset($edituser['password']) && trim($edituser['username']) != '' && trim($edituser['password']) != '') {
                 $loginData = array('username' => $edituser['username'], 
                                    'password' => $edituser['password']);
-                if ($this->get('xrow_rest.crm.plugin')->checkPassword($loginData) === true) {
+                $checkPassword = $this->get('xrow_rest.crm.plugin')->checkPassword($loginData);
+                if ($checkPassword === true) {
                     return new JsonResponse(array(
                                             'result' => true,
                                             'type' => 'CONTENT',
                                             'message' => 'User data'));
                 }
-                else {
-                    return new JsonResponse(array('error_description' => 'Please fill in required data.'));
-                }
+                elseif (isset($checkPassword['error']))
+                    $error = $checkPassword['error'];
+                else
+                    $error = 'Please fill in required data.';
+                return new JsonResponse(array('error_description' => $error));
             }
             return new JsonResponse(array(
                 'result' => null,
@@ -360,6 +363,7 @@ class ApiController extends Controller
             setcookie($cookieName, null, -1, '/');
             unset($_COOKIE[$cookieName]);
         }
+        $this->get('xrow_rest.crm.plugin')->logout($session);
         $session->invalidate();
         return new JsonResponse(array(
                 'result' => null,
