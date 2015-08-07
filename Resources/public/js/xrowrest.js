@@ -202,14 +202,16 @@ function restLogout(settings, jsoObj, localStorageToken, redirectURL, sessionArr
             crossDomain: true,
             url     : settings.baseURL+settings.apiSessionURL+'?access_token='+localStorageToken.access_token
         }).done(function(sessionRequest){
-            restLogout(settings, jsoObj, accessTokenString, redirectURL, sessionRequest);
+            restLogout(settings, jsoObj, null, redirectURL, sessionRequest);
         });
     }
     else {
-        jsoObj.wipeTokens();
-        if (redirectURL && redirectURL != '')
-            window.location.href = redirectURL;
-        else
-            location.reload();
+        var cookie = getCookie('eZSESSID');
+        restLogout(settings, jsoObj, null, redirectURL, {session_name: 'eZSESSID', session_id: cookie});
     }
+};
+function getCookie(name) {
+    function escape(s) { return s.replace(/([.*+?\^${}()|\[\]\/\\])/g, '\\$1'); };
+    var match = document.cookie.match(RegExp('(?:^|;\\s*)' + escape(name) + '=([^;]*)'));
+    return match ? match[1] : null;
 };
