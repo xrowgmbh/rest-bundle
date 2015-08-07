@@ -172,11 +172,15 @@ class ApiController extends Controller
             elseif ($httpMethod == 'PATCH') {
                 $CRMUser = $this->get('xrow_rest.crm.plugin')->updateUser($user, $request);
             }
-            if($CRMUser) {
+            if($CRMUser && !array_key_exists('error', $CRMUser)) {
                 return new JsonResponse(array(
                             'result' => $CRMUser,
                             'type' => 'CONTENT',
                             'message' => 'User data'));
+            }
+            if($CRMUser && array_key_exists('error', $CRMUser)) {
+                return new JsonResponse(array(
+                    'error_description' => $CRMUser['error']), 500);
             }
             return new JsonResponse(array(
                             'result' => null,
