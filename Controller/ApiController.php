@@ -361,8 +361,8 @@ class ApiController extends Controller
                 unset($_COOKIE[$sessionName]);
             }
             $this->get('xrow_rest.crm.plugin')->logout($session);
+            $session->invalidate();
         }
-        $session->invalidate();
         return new JsonResponse(array(
                                     'result' => array('session_name' => $sessionName),
                                     'type' => 'LOGOUT',
