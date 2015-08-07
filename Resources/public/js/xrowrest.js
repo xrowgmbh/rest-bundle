@@ -16,7 +16,7 @@ if (typeof oa_params_cl != "undefined" && typeof oa_params_clsc != "undefined" &
                     "tokenURL": "/oauth/v2/token",
                     "authURL": "/xrowapi/v1/auth",
                     "apiSessionURL": "/xrowapi/v1/session",
-                    "apiLogoutURL": "/xrowapi/v1/logout"},
+                    "apiLogoutURL": "/xrowapi/v1/sessions"},
         callbackFunctionIfTokenIsSet = '';
     if (typeof callbackFunctionIfToken != "undefined")
         callbackFunctionIfTokenIsSet = callbackFunctionIfToken;
@@ -175,17 +175,41 @@ function restLoginForm(dataArray, callback){
         callback(error);
     });
 };
-function restLogout(settings, jsoObj, redirectURL){
-    $.ajax({
-        type    : 'DELETE',
-        url     : settings.apiLogoutURL
-    }).done(function (logoutRequest) {
-        if (typeof logoutRequest != "undefined" && typeof logoutRequest.session_name != "undefined" && logoutRequest.session_name != '')
-            document.cookie = logoutRequest.session_name+'=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;';
+function restLogout(settings, jsoObj, localStorageToken, redirectURL, sessionArray){
+    if (typeof sessionArray != 'undefined') {
+        $.ajax({
+            type    : 'DELETE',
+            xhrFields  : {
+                withCredentials: true
+            },
+            crossDomain: true,
+            url     : settings.baseURL+settings.apiLogoutURL+'/'+sessionArray.session_id
+        }).done(function (logoutRequest) {
+            document.cookie = sessionArray.session_name+'=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;';
+            jsoObj.wipeTokens();
+            if (redirectURL && redirectURL != '')
+                window.location.href = redirectURL;
+            else
+                location.reload();
+        });
+    }
+    else if(localStorageToken !== null && typeof localStorageToken.access_token != "undefined") {
+        $.ajax({
+            type    : 'GET',
+            xhrFields  : {
+                withCredentials: true
+            },
+            crossDomain: true,
+            url     : settings.baseURL+settings.apiSessionURL+'?access_token='+localStorageToken.access_token
+        }).done(function(sessionRequest){
+            restLogout(settings, jsoObj, accessTokenString, redirectURL, sessionRequest);
+        });
+    }
+    else {
         jsoObj.wipeTokens();
         if (redirectURL && redirectURL != '')
             window.location.href = redirectURL;
         else
             location.reload();
-    });
+    }
 };

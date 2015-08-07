@@ -116,39 +116,6 @@ class ApiController extends Controller
     }
 
     /**
-     * Get session data
-     *
-     * @param Request $request
-     * @return \Symfony\Component\HttpFoundation\JsonResponse
-     */
-    public function getSessionAction(Request $request)
-    {
-        try {
-            $user = $this->checkAccessGranted($request);
-            if (!$user instanceof APIUser) {
-                return new JsonResponse(array(
-                    'error' => 'invalid_grant',
-                    'error_type' => 'NOUSER',
-                    'error_description' => 'This user does not have access to this section.'), 403);
-            }
-            $session = $request->getSession();
-            if ($session->isStarted() === false) {
-                $session->start();
-            }
-            return new JsonResponse(
-                            array("session_name" => $session->getName(),
-                                  "session_id" => $session->getId()));
-
-        } catch (AuthenticationException $e) {
-            $exception = $this->errorHandling($e);
-            return new JsonResponse(array(
-                'error' => $exception['error'],
-                'error_type' => $exception['type'],
-                'error_description' => $exception['error_description']), $exception['httpCode']);
-        }
-    }
-
-    /**
      * Get or update user data
      * 
      * @param Request $request
@@ -349,16 +316,48 @@ class ApiController extends Controller
     }
 
     /**
+     * Get session data
+     *
+     * @param Request $request
+     * @return \Symfony\Component\HttpFoundation\JsonResponse
+     */
+    public function getSessionAction(Request $request)
+    {
+        try {
+            $user = $this->checkAccessGranted($request);
+            if (!$user instanceof APIUser) {
+                return new JsonResponse(array(
+                    'error' => 'invalid_grant',
+                    'error_type' => 'NOUSER',
+                    'error_description' => 'This user does not have access to this section.'), 403);
+            }
+            $session = $request->getSession();
+            if ($session->isStarted() === false) {
+                $session->start();
+            }
+            return new JsonResponse(
+                array("session_name" => $session->getName(),
+                    "session_id" => $session->getId()));
+
+        } catch (AuthenticationException $e) {
+            $exception = $this->errorHandling($e);
+            return new JsonResponse(array(
+                'error' => $exception['error'],
+                'error_type' => $exception['type'],
+                'error_description' => $exception['error_description']), $exception['httpCode']);
+        }
+    }
+
+    /**
      * Logout user
      * 
      * @return \Symfony\Component\HttpFoundation\JsonResponse
      */
-    public function logoutAction(Request $request)
+    public function deleteSessionAction(Request $request, $sessionId)
     {
-        $this->get('security.context')->setToken(null);
         $sessionName = '';
-        $session = $request->getSession();
-        if ($session->isStarted() !== false) {
+        $session = $this->container->get('session');
+        if ($session->isStarted() !== false && $sessionId != '' && $session->getId() == $sessionId) {
             $sessionName = $session->getName();
             if (isset($_COOKIE[$sessionName])) {
                 setcookie($sessionName, null, -1, '/');
@@ -367,8 +366,9 @@ class ApiController extends Controller
             $this->get('xrow_rest.crm.plugin')->logout($session);
             $session->invalidate();
         }
+        $this->get('security.context')->setToken(null);
         return new JsonResponse(array(
-                                    'result' => array('session_name' => $sessionName),
+                                    'result' => null,
                                     'type' => 'LOGOUT',
                                     'message' => 'User is logged out'));
     }

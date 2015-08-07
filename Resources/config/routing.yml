@@ -40,8 +40,14 @@ xrowapi_logout:
         _controller: xrowRestBundle:Api:logout
     methods: [DELETE]
 
-xrowapi_session:
+xrowapi_session_get:
     path:   /session
     defaults:
         _controller: xrowRestBundle:Api:getSession
     methods: [GET|POST]
+
+xrowapi_session_delete:
+    path: /sessions/{sessionId}
+    defaults:
+        _controller: xrowRestBundle:Api:deleteSession
+    methods: [DELETE]
