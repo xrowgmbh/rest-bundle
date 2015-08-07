@@ -38,7 +38,7 @@ xrowapi_logout:
     path:   /logout
     defaults:
         _controller: xrowRestBundle:Api:logout
-    methods: [GET]
+    methods: [DELETE]
 
 xrowapi_session:
     path:   /session

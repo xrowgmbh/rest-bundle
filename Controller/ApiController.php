@@ -324,17 +324,12 @@ class ApiController extends Controller
                 $loginData = array('username' => $edituser['username'], 
                                    'password' => $edituser['password']);
                 $checkPassword = $this->get('xrow_rest.crm.plugin')->checkPassword($loginData);
-                if ($checkPassword === true) {
+                if ($this->get('xrow_rest.crm.plugin')->checkPassword($loginData) === true) {
                     return new JsonResponse(array(
                                             'result' => true,
                                             'type' => 'CONTENT',
                                             'message' => 'User data'));
                 }
-                elseif (isset($checkPassword['error']))
-                    $error = $checkPassword['error'];
-                else
-                    $error = 'Please fill in required data.';
-                return new JsonResponse(array('error_description' => $error));
             }
             return new JsonResponse(array(
                 'result' => null,
@@ -357,18 +352,21 @@ class ApiController extends Controller
     public function logoutAction(Request $request)
     {
         $this->get('security.context')->setToken(null);
+        $sessionName = '';
         $session = $request->getSession();
-        $cookieName = $session->getName();
-        if (isset($_COOKIE[$cookieName])) {
-            setcookie($cookieName, null, -1, '/');
-            unset($_COOKIE[$cookieName]);
+        if ($session->isStarted() !== false) {
+            $sessionName = $session->getName();
+            if (isset($_COOKIE[$sessionName])) {
+                setcookie($sessionName, null, -1, '/');
+                unset($_COOKIE[$sessionName]);
+            }
+            $this->get('xrow_rest.crm.plugin')->logout($session);
         }
-        $this->get('xrow_rest.crm.plugin')->logout($session);
         $session->invalidate();
         return new JsonResponse(array(
-                'result' => null,
-                'type' => 'LOGOUT',
-                'message' => 'User is logged out'));
+                                    'result' => array('session_name' => $sessionName),
+                                    'type' => 'LOGOUT',
+                                    'message' => 'User is logged out'));
     }
 
     /**

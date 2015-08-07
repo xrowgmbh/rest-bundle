@@ -175,15 +175,16 @@ function restLoginForm(dataArray, callback){
         callback(error);
     });
 };
-function restLogout(settings, jsoObj, accessTokenString, redirectURL){
+function restLogout(settings, jsoObj, redirectURL){
     $.ajax({
-        type    : 'GET',
-        url     : settings.apiLogoutURL+accessTokenString
+        type    : 'DELETE',
+        url     : settings.apiLogoutURL
     }).done(function (logoutRequest) {
+        if (typeof logoutRequest != "undefined" && typeof logoutRequest.session_name != "undefined" && logoutRequest.session_name != '')
+            document.cookie = logoutRequest.session_name+'=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;';
         jsoObj.wipeTokens();
-        if (redirectURL && redirectURL != '') {
+        if (redirectURL && redirectURL != '')
             window.location.href = redirectURL;
-        }
         else
             location.reload();
     });
