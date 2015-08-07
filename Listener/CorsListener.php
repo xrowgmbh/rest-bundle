@@ -1,5 +1,5 @@
 <?php
-namespace wuv\aboshopBundle\Listener;
+namespace xrow\restBundle\Listener;
 
 use Symfony\Component\HttpKernel\Event\FilterResponseEvent;
 
