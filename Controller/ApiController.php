@@ -40,7 +40,6 @@ class ApiController extends Controller
             }
             if ($oauthToken instanceof AnonymousToken) {
                 $oauthTokenString = $this->get('fos_oauth_server.server')->getBearerToken($request, true);
-                $session->set('access_token', $oauthTokenString);
                 $oauthToken = new OAuthToken();
                 $oauthToken->setToken($oauthTokenString);
                 if ($oauthToken instanceof OAuthToken) {
@@ -48,6 +47,11 @@ class ApiController extends Controller
                     $returnValue = $this->get('security.authentication.manager')->authenticate($oauthToken);
                     if ($returnValue instanceof TokenInterface) {
                         $this->get('security.context')->setToken($returnValue);
+                        $session->set('access_token', array('access_token' => $oauthTokenString,
+                                                            'expires_in' => $request->get('expires_in'),
+                                                            'refresh_token' => $request->get('refresh_token'),
+                                                            'token_type' => $request->get('token_type'),
+                                                            'scope' => $request->get('scope')));
                         // eZ legacy login does not work
                         #$this->loginAPIUser($request, $returnValue);
                     }
