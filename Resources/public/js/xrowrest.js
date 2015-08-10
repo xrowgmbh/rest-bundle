@@ -201,13 +201,24 @@ function restLogout(settings, jsoObj, localStorageToken, redirectURL, sessionArr
             },
             crossDomain: true,
             url     : settings.baseURL+settings.apiSessionURL+'?access_token='+localStorageToken.access_token
-        }).done(function(sessionRequest){
-            restLogout(settings, jsoObj, null, redirectURL, sessionRequest);
+        }).done(function(sessionRequest, textStatus, jqXHR){
+            if (typeof sessionRequest != 'undefined') {
+                if (typeof sessionRequest.result != 'undefined')
+                    restLogout(settings, jsoObj, null, redirectURL, sessionRequest.result);
+                else if (sessionRequest.responseRetryReturn != 'undefined' && typeof sessionRequest.responseRetryReturn.result != 'undefined')
+                    restLogout(settings, jsoObj, null, redirectURL, sessionRequest.responseRetryReturn.result);
+            }
+            else {
+                var cookie = getCookie('eZSESSID');
+                if (cookie != '')
+                    restLogout(settings, jsoObj, null, redirectURL, {session_name: 'eZSESSID', session_id: cookie});
+            }
         });
     }
     else {
         var cookie = getCookie('eZSESSID');
-        restLogout(settings, jsoObj, null, redirectURL, {session_name: 'eZSESSID', session_id: cookie});
+        if (cookie != '')
+            restLogout(settings, jsoObj, null, redirectURL, {session_name: 'eZSESSID', session_id: cookie});
     }
 };
 function getCookie(name) {

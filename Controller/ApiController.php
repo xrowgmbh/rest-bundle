@@ -331,13 +331,19 @@ class ApiController extends Controller
                     'error_type' => 'NOUSER',
                     'error_description' => 'This user does not have access to this section.'), 403);
             }
-            $session = $request->getSession();
+            $session = $this->container->get('session');
             if ($session->isStarted() === false) {
-                $session->start();
+                return new JsonResponse(array(
+                    'result' => null,
+                    'error_type' => 'NOCONTENT',
+                    'error_description' => 'There is no session'), 204);
             }
-            return new JsonResponse(
-                array("session_name" => $session->getName(),
-                    "session_id" => $session->getId()));
+            return new JsonResponse(array(
+                    'result' => array(
+                        'session_name' => $session->getName(),
+                        'session_id' => $session->getId()),
+                    'type' => 'CONTENT',
+                    'message' => 'Session data'));
 
         } catch (AuthenticationException $e) {
             $exception = $this->errorHandling($e);
