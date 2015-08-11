@@ -11,6 +11,8 @@ use Symfony\Component\Security\Core\Exception\AuthenticationException;
 use Symfony\Component\Security\Core\Authentication\Token\AnonymousToken;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
+use Sensio\Bundle\FrameworkExtraBundle\Configuration\Cache;
+
 use FOS\OAuthServerBundle\Security\Authentication\Token\OAuthToken;
 use FOS\OAuthServerBundle\Model\AccessTokenInterface;
 
@@ -19,8 +21,9 @@ use OAuth2\OAuth2AuthenticateException;
 
 use xrow\restBundle\Entity\User as APIUser;
 
-use eZ\Publish\Core\MVC\Symfony\Event\InteractiveLoginEvent;
-
+/**
+ * @Cache(public=false)
+ */
 class ApiController extends Controller
 {
     /**
@@ -48,8 +51,6 @@ class ApiController extends Controller
                     if ($returnValue instanceof TokenInterface) {
                         $this->get('security.context')->setToken($returnValue);
                         $session->set('access_token', $oauthTokenString);
-                        // eZ legacy login does not work
-                        #$this->loginAPIUser($request, $returnValue);
                     }
                 }
             }
@@ -79,40 +80,6 @@ class ApiController extends Controller
                     'error_type' => $exception['type'],
                     'error_description' => $exception['error_description']), $exception['httpCode']);
         }
-    }
-
-    /**
-     * Problem: der eZ User hat nicht die Daten des SF-Users. 
-     * Das muss noch mal etwas überdacht werden und dann erst darf der 
-     * neue "zusammengelegte" User mit $this->get('security.context')->setUser($user) auch gesetzt werden
-     * 
-     * @param Symfony\Component\HttpFoundation\Request $request
-     * @param Symfony\Component\Security\Core\Authentication\Token\TokenInterface $returnValue
-     */
-    function loginAPIUser($request, $returnValue)
-    {
-        // Get eZUserID from user with read-rights
-        $eZUserID = $this->getParameter('eZUserWithAbo');
-        // Get some eZ services
-        $repository = $this->get('ezpublish.api.repository');
-        $legacyKernel = $this->get('ezpublish_legacy.kernel');
-        // Load the eZ User
-        $currentEzUser = $repository->getUserService()->loadUser($eZUserID);
-        // Set user in repository
-        $repository->setCurrentUser($currentEzUser);
-        // Login user for eZ new stack
-        $event = new InteractiveLoginEvent($request, $returnValue);
-        $event->setApiUser($currentEzUser);
-        // Login user for eZ legacy stack
-        $result = $legacyKernel()->runCallback(
-                function () use ( $currentEzUser )
-                {
-                    $legacyUser = \eZUser::fetch( $currentEzUser->id );
-                    \eZUser::setCurrentlyLoggedInUser( $legacyUser, $legacyUser->attribute( 'contentobject_id' ), \eZUser::NO_SESSION_REGENERATE );
-                },
-                false,
-                false
-        );
     }
 
     /**
