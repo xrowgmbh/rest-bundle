@@ -22,7 +22,7 @@ use OAuth2\OAuth2AuthenticateException;
 use xrow\restBundle\Entity\User as APIUser;
 
 /**
- * @Cache(public=false)
+ * @Cache(maxage="0", smaxage="0", expires="now", public=false)
  */
 class ApiController extends Controller
 {
