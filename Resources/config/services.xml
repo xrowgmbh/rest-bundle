@@ -39,7 +39,7 @@
             <argument type="service" id="service_container" /> 
         </service>
 
-        <service id="xrow_rest.cors_listener" class="xrow\restBundle\Listener\CorsListener">
+        <service id="xrow_rest.response_listener" class="xrow\restBundle\EventListener\ResponseListener">
             <tag name="kernel.event_listener" event="kernel.response" method="onKernelResponse" />
         </service>
 
