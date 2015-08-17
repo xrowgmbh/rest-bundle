@@ -22,9 +22,11 @@ class ResponseListener
             $responseHeaders->set('Access-Control-Allow-Methods', 'POST, GET, OPTIONS, PATCH, DELETE');
             $responseHeaders->set('Access-Control-Allow-Credentials', 'true');
             if (strpos($request->getRequestUri(), '/xrowapi/v1/') !== false) {
+                $response->setPrivate();
                 $responseHeaders->addCacheControlDirective('no-cache', true);
-                $responseHeaders->addCacheControlDirective('must-revalidate', true);
                 $responseHeaders->addCacheControlDirective('no-store', true);
+                $responseHeaders->addCacheControlDirective('max-age', 0);
+                $responseHeaders->addCacheControlDirective('must-revalidate', true);
             }
         }
     }
