@@ -21,12 +21,11 @@ class ResponseListener
             }
             $responseHeaders->set('Access-Control-Allow-Methods', 'POST, GET, OPTIONS, PATCH, DELETE');
             $responseHeaders->set('Access-Control-Allow-Credentials', 'true');
-            if (strpos($request->getRequestUri(), '/xrowapi/v1/') !== false) {
-                // private and max-age moved to config.yml
-                $responseHeaders->addCacheControlDirective('no-cache', true);
-                $responseHeaders->addCacheControlDirective('no-store', true);
-                $responseHeaders->addCacheControlDirective('must-revalidate', true);
-            }
+            $response->setPrivate();
+            $response->setMaxAge(0);
+            $response->setSharedMaxAge(0);
+            $response->mustRevalidate();
+            $responseHeaders->addCacheControlDirective('no-store', true);
         }
     }
 }

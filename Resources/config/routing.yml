@@ -51,3 +51,9 @@ xrowapi_session_delete:
     defaults:
         _controller: xrowRestBundle:Api:deleteSession
     methods: [DELETE]
+
+xrowapi_options:
+    path: *
+    defaults:
+        _controller: xrowRestBundle:Api:options
+    methods: [OPTIONS]
