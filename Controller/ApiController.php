@@ -115,10 +115,7 @@ class ApiController extends Controller
             }
             $httpMethod = $request->getMethod();
             if ($httpMethod == 'GET') {
-                if ($request->query->has('refresh_session'))
-                    $CRMUser = $this->get('xrow_rest.crm.plugin')->getUser($user, true);
-                else
-                    $CRMUser = $this->get('xrow_rest.crm.plugin')->getUser($user);
+                $CRMUser = $this->get('xrow_rest.crm.plugin')->getUser($user);
             }
             elseif ($httpMethod == 'PATCH') {
                 $CRMUser = $this->get('xrow_rest.crm.plugin')->updateUser($user, $request);
@@ -162,10 +159,7 @@ class ApiController extends Controller
                         'error_type' => 'NOUSER',
                         'error_description' => 'This user does not have access to this section.'), 403);
             }
-            if ($request->request->has('refresh_session') || $request->query->has('refresh_session'))
-                $CRMAccount = $this->get('xrow_rest.crm.plugin')->getAccount($user, true);
-            else
-                $CRMAccount = $this->get('xrow_rest.crm.plugin')->getAccount($user);
+            $CRMAccount = $this->get('xrow_rest.crm.plugin')->getAccount($user);
             if($CRMAccount) {
                 return new JsonResponse(array(
                         'result' => $CRMAccount,
@@ -202,10 +196,7 @@ class ApiController extends Controller
                         'error_type' => 'NOUSER',
                         'error_description' => 'This user does not have access to this section.'), 403);
             }
-            if ($request->request->has('refresh_session') || $request->query->has('refresh_session'))
-                $CRMUserSubscriptions = $this->get('xrow_rest.crm.plugin')->getSubscriptions($user, true);
-            else
-                $CRMUserSubscriptions = $this->get('xrow_rest.crm.plugin')->getSubscriptions($user);
+            $CRMUserSubscriptions = $this->get('xrow_rest.crm.plugin')->getSubscriptions($user);
             if($CRMUserSubscriptions) {
                 return new JsonResponse(array(
                             'result' => $CRMUserSubscriptions,
@@ -242,10 +233,7 @@ class ApiController extends Controller
                     'error_type' => 'NOUSER',
                     'error_description' => 'This user does not have access to this section.'), 403);
             }
-            if ($request->request->has('refresh_session') || $request->query->has('refresh_session'))
-                $CRMUserSubscription = $this->get('xrow_rest.crm.plugin')->getSubscription($user, $subscriptionId, true);
-            else
-                $CRMUserSubscription = $this->get('xrow_rest.crm.plugin')->getSubscription($user, $subscriptionId);
+            $CRMUserSubscription = $this->get('xrow_rest.crm.plugin')->getSubscription($user, $subscriptionId);
             if($CRMUserSubscription) {
                 return new JsonResponse(array(
                     'result' => $CRMUserSubscription,
