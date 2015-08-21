@@ -24,23 +24,6 @@ use xrow\restBundle\Entity\User as APIUser;
 class ApiController extends Controller
 {
     /**
-     * For all routes with method OPTIONS
-     *
-     * @param Request $request
-     */
-    public function optionsAction(Request $request)
-    {
-        $response = new Response();
-        $responseHeaders = $response->headers;
-        $responseHeaders->set('Access-Control-Max-Age', '3600');
-        $responseHeaders->set('Access-Control-Allow-Headers', 'Content-type');
-        $responseHeaders->set('Access-Control-Allow-Origin', '*');
-        $responseHeaders->set('Access-Control-Allow-Methods', 'POST, GET, OPTIONS, PATCH, DELETE');
-        $responseHeaders->set('Access-Control-Allow-Credentials', 'true');
-        return $response;
-    }
-
-    /**
      * For authentication of an user
      * 
      * @param Request $request
@@ -116,7 +99,6 @@ class ApiController extends Controller
             $httpMethod = $request->getMethod();
             if ($httpMethod == 'GET') {
                 $CRMUser = $this->get('xrow_rest.crm.plugin')->getUser($user);
-                //return 'bla';
             }
             elseif ($httpMethod == 'PATCH') {
                 $CRMUser = $this->get('xrow_rest.crm.plugin')->updateUser($user, $request);
