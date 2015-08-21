@@ -344,6 +344,9 @@ class ApiController extends Controller
         $sessionName = '';
         $session = $this->container->get('session');
         if ($session->isStarted() !== false && $sessionId != '' && $session->getId() == $sessionId) {
+            $crmPlugin = $this->get('xrow_rest.crm.plugin');
+            if (method_exists($crmPlugin, 'logout'))
+                $crmPlugin->logout();
             $sessionName = $session->getName();
             if (isset($_COOKIE[$sessionName])) {
                 setcookie($sessionName, null, -1, '/');
