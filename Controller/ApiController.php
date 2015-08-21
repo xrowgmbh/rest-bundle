@@ -116,6 +116,7 @@ class ApiController extends Controller
             $httpMethod = $request->getMethod();
             if ($httpMethod == 'GET') {
                 $CRMUser = $this->get('xrow_rest.crm.plugin')->getUser($user);
+                //return 'bla';
             }
             elseif ($httpMethod == 'PATCH') {
                 $CRMUser = $this->get('xrow_rest.crm.plugin')->updateUser($user, $request);
@@ -341,12 +342,18 @@ class ApiController extends Controller
      */
     public function deleteSessionAction(Request $request, $sessionId)
     {
+        $secureContext = $this->get('security.context')->getToken();
         $sessionName = '';
         $session = $this->container->get('session');
         if ($session->isStarted() !== false && $sessionId != '' && $session->getId() == $sessionId) {
             $crmPlugin = $this->get('xrow_rest.crm.plugin');
-            if (method_exists($crmPlugin, 'logout'))
-                $crmPlugin->logout();
+            if (method_exists($crmPlugin, 'logout')) {
+                $user = null;
+                $secureToken = $secureContext->getToken();
+                if ($secureToken instanceof TokenInterface)
+                    $user = $secureToken->getUser();
+                $crmPlugin->logout($user);
+            }
             $sessionName = $session->getName();
             if (isset($_COOKIE[$sessionName])) {
                 setcookie($sessionName, null, -1, '/');
@@ -354,7 +361,7 @@ class ApiController extends Controller
             }
             $session->invalidate();
         }
-        $this->get('security.context')->setToken(null);
+        $secureContext->setToken(null);
         return new JsonResponse(array(
                                     'result' => null,
                                     'type' => 'LOGOUT',
