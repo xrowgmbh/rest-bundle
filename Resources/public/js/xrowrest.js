@@ -198,7 +198,7 @@ function restLoginForm(dataArray, callback){
 function restLogout(settings, jsoObj, localStorageToken, redirectURL, sessionArray){
     if (typeof sessionArray != 'undefined') {
         $.ajax({
-            type    : 'GET',//'DELETE',
+            type    : 'DELETE',
             xhrFields  : {
                 withCredentials: true
             },
