@@ -104,10 +104,16 @@ class ApiController extends Controller
                 $CRMUser = $this->get('xrow_rest.crm.plugin')->updateUser($user, $request);
             }
             if($CRMUser && !array_key_exists('error', $CRMUser)) {
-                return new JsonResponse(array(
-                            'result' => $CRMUser,
-                            'type' => 'CONTENT',
-                            'message' => 'User data'));
+                $response = new JsonResponse(array(
+                                                'result' => $CRMUser,
+                                                'type' => 'CONTENT',
+                                                'message' => 'User data'));
+                #$timeCollector = $this->container->get('data_collector.request');
+                #$timeCollector->collect($request, $response);
+                #$timer = $timeCollector->lateCollect();
+                #var_dump($timer);
+                #return 'BÖA';
+                return $response;
             }
             if($CRMUser && array_key_exists('error', $CRMUser)) {
                 return new JsonResponse(array(
@@ -324,7 +330,7 @@ class ApiController extends Controller
      */
     public function deleteSessionAction(Request $request, $sessionId)
     {
-        $secureContext = $this->get('security.context')->getToken();
+        $secureContext = $this->get('security.context');
         $sessionName = '';
         $session = $this->container->get('session');
         if ($session->isStarted() !== false && $sessionId != '' && $session->getId() == $sessionId) {
