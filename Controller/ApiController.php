@@ -60,9 +60,10 @@ class ApiController extends Controller
                             'error_type' => 'NOUSER',
                             'error_description' => 'This user does not have access to this section.'), 403);
                 }
-                // Set subscriptions to session for permissions
-                $this->get('xrow_rest.crm.plugin')->getUser($user);
-                $this->get('xrow_rest.crm.plugin')->getSubscriptions($user);
+                // Set subscriptions to session for permissions for legacy login
+                $userData = array('user' => $this->get('xrow_rest.crm.plugin')->getUser($user),
+                                  'subscriptions' => $this->get('xrow_rest.crm.plugin')->getSubscriptions($user));
+                $session->set('CRMUserData', $userData);
                 $return = array('session_name' => $session->getName(),
                                 'session_id' => $session->getId());
                 return new JsonResponse(array(
