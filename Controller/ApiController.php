@@ -109,11 +109,6 @@ class ApiController extends Controller
                                                 'result' => $CRMUser,
                                                 'type' => 'CONTENT',
                                                 'message' => 'User data'));
-                #$timeCollector = $this->container->get('data_collector.request');
-                #$timeCollector->collect($request, $response);
-                #$timer = $timeCollector->lateCollect();
-                #var_dump($timer);
-                #return 'BÖA';
                 return $response;
             }
             if($CRMUser && array_key_exists('error', $CRMUser)) {
@@ -188,10 +183,12 @@ class ApiController extends Controller
             }
             $CRMUserSubscriptions = $this->get('xrow_rest.crm.plugin')->getSubscriptions($user);
             if($CRMUserSubscriptions) {
-                return new JsonResponse(array(
-                            'result' => $CRMUserSubscriptions,
-                            'type' => 'CONTENT',
-                            'message' => 'User subscriptions'));
+                $jsonContent = new JsonResponse(array(
+                                        'result' => $CRMUserSubscriptions,
+                                        'type' => 'CONTENT',
+                                        'message' => 'User subscriptions'));
+                $jsonContent = $jsonContent->setEncodingOptions(JSON_FORCE_OBJECT);
+                return $jsonContent;
             }
             return new JsonResponse(array(
                             'result' => null,
