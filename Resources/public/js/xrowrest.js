@@ -61,6 +61,9 @@ if (typeof oa_params_cl != "undefined" && typeof oa_params_clsc != "undefined" &
                         dataArray = {'form': loginForm,
                                      'settings': settings,
                                      'jsoObj': jsoObj};
+                        if ($('#'+errorOutputBoxId).length) {
+                            $('#'+errorOutputBoxId).hide();
+                        }
                     restLoginForm(dataArray, function(getTokenData){
                         if (typeof getTokenData.error != 'undefined') {
                             if ($('#'+errorOutputBoxId).length) {
