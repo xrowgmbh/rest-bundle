@@ -45,3 +45,9 @@ xrowapi_session_get:
     defaults:
         _controller: xrowRestBundle:Api:getSession
     methods: [GET|POST]
+
+xrowapi_accountActiveInfo:
+    path: /accountactiveinfo
+    defaults: 
+        _controller: xrowRestBundle:Api:accountActiveInfo
+    methods: [POST]
