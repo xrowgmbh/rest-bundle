@@ -66,31 +66,15 @@ if (typeof oa_params_cl != "undefined" && typeof oa_params_clsc != "undefined" &
                     }
                     restLoginForm(dataArray, function(getTokenData){
                         if (typeof getTokenData.error != 'undefined') {
-                            form = dataArray.form,
-                            $.each(form.serializeArray(), function(i, field) {
-                                if (field.name == 'username' && field.value != '') {
-                                    $.ajax({
-                                        type       : 'POST',
-                                        xhrFields  : {withCredentials: true},
-                                        crossDomain: true,
-                                        data       : {username:field.value},
-                                        url        : settings.baseURL+'/xrowapi/v1/accountactiveinfo'
-                                    }).done(function (authRequest) {
-                                        if (!authRequest.activeinfo) {
-                                            if ($('#'+errorOutputBoxId).length)
-                                                $('#'+errorOutputBoxId).text(authRequest.errorText).show();
-                                        }
-                                        else {
-                                            if ($('#'+errorOutputBoxId).length) {
-                                                $('#'+errorOutputBoxId).text(getTokenData.error).show();
-                                            }
-                                            else {
-                                                window.console.log(getTokenData.error);
-                                            }
-                                        }
-                                    });
-                                }
-                            });
+                            if (typeof window[restLoginFormErrorHandling] == "function") {
+                                window[restLoginFormErrorHandling](getTokenData, dataArray);
+                            }
+                            else if ($('#'+errorOutputBoxId).length) {
+                                $('#'+errorOutputBoxId).text(getTokenData.error).show();
+                            }
+                            else {
+                                window.console.log(getTokenData.error);
+                            }
                         }
                         else if (typeof getTokenData === "string") {
                             var queryHash = "#" + getTokenData.split("?"); 
