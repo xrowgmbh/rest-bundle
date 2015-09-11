@@ -16,13 +16,7 @@ if (typeof oa_params_cl != "undefined" && typeof oa_params_clsc != "undefined" &
                     "tokenURL": "/oauth/v2/token",
                     "authURL": "/xrowapi/v1/auth",
                     "apiSessionURL": "/xrowapi/v1/session",
-                    "apiLogoutURL": "/xrowapi/v1/sessions"},
-        callbackFunctionIfTokenIsSet = '',
-        restLoginFormErrorHandlingIsSet = '';
-    if (typeof callbackFunctionIfToken != "undefined")
-        callbackFunctionIfTokenIsSet = callbackFunctionIfToken;
-    if (typeof restLoginFormErrorHandling != "undefined")
-        restLoginFormErrorHandlingIsSet = restLoginFormErrorHandling;
+                    "apiLogoutURL": "/xrowapi/v1/sessions"};
     var jsoObj = new JSO({
         client_id: settings.client_id,
         authorization: settings.baseURL+settings.authURL,
@@ -34,14 +28,14 @@ if (typeof oa_params_cl != "undefined" && typeof oa_params_clsc != "undefined" &
     JSO.enablejQuery($);
     var token = jsoObj.checkToken();
     if (token !== null && typeof token.access_token != 'undefined') {
-        if(callbackFunctionIfTokenIsSet != '' && typeof window[callbackFunctionIfTokenIsSet] == "function") {
-            window[callbackFunctionIfTokenIsSet](jsoObj, settings, token);
+        if(typeof callbackFunctionIfToken != "undefined" && typeof window[callbackFunctionIfToken] == "function") {
+            window[callbackFunctionIfToken](jsoObj, settings, token);
         }
     }
     else {
-        if (callbackFunctionIfTokenIsSet != '' && typeof window[callbackFunctionIfTokenIsSet] == "function") {
-           window[callbackFunctionIfTokenIsSet](jsoObj, settings);
-       }
+        if(typeof callbackFunctionIfToken != "undefined" && typeof window[callbackFunctionIfToken] == "function") {
+            window[callbackFunctionIfToken](jsoObj, settings, token);
+        }
     }
     /**
      * you need a form with class use-api-logn
@@ -65,8 +59,8 @@ if (typeof oa_params_cl != "undefined" && typeof oa_params_clsc != "undefined" &
                     }
                     restLoginForm(dataArray, function(getTokenData){
                         if (typeof getTokenData.error != 'undefined') {
-                            if (restLoginFormErrorHandlingIsSet != ''&& typeof window[restLoginFormErrorHandlingIsSet] == "function") {
-                                window[restLoginFormErrorHandlingIsSet](getTokenData, dataArray);
+                            if(typeof callbackRestLoginFormErrorHandling != "undefined" && typeof window[callbackRestLoginFormErrorHandling] == "function") {
+                                window[callbackRestLoginFormErrorHandling](getTokenData, dataArray);
                             }
                             else if ($('#'+errorOutputBoxId).length) {
                                 $('#'+errorOutputBoxId).text(getTokenData.error).show();
