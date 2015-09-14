@@ -32,10 +32,8 @@ if (typeof oa_params_cl != "undefined" && typeof oa_params_clsc != "undefined" &
             window[callbackFunctionIfToken](jsoObj, settings, token);
         }
     }
-    else {
-        if(typeof callbackFunctionIfToken != "undefined" && typeof window[callbackFunctionIfToken] == "function") {
-            window[callbackFunctionIfToken](jsoObj, settings, token);
-        }
+    else if(typeof callbackFunctionIfToken != "undefined" && typeof window[callbackFunctionIfToken] == "function") {
+        window[callbackFunctionIfToken](jsoObj, settings, token);
     }
     /**
      * you need a form with class use-api-logn
