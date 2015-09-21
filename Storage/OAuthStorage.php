@@ -166,8 +166,10 @@ class OAuthStorage implements IOAuth2RefreshTokens, IOAuth2GrantUser, IOAuth2Gra
         if (null !== $user) {
             if ($user == 'NOTACTIVE')
                 throw new \OAuth2\OAuth2ServerException(\OAuth2\OAuth2::HTTP_BAD_REQUEST, \OAuth2\OAuth2::ERROR_INVALID_GRANT, $this->container->get('translator')->trans("Your account has to be activated"));
-            if ($user == 'LOCKOUT')
-                throw new \OAuth2\OAuth2ServerException(\OAuth2\OAuth2::HTTP_BAD_REQUEST, \OAuth2\OAuth2::ERROR_INVALID_GRANT, $this->container->get('translator')->trans("Your account has been locked because you tried to login too many times"));
+            if (strpos($user,'LOCKOUT') !== false) {
+                $errorText=explode("=",$user);
+                throw new \OAuth2\OAuth2ServerException(\OAuth2\OAuth2::HTTP_BAD_REQUEST, \OAuth2\OAuth2::ERROR_INVALID_GRANT, $errorText[1]);
+            }
             return array(
                 'data' => $user,
             );
