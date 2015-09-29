@@ -258,7 +258,7 @@ class ApiController extends Controller
                     'error_description' => 'This user does not have access to this section.'), 403);
             }
             $edituser = $request->get('edituser', false);
-            if ((isset($edituser['username']) || isset($edituser['email'])) && isset($edituser['password']) && (trim($edituser['username']) != '' | trim($edituser['email']) != '') && trim($edituser['password']) != '') {
+            if ( ((isset($edituser['username']) && trim($edituser['username']) != '') || (isset($edituser['email']) && trim($edituser['email']) != '')) && (isset($edituser['password']) && trim($edituser['password']) != '') ) {
                 $loginData = array('username' => (isset($edituser['username']) && trim($edituser['username']) != '') ? $edituser['username'] : $edituser['email'],
                                    'password' => $edituser['password']);
                 $checkPassword = $this->get('xrow_rest.crm.plugin')->checkPassword($loginData);
