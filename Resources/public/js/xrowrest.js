@@ -47,13 +47,17 @@ if (typeof oa_params_cl != "undefined" && typeof oa_params_clsc != "undefined" &
                 $(this).submit(function(e){
                     e.preventDefault();
                     var loginForm = $(this),
-                        errorOutputBoxId = loginForm.attr('id')+'-error';
+                        errorOutputBoxId = loginForm.attr('id')+'-error',
+                        successOutputBoxId = loginForm.attr('id')+'-success';
                         counterGetToken = 0,
                         dataArray = {'form': loginForm,
                                      'settings': settings,
                                      'jsoObj': jsoObj};
                     if ($('#'+errorOutputBoxId).length) {
                         $('#'+errorOutputBoxId).hide();
+                    }
+                    if ($('#'+successOutputBoxId).length) {
+                        $('#'+successOutputBoxId).hide();
                     }
                     restLoginForm(dataArray, function(getTokenData){
                         if (typeof getTokenData.error != 'undefined') {
