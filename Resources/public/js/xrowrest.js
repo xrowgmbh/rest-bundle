@@ -48,7 +48,7 @@ if (typeof oa_params_cl != "undefined" && typeof oa_params_clsc != "undefined" &
                     e.preventDefault();
                     var loginForm = $(this),
                         errorOutputBoxId = loginForm.attr('id')+'-error',
-                        successOutputBoxId = loginForm.attr('id')+'-success';
+                        successOutputBoxId = loginForm.attr('id')+'-success',
                         counterGetToken = 0,
                         dataArray = {'form': loginForm,
                                      'settings': settings,
