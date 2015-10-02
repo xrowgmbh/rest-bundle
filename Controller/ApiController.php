@@ -419,31 +419,4 @@ class ApiController extends Controller
         }
         return $result;
     }
-
-    /**
-     * Return The state of the account activation
-     *
-     * @param Request $request
-     * @return Symfony\Component\HttpFoundation\JsonResponse;
-     */
-    public function accountActiveInfoAction(Request $request)
-    {
-        $username = '';
-        if ($request->getMethod() == 'POST') {
-            $username = $request->request->get('username');
-        }
-        $userManager = $this->container->get('fos_user.user_manager');
-        $user= $userManager->findUserByEmail($username);
-        if ($user !== null) {
-            $crmuserid= $user->getCrmuserId();
-            if($crmuserid == null)
-            {
-                $accountactiveinfo = false;
-                $errorText = 'Ihr Account ist noch nicht aktiviert. Bitte führen Sie zunächst die Aktivierung durch und melden Sie sich dann an.';
-                return new JsonResponse(array('activeinfo' => $accountactiveinfo,'errorText'=>$errorText));
-            }
-        }
-        $accountactiveinfo = true;
-        return new JsonResponse(array('activeinfo' => $accountactiveinfo));
-    }
 }
