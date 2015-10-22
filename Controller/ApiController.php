@@ -115,10 +115,7 @@ class ApiController extends Controller
                 return new JsonResponse(array(
                     'error_description' => $CRMUser['error']), 500);
             }
-            return new JsonResponse(array(
-                            'result' => null,
-                            'type' => 'NOCONTENT',
-                            'message' => 'User not found'), 204);
+            return new JsonResponse('', 204);
         } catch (AuthenticationException $e) {
             $exception = $this->errorHandling($e);
             return new JsonResponse(array(
@@ -151,10 +148,7 @@ class ApiController extends Controller
                         'type' => 'CONTENT',
                         'message' => 'Account data'));
             }
-            return new JsonResponse(array(
-                    'result' => null,
-                    'type' => 'NOCONTENT',
-                    'message' => 'User not found'), 204);
+            return new JsonResponse('', 204);
         } catch (AuthenticationException $e) {
             $exception = $this->errorHandling($e);
             return new JsonResponse(array(
@@ -190,10 +184,7 @@ class ApiController extends Controller
                 $jsonContent = $jsonContent->setEncodingOptions(JSON_FORCE_OBJECT);
                 return $jsonContent;
             }
-            return new JsonResponse(array(
-                            'result' => null,
-                            'type' => 'NOCONTENT',
-                            'message' => 'User does not have subscriptions'), 204);
+            return new JsonResponse('', 204);
         } catch (AuthenticationException $e) {
             $exception = $this->errorHandling($e);
             return new JsonResponse(array(
@@ -227,10 +218,7 @@ class ApiController extends Controller
                     'type' => 'CONTENT',
                     'message' => 'User subscription'));
             }
-            return new JsonResponse(array(
-                'result' => null,
-                'type' => 'NOCONTENT',
-                'message' => 'User does not have subscriptions'), 204);
+            return new JsonResponse('', 204);
         } catch (AuthenticationException $e) {
             $exception = $this->errorHandling($e);
             return new JsonResponse(array(
@@ -269,10 +257,7 @@ class ApiController extends Controller
                                             'message' => 'User data'));
                 }
             }
-            return new JsonResponse(array(
-                'result' => null,
-                'type' => 'NOCONTENT',
-                'message' => 'User not found'), 204);
+            return new JsonResponse('', 204);
         } catch (AuthenticationException $e) {
             $exception = $this->errorHandling($e);
             return new JsonResponse(array(
@@ -300,10 +285,7 @@ class ApiController extends Controller
             }
             $session = $this->container->get('session');
             if ($session->isStarted() === false) {
-                return new JsonResponse(array(
-                    'result' => null,
-                    'error_type' => 'NOCONTENT',
-                    'error_description' => 'There is no session'), 204);
+                return new JsonResponse('', 204);
             }
             return new JsonResponse(array(
                     'result' => array(
