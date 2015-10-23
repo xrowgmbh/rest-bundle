@@ -33,7 +33,7 @@ class ApiController extends Controller
     {
         $user = false;
         try {
-            $oauthToken = $this->get('security.context')->getToken();
+            $oauthToken = $this->get('security.token_storage')->getToken();
             $session = $request->getSession();
             if ($session->isStarted() === false) {
                 $session->start();
@@ -46,12 +46,12 @@ class ApiController extends Controller
                     $tokenString = $oauthToken->getToken();
                     $returnValue = $this->get('security.authentication.manager')->authenticate($oauthToken);
                     if ($returnValue instanceof TokenInterface) {
-                        $this->get('security.context')->setToken($returnValue);
+                        $this->get('security.token_storage')->setToken($returnValue);
                         $session->set('access_token', $oauthTokenString);
                     }
                 }
             }
-            $oauthToken = $this->get('security.context')->getToken();
+            $oauthToken = $this->get('security.token_storage')->getToken();
             if ($oauthToken instanceof OAuthToken) {
                 $user = $oauthToken->getUser();
                 if (!$user instanceof APIUser) {
@@ -310,7 +310,7 @@ class ApiController extends Controller
      */
     public function deleteSessionAction(Request $request, $sessionId)
     {
-        $secureContext = $this->get('security.context');
+        $secureContext = $this->get('security.token_storage');
         $sessionName = '';
         $session = $this->container->get('session');
         if ($session->isStarted() !== false && $sessionId != '' && $session->getId() == $sessionId) {
@@ -359,7 +359,7 @@ class ApiController extends Controller
         }
         else {
             // Check if user is from same domaine
-            $oauthToken = $this->get('security.context')->getToken();
+            $oauthToken = $this->get('security.token_storage')->getToken();
             if ($oauthToken instanceof OAuthToken) {
                 $user = $oauthToken->getUser();
             }
