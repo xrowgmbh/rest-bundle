@@ -8,7 +8,7 @@ xrowapi_user:
     path:   /user
     defaults: 
         _controller: xrowRestBundle:Api:getUser
-    methods: [GET|PATCH|OPTIONS]
+    methods: [PATCH|OPTIONS|GET]
 
 xrowapi_account:
     path:   /account
@@ -38,7 +38,7 @@ xrowapi_session_delete:
     path: /sessions/{sessionId}
     defaults:
         _controller: xrowRestBundle:Api:deleteSession
-    methods: [DELETE|OPTIONS|GET]
+    methods: [DELETE|OPTIONS]
 
 xrowapi_session_get:
     path: /session
