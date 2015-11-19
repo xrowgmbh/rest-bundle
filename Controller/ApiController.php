@@ -27,39 +27,50 @@ class ApiController extends Controller
      * For authentication of an user
      * 
      * @param Request $request
-     * @throws AccessDeniedException
+     * @return \Symfony\Component\HttpFoundation\JsonResponse
      */
     public function setAuthenticationAction(Request $request)
     {
         $user = false;
-        try {
-            $oauthToken = $this->get('security.token_storage')->getToken();
-            $session = $request->getSession();
-            if ($session->isStarted() === false) {
-                $session->start();
-            }
-            if ($oauthToken instanceof AnonymousToken) {
+        $session = $request->getSession();
+        if ($session->isStarted() === false) {
+            $session->start();
+        }
+        $oauthToken = $this->get('security.token_storage')->getToken();
+        if ($oauthToken instanceof AnonymousToken) {
+            try {
                 $oauthTokenString = $this->get('fos_oauth_server.server')->getBearerToken($request, true);
-                $oauthToken = new OAuthToken();
-                $oauthToken->setToken($oauthTokenString);
-                if ($oauthToken instanceof OAuthToken) {
-                    $tokenString = $oauthToken->getToken();
+            }
+            catch (\Exception $e) {
+                $exception = $this->errorHandling($e);
+                return new JsonResponse(array(
+                    'error' => $exception['error'],
+                    'error_type' => $exception['type'],
+                    'error_description' => $exception['error_description']), $exception['httpCode']);
+            }
+            $oauthToken = new OAuthToken();
+            $oauthToken->setToken($oauthTokenString);
+            if ($oauthToken instanceof OAuthToken) {
+                $tokenString = $oauthToken->getToken();
+                try {
                     $returnValue = $this->get('security.authentication.manager')->authenticate($oauthToken);
-                    if ($returnValue instanceof TokenInterface) {
-                        $this->get('security.token_storage')->setToken($returnValue);
-                        $session->set('access_token', $oauthTokenString);
-                    }
+                } catch (\Exception $e) {
+                    $exception = $this->errorHandling($e);
+                    return new JsonResponse(array(
+                        'error' => $exception['error'],
+                        'error_type' => $exception['type'],
+                        'error_description' => $exception['error_description']), $exception['httpCode']);
+                }
+                if ($returnValue instanceof TokenInterface) {
+                    $this->get('security.token_storage')->setToken($returnValue);
+                    $session->set('access_token', $oauthTokenString);
                 }
             }
-            $oauthToken = $this->get('security.token_storage')->getToken();
-            if ($oauthToken instanceof OAuthToken) {
-                $user = $oauthToken->getUser();
-                if (!$user instanceof APIUser) {
-                    return new JsonResponse(array(
-                            'error' => 'invalid_grant',
-                            'error_type' => 'NOUSER',
-                            'error_description' => 'This user does not have access to this section.'), 403);
-                }
+        }
+        $oauthToken = $this->get('security.token_storage')->getToken();
+        if ($oauthToken instanceof OAuthToken) {
+            $user = $oauthToken->getUser();
+            if ($user instanceof APIUser) {
                 // Set subscriptions to session for permissions for legacy login
                 $userData = array('user' => $this->get('xrow_rest.crm.plugin')->getUser($user),
                                   'subscriptions' => $this->get('xrow_rest.crm.plugin')->getSubscriptions($user));
@@ -71,13 +82,11 @@ class ApiController extends Controller
                         'type' => 'CONTENT',
                         'message' => 'Authentication successfully'));
             }
-        } catch (AuthenticationException $e) {
-            $exception = $this->errorHandling($e);
-            return new JsonResponse(array(
-                    'error' => $exception['error'],
-                    'error_type' => $exception['type'],
-                    'error_description' => $exception['error_description']), $exception['httpCode']);
         }
+        return new JsonResponse(array(
+                        'error' => 'invalid_grant',
+                        'error_type' => 'NOUSER',
+                        'error_description' => 'This user does not have access to this section.'), 403);
     }
 
     /**
@@ -91,31 +100,6 @@ class ApiController extends Controller
     {
         try {
             $user = $this->checkAccessGranted($request);
-            if (!$user instanceof APIUser) {
-                return new JsonResponse(array(
-                        'error' => 'invalid_grant',
-                        'error_type' => 'NOUSER',
-                        'error_description' => 'This user does not have access to this section.'), 403);
-            }
-            $httpMethod = $request->getMethod();
-            if ($httpMethod == 'GET') {
-                $CRMUser = $this->get('xrow_rest.crm.plugin')->getUser($user);
-            }
-            elseif ($httpMethod == 'PATCH') {
-                $CRMUser = $this->get('xrow_rest.crm.plugin')->updateUser($user, $request);
-            }
-            if($CRMUser && !array_key_exists('error', $CRMUser)) {
-                $response = new JsonResponse(array(
-                                                'result' => $CRMUser,
-                                                'type' => 'CONTENT',
-                                                'message' => 'User data'));
-                return $response;
-            }
-            if($CRMUser && array_key_exists('error', $CRMUser)) {
-                return new JsonResponse(array(
-                    'error_description' => $CRMUser['error']), 500);
-            }
-            return new JsonResponse('', 204);
         } catch (AuthenticationException $e) {
             $exception = $this->errorHandling($e);
             return new JsonResponse(array(
@@ -123,6 +107,31 @@ class ApiController extends Controller
                     'error_type' => $exception['type'],
                     'error_description' => $exception['error_description']), $exception['httpCode']);
         }
+        if (!$user instanceof APIUser) {
+            return new JsonResponse(array(
+                    'error' => 'invalid_grant',
+                    'error_type' => 'NOUSER',
+                    'error_description' => 'This user does not have access to this section.'), 403);
+        }
+        $httpMethod = $request->getMethod();
+        if ($httpMethod == 'GET') {
+            $CRMUser = $this->get('xrow_rest.crm.plugin')->getUser($user);
+        }
+        elseif ($httpMethod == 'PATCH') {
+            $CRMUser = $this->get('xrow_rest.crm.plugin')->updateUser($user, $request);
+        }
+        if($CRMUser && !array_key_exists('error', $CRMUser)) {
+            $response = new JsonResponse(array(
+                                            'result' => $CRMUser,
+                                            'type' => 'CONTENT',
+                                            'message' => 'User data'));
+            return $response;
+        }
+        if($CRMUser && array_key_exists('error', $CRMUser)) {
+            return new JsonResponse(array(
+                'error_description' => $CRMUser['error']), 500);
+        }
+        return new JsonResponse('', 204);
     }
 
     /**
@@ -135,20 +144,6 @@ class ApiController extends Controller
     {
         try {
             $user = $this->checkAccessGranted($request);
-            if (!$user instanceof APIUser) {
-                return new JsonResponse(array(
-                        'error' => 'invalid_grant',
-                        'error_type' => 'NOUSER',
-                        'error_description' => 'This user does not have access to this section.'), 403);
-            }
-            $CRMAccount = $this->get('xrow_rest.crm.plugin')->getAccount($user);
-            if($CRMAccount) {
-                return new JsonResponse(array(
-                        'result' => $CRMAccount,
-                        'type' => 'CONTENT',
-                        'message' => 'Account data'));
-            }
-            return new JsonResponse('', 204);
         } catch (AuthenticationException $e) {
             $exception = $this->errorHandling($e);
             return new JsonResponse(array(
@@ -156,6 +151,20 @@ class ApiController extends Controller
                     'error_type' => $exception['type'],
                     'error_description' => $exception['error_description']), $exception['httpCode']);
         }
+        if (!$user instanceof APIUser) {
+            return new JsonResponse(array(
+                    'error' => 'invalid_grant',
+                    'error_type' => 'NOUSER',
+                    'error_description' => 'This user does not have access to this section.'), 403);
+        }
+        $CRMAccount = $this->get('xrow_rest.crm.plugin')->getAccount($user);
+        if($CRMAccount) {
+            return new JsonResponse(array(
+                    'result' => $CRMAccount,
+                    'type' => 'CONTENT',
+                    'message' => 'Account data'));
+        }
+        return new JsonResponse('', 204);
     }
 
     /**
@@ -169,22 +178,6 @@ class ApiController extends Controller
     {
         try {
             $user = $this->checkAccessGranted($request);
-            if (!$user instanceof APIUser) {
-                return new JsonResponse(array(
-                        'error' => 'invalid_grant',
-                        'error_type' => 'NOUSER',
-                        'error_description' => 'This user does not have access to this section.'), 403);
-            }
-            $CRMUserSubscriptions = $this->get('xrow_rest.crm.plugin')->getSubscriptions($user);
-            if($CRMUserSubscriptions) {
-                $jsonContent = new JsonResponse(array(
-                                        'result' => $CRMUserSubscriptions,
-                                        'type' => 'CONTENT',
-                                        'message' => 'User subscriptions'));
-                $jsonContent = $jsonContent->setEncodingOptions(JSON_FORCE_OBJECT);
-                return $jsonContent;
-            }
-            return new JsonResponse('', 204);
         } catch (AuthenticationException $e) {
             $exception = $this->errorHandling($e);
             return new JsonResponse(array(
@@ -192,6 +185,22 @@ class ApiController extends Controller
                     'error_type' => $exception['type'],
                     'error_description' => $exception['error_description']), $exception['httpCode']);
         }
+        if (!$user instanceof APIUser) {
+            return new JsonResponse(array(
+                    'error' => 'invalid_grant',
+                    'error_type' => 'NOUSER',
+                    'error_description' => 'This user does not have access to this section.'), 403);
+        }
+        $CRMUserSubscriptions = $this->get('xrow_rest.crm.plugin')->getSubscriptions($user);
+        if($CRMUserSubscriptions) {
+            $jsonContent = new JsonResponse(array(
+                                    'result' => $CRMUserSubscriptions,
+                                    'type' => 'CONTENT',
+                                    'message' => 'User subscriptions'));
+            $jsonContent = $jsonContent->setEncodingOptions(JSON_FORCE_OBJECT);
+            return $jsonContent;
+        }
+        return new JsonResponse('', 204);
     }
 
     /**
@@ -205,20 +214,6 @@ class ApiController extends Controller
     {
         try {
             $user = $this->checkAccessGranted($request);
-            if (!$user instanceof APIUser) {
-                return new JsonResponse(array(
-                    'error' => 'invalid_grant',
-                    'error_type' => 'NOUSER',
-                    'error_description' => 'This user does not have access to this section.'), 403);
-            }
-            $CRMUserSubscription = $this->get('xrow_rest.crm.plugin')->getSubscription($user, $subscriptionId);
-            if($CRMUserSubscription) {
-                return new JsonResponse(array(
-                    'result' => $CRMUserSubscription,
-                    'type' => 'CONTENT',
-                    'message' => 'User subscription'));
-            }
-            return new JsonResponse('', 204);
         } catch (AuthenticationException $e) {
             $exception = $this->errorHandling($e);
             return new JsonResponse(array(
@@ -226,6 +221,20 @@ class ApiController extends Controller
                 'error_type' => $exception['type'],
                 'error_description' => $exception['error_description']), $exception['httpCode']);
         }
+        if (!$user instanceof APIUser) {
+            return new JsonResponse(array(
+                'error' => 'invalid_grant',
+                'error_type' => 'NOUSER',
+                'error_description' => 'This user does not have access to this section.'), 403);
+        }
+        $CRMUserSubscription = $this->get('xrow_rest.crm.plugin')->getSubscription($user, $subscriptionId);
+        if($CRMUserSubscription) {
+            return new JsonResponse(array(
+                'result' => $CRMUserSubscription,
+                'type' => 'CONTENT',
+                'message' => 'User subscription'));
+        }
+        return new JsonResponse('', 204);
     }
 
     /**
@@ -239,25 +248,6 @@ class ApiController extends Controller
     {
         try {
             $user = $this->checkAccessGranted($request);
-            if (!$user instanceof APIUser) {
-                return new JsonResponse(array(
-                    'error' => 'invalid_grant',
-                    'error_type' => 'NOUSER',
-                    'error_description' => 'This user does not have access to this section.'), 403);
-            }
-            $edituser = $request->get('edituser', false);
-            if ( ((isset($edituser['username']) && trim($edituser['username']) != '') || (isset($edituser['email']) && trim($edituser['email']) != '')) && (isset($edituser['password']) && trim($edituser['password']) != '') ) {
-                $loginData = array('username' => (isset($edituser['username']) && trim($edituser['username']) != '') ? $edituser['username'] : $edituser['email'],
-                                   'password' => $edituser['password']);
-                $checkPassword = $this->get('xrow_rest.crm.plugin')->checkPassword($loginData);
-                if ($this->get('xrow_rest.crm.plugin')->checkPassword($loginData) === true) {
-                    return new JsonResponse(array(
-                                            'result' => true,
-                                            'type' => 'CONTENT',
-                                            'message' => 'User data'));
-                }
-            }
-            return new JsonResponse('', 204);
         } catch (AuthenticationException $e) {
             $exception = $this->errorHandling($e);
             return new JsonResponse(array(
@@ -265,6 +255,25 @@ class ApiController extends Controller
                 'error_type' => $exception['type'],
                 'error_description' => $exception['error_description']), $exception['httpCode']);
         }
+        if (!$user instanceof APIUser) {
+            return new JsonResponse(array(
+                'error' => 'invalid_grant',
+                'error_type' => 'NOUSER',
+                'error_description' => 'This user does not have access to this section.'), 403);
+        }
+        $edituser = $request->get('edituser', false);
+        if ( ((isset($edituser['username']) && trim($edituser['username']) != '') || (isset($edituser['email']) && trim($edituser['email']) != '')) && (isset($edituser['password']) && trim($edituser['password']) != '') ) {
+            $loginData = array('username' => (isset($edituser['username']) && trim($edituser['username']) != '') ? $edituser['username'] : $edituser['email'],
+                               'password' => $edituser['password']);
+            $checkPassword = $this->get('xrow_rest.crm.plugin')->checkPassword($loginData);
+            if ($this->get('xrow_rest.crm.plugin')->checkPassword($loginData) === true) {
+                return new JsonResponse(array(
+                                        'result' => true,
+                                        'type' => 'CONTENT',
+                                        'message' => 'User data'));
+            }
+        }
+        return new JsonResponse('', 204);
     }
 
     /**
@@ -277,23 +286,6 @@ class ApiController extends Controller
     {
         try {
             $user = $this->checkAccessGranted($request);
-            if (!$user instanceof APIUser) {
-                return new JsonResponse(array(
-                    'error' => 'invalid_grant',
-                    'error_type' => 'NOUSER',
-                    'error_description' => 'This user does not have access to this section.'), 403);
-            }
-            $session = $this->container->get('session');
-            if ($session->isStarted() === false) {
-                return new JsonResponse('', 204);
-            }
-            return new JsonResponse(array(
-                    'result' => array(
-                        'session_name' => $session->getName(),
-                        'session_id' => $session->getId()),
-                    'type' => 'CONTENT',
-                    'message' => 'Session data'));
-
         } catch (AuthenticationException $e) {
             $exception = $this->errorHandling($e);
             return new JsonResponse(array(
@@ -301,6 +293,22 @@ class ApiController extends Controller
                 'error_type' => $exception['type'],
                 'error_description' => $exception['error_description']), $exception['httpCode']);
         }
+        if (!$user instanceof APIUser) {
+            return new JsonResponse(array(
+                'error' => 'invalid_grant',
+                'error_type' => 'NOUSER',
+                'error_description' => 'This user does not have access to this section.'), 403);
+        }
+        $session = $this->container->get('session');
+        if ($session->isStarted() === false) {
+            return new JsonResponse('', 204);
+        }
+        return new JsonResponse(array(
+                'result' => array(
+                    'session_name' => $session->getName(),
+                    'session_id' => $session->getId()),
+                'type' => 'CONTENT',
+                'message' => 'Session data'));
     }
 
     /**
