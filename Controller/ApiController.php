@@ -131,7 +131,9 @@ class ApiController extends Controller
             return new JsonResponse(array(
                 'error_description' => $CRMUser['error']), 500);
         }
-        return new JsonResponse('', 204);
+        $response = new JsonResponse('', 204);
+        $response->prepare($request);
+        return $response;
     }
 
     /**
@@ -164,7 +166,9 @@ class ApiController extends Controller
                     'type' => 'CONTENT',
                     'message' => 'Account data'));
         }
-        return new JsonResponse('', 204);
+        $response = new JsonResponse('', 204);
+        $response->prepare($request);
+        return $response;
     }
 
     /**
@@ -200,7 +204,9 @@ class ApiController extends Controller
             $jsonContent = $jsonContent->setEncodingOptions(JSON_FORCE_OBJECT);
             return $jsonContent;
         }
-        return new JsonResponse('', 204);
+        $response = new JsonResponse('', 204);
+        $response->prepare($request);
+        return $response;
     }
 
     /**
@@ -234,7 +240,9 @@ class ApiController extends Controller
                 'type' => 'CONTENT',
                 'message' => 'User subscription'));
         }
-        return new JsonResponse('', 204);
+        $response = new JsonResponse('', 204);
+        $response->prepare($request);
+        return $response;
     }
 
     /**
@@ -273,7 +281,9 @@ class ApiController extends Controller
                                         'message' => 'User data'));
             }
         }
-        return new JsonResponse('', 204);
+        $response = new JsonResponse('', 204);
+        $response->prepare($request);
+        return $response;
     }
 
     /**
@@ -301,7 +311,9 @@ class ApiController extends Controller
         }
         $session = $this->container->get('session');
         if ($session->isStarted() === false) {
-            return new JsonResponse('', 204);
+            $response = new JsonResponse('', 204);
+            $response->prepare($request);
+            return $response;
         }
         return new JsonResponse(array(
                 'result' => array(
