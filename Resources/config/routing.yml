@@ -4,6 +4,12 @@ xrow_rest_api_auth:
         _controller: xrowRestBundle:Api:setAuthentication
     methods: [GET|POST]
 
+xrowapi_setcookie:
+    path: /xrowapi/v1/setcookie
+    defaults: 
+        _controller: xrowRestBundle:Api:setCookie
+    methods: [GET|POST]
+
 xrowapi_user:
     path:   /user
     defaults: 

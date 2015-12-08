@@ -90,6 +90,44 @@ class ApiController extends Controller
     }
 
     /**
+     * Set cookie from API server to my server
+     * 
+     * @param Request $request
+     * @return \Symfony\Component\HttpFoundation\JsonResponse
+     */
+    public function setCookieAction(Request $request)
+    {
+        try {
+            $user = $this->checkAccessGranted($request);
+            if (!$user instanceof APIUser) {
+                return new JsonResponse(array(
+                    'error' => 'invalid_grant',
+                    'error_type' => 'NOUSER',
+                    'error_description' => 'This user does not have access to this section.'), 403);
+            }
+            $sessionName = 'eZSESSID';
+            $sessionValue = $request->query->get('idsv');
+            if ($sessionValue !== null)
+            if (isset($_COOKIE[$sessionName])) {
+                setcookie($sessionName, null, -1, '/');
+                unset($_COOKIE[$sessionName]);
+            }
+            setcookie($sessionName, $sessionValue, 0, '/' );
+            return new JsonResponse();
+        } catch (\Exception $e) {
+            $exception = $this->errorHandling($e);
+            if (isset($exception['error'])) {
+                return new JsonResponse(array('error' => $exception['error'],
+                    'error_type' => $exception['type'],
+                    'error_description' => $exception['error_description']), $exception['httpCode']);
+            }
+            else {
+                return new JsonResponse(array('error_description' => $exception['error_description']), $exception['httpCode']);
+            }
+        }
+    }
+
+    /**
      * Get or update user data
      * 
      * @param Request $request

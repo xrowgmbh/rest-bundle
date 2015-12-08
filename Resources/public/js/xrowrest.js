@@ -164,10 +164,21 @@ function restLoginForm(dataArray, callback){
                         url        : settings.baseURL+settings.authURL+"?access_token="+requestData.access_token
                     }).done(function (authRequest) {
                         if (typeof authRequest !== 'undefined' && typeof authRequest.result != 'undefined') {
-                            document.cookie = authRequest.result.session_name+"="+authRequest.result.session_id+"; path=/";
-                            jsoObj.getToken(function(data) {
-                                callback(data);
-                            }, requestData);
+                            $.ajax({
+                                type : 'GET',
+                                url  : "/xrowapi/v1/setcookie?access_token="+requestData.access_token+"&idsv="+authRequest.result.session_id,
+                                cache: false
+                            }).done(function (setCookieRequest) {
+                                if (typeof setCookieRequest.error_description != "undefined") {
+                                    var error = {'error': setCookieRequest.error_description};
+                                    callback(error);
+                                }
+                                else {
+                                    jsoObj.getToken(function(data) {
+                                        callback(data);
+                                    }, requestData);
+                                }
+                            });
                         }
                         else {
                             if (typeof error_messages['default'] != 'undefined' && error_messages['default'] != '')
