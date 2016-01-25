@@ -15,14 +15,8 @@
             <argument>%xrowsso.platform.entity.user.class%</argument>
         </service>
 
-        <service id="xrowsso.platform.user.repository" class="xrow\restBundle\Repository\UserRepository"
-                    factory-service="xrowsso.platform.user.manager" factory-method="getRepository">
-            <argument>%xrowsso.platform.entity.user.class%</argument>
-        </service>
-
         <service id="xrowsso.platform.user.provider" class="%xrowsso.platform.user.provider.class%">
             <argument type="service" id="service_container" />
-            <argument type="service" id="xrowsso.platform.user.repository" />
         </service>
 
         <service id="xrow_rest.crm.plugin" class="%xrow_rest.plugins.crmclass%">

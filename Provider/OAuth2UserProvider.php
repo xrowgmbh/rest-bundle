@@ -2,58 +2,52 @@
 
 namespace xrow\restBundle\Provider;
 
-use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
 use Symfony\Component\Security\Core\User\UserProviderInterface;
+use Symfony\Component\DependencyInjection\ContainerInterface;
+use Doctrine\ORM\EntityManager;
+use Symfony\Component\Security\Core\Encoder\EncoderFactoryInterface;
 use Symfony\Component\Security\Core\Exception\UsernameNotFoundException;
 use Symfony\Component\Security\Core\Exception\UnsupportedUserException;
-use Doctrine\Common\Persistence\ObjectRepository;
-use Doctrine\ORM\NoResultException;
 
-class UserProvider implements UserProviderInterface
+class OAuth2UserProvider implements UserProviderInterface
 {
-    /**
-     * @var \Symfony\Component\DependencyInjection\ContainerInterface
-     */
-    protected $container;
-
-    /**
-     * @var \xrow\restBundle\CRM\CRMPluginInterface
-     */
-    protected $crmPluginClassObject;
-
-    /**
-     * @var Doctrine\ORM\EntityManager
-     */
-    protected $em;
+    public $container;
+    private $em;
+    private $encoderFactory;
+    private $crmPluginClassObject;
 
     /**
      * @param \Symfony\Component\DependencyInjection\ContainerInterface $container
-     * @param \Doctrine\Common\Persistence\ObjectRepository $userRepository
+     * @param \Doctrine\ORM\EntityManager $entityManager
+     * @param \Symfony\Component\Security\Core\Encoder\EncoderFactoryInterface $encoderFactory
      */
-    public function __construct(ContainerInterface $container){
+    public function __construct(ContainerInterface $container, EntityManager $entityManager, EncoderFactoryInterface $encoderFactory)
+    {
         $this->container = $container;
+        $this->em = $entityManager;
+        $this->encoderFactory = $encoderFactory;
         $this->crmPluginClassObject = $this->container->get('xrow_rest.crm.plugin');
-        $this->em = $this->container->get('doctrine.orm.entity_manager');
-        $this->userRepository = $this->em->getRepository('\xrow\restBundle\Entity\User');
     }
 
     /**
-     * Get user with username and password
-     * 
+     * Gets CRM user with username and password
+     *
      * @param string $username
      * @param string $password
      * @throws UsernameNotFoundException
      * @return \xrow\restBundle\Entity\User
      */
-    public function loadUserFromCRM($username, $password, $openIdConnect = false)
+    public function loadUserFromCRM($username, $password)
     {
+        $user = null;
         $crmUser = $this->crmPluginClassObject->loadUser(trim($username), trim($password));
+
         if ($crmUser !== null) {
             try {
                 $user = $this->loadUserByUsername($crmUser['id']);
             } catch(UsernameNotFoundException $e) {
-                $user = $this->createUser($crmUser);
+                $user = $this->createUser($crmUser, trim($password), array('ROLE_USER'), array('user'));
             }
         }
         return $user;
@@ -70,13 +64,10 @@ class UserProvider implements UserProviderInterface
      */
     public function loadUserByUsername($crmuserId)
     {
-        $user = $this->userRepository->findOneBy(array('crmuserId' => $crmuserId));
-        if ($user === null) {
-            $message = sprintf(
-                'Unable to find an active api user object identified by "%s".',
-                $crmuserId
-            );
-            throw new UsernameNotFoundException($message);
+        $user = $this->em->getRepository('\xrow\restBundle\Entity\OAuth2UserCRM')->findOneBy(array('crmuserId' => $crmuserId));
+
+        if (!$user) {
+            throw new UsernameNotFoundException(sprintf('User with crmuserId "%s" not found.', $crmuserId));
         }
 
         return $user;
@@ -89,11 +80,11 @@ class UserProvider implements UserProviderInterface
      * totally reloaded (e.g. from the database), or if the UserInterface
      * object can just be merged into some internal array of users / identity
      * map.
-     *
+     * 
      * @param UserInterface $user
      * @throws UnsupportedUserException if the account is not supported
      * @throws UsernameNotFoundException if user not found
-     *
+     * 
      * @return UserInterface
      */
     public function refreshUser(UserInterface $user)
@@ -107,25 +98,54 @@ class UserProvider implements UserProviderInterface
                 )
             );
         }
-        $refreshedUser = $this->userRepository->find($user->getId());
+
+        $refreshedUser = $this->loadUserByUsername($user->getCrmuserId());
         if (null === $refreshedUser) {
-            throw new UsernameNotFoundException(sprintf('User with id %s not found', json_encode($user->getId())));
+            throw new UsernameNotFoundException(sprintf('User with crmuserId %s not found', $user->getCrmuserId()));
         }
 
         return $refreshedUser;
     }
 
     /**
+     * Whether this provider supports the given user class
+     *
+     * @param string $class
+     *
+     * @return Boolean
+     */
+    public function supportsClass($class)
+    {
+        if ($class == '\xrow\restBundle\Entity\OAuth2UserCRM') {
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
      * Creates a new user
      *
-     * @param array $crmUser
-     * 
+     * @param string $username
+     * @param string $password
+     * @param array $roles
+     * @param array $scopes
+     *
      * @return UserInterface
      */
-    public function createUser($crmUser)
+    public function createUser($crmUser, $password, array $roles = array(), array $scopes = array())
     {
-        $user = new \xrow\restBundle\Entity\User($crmUser['id']);
+        $user = new \xrow\restBundle\Entity\OAuth2UserCRM($crmUser['id']);
         $user->setUsername(md5($crmUser['id']));
+        $user->setRoles($roles);
+        $user->setScopes($scopes);
+
+        // Generate password
+        $salt = $this->generateSalt();
+        $password = $this->encoderFactory->getEncoder($user)->encodePassword($password, $salt);
+
+        $user->setSalt($salt);
+        $user->setPassword($password);
 
         // Store User
         $this->em->persist($user);
@@ -134,9 +154,13 @@ class UserProvider implements UserProviderInterface
         return $user;
     }
 
-    public function supportsClass($class)
+    /**
+     * Creates a salt for password hashing
+     *
+     * @return A salt
+     */
+    protected function generateSalt()
     {
-        return $this->userRepository->getClassName() === $class
-        || is_subclass_of($class, $this->userRepository->getClassName());
+        return base_convert(sha1(uniqid(mt_rand(), true)), 16, 36);
     }
 }

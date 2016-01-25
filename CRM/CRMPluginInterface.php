@@ -4,7 +4,7 @@ namespace xrow\restBundle\CRM;
 
 interface CRMPluginInterface
 {
-    public function loadUser($username, $password, $userRepository);
+    public function loadUser($username, $password);
 
     public function getUser($user);
 
