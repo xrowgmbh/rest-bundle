@@ -4,6 +4,7 @@ namespace xrow\restBundle\Entity;
 
 use OAuth2\ServerBundle\Entity\User as BaseUser;
 use OAuth2\ServerBundle\User\AdvancedOAuth2UserInterface;
+use Symfony\Component\Security\Core\User\UserInterface;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
@@ -98,5 +99,10 @@ class OAuth2UserCRM extends BaseUser implements AdvancedOAuth2UserInterface
     public function isEnabled()
     {
         return true;
+    }
+
+    public function __toString()
+    {
+        return $this->crmuserId;
     }
 }

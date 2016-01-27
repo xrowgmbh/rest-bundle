@@ -1,11 +1,16 @@
 <script type='text/javascript'>
-var oa_params_cl = '{{ oa_params_cl }}',
-    oa_params_clsc = '{{ oa_params_clsc }}',
-    oa_params_clba = '{{ oa_params_clba }}';
-{% if callbackFunctionIfToken is defined %}
-var callbackFunctionIfToken = '{{ callbackFunctionIfToken }}';
+var oauthSettings = {"client_id": "{{oa_params.clid}}",
+                     "client_secret": "{{oa_params.clsc}}",
+                     "baseURL": "{{oa_params.clba}}",
+                     "tokenURL": "{{oa_params.endpoint_token}}/token",
+                     "authURL": "{{oa_params.endpoint_rest}}/auth",
+                     "apiSessionURL": "{{oa_params.endpoint_rest}}/session",
+                     "apiLogoutURL": "{{oa_params.endpoint_rest}}/sessions",
+                     "setcookieURL": "{{oa_params.endpoint_rest}}/setcookie"};
+{% if oa_params.callback_function_if_token_is_set is defined %}
+var callbackFunctionIfToken = '{{oa_params.callback_function_if_token_is_set}}';
 {% endif %}
-{% if callbackRestLoginFormErrorHandling is defined %}
-var callbackRestLoginFormErrorHandling = '{{ callbackRestLoginFormErrorHandling }}';
+{% if oa_params.callback_function_if_restLogin_fail is defined %}
+var callbackRestLoginFormErrorHandling = '{{oa_params.callback_function_if_restLogin_fail}}';
 {% endif %}
 </script>

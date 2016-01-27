@@ -11,7 +11,8 @@ class ResponseListener
         $response = $event->getResponse();
         $responseHeaders = $response->headers;
         $requestHeaders = $request->headers;
-        if (strpos($request->getRequestUri(), '/xrowapi/v1/') !== false || strpos($request->getRequestUri(), '/oauth/v2/') !== false) {
+        if (strpos($request->getRequestUri(), '/xrowapi/v1/') !== false || strpos($request->getRequestUri(), '/oauth/v2/') !== false ||
+            strpos($request->getRequestUri(), '/xrowapi/v2/') !== false) {
             $responseHeaders->set('Access-Control-Allow-Headers', 'Content-type');
             if ($requestHeaders->get('Origin')) {
                 $responseHeaders->set('Access-Control-Allow-Origin', $requestHeaders->get('Origin'));

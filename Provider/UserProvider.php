@@ -48,6 +48,7 @@ class UserProvider implements UserProviderInterface
      */
     public function loadUserFromCRM($username, $password, $openIdConnect = false)
     {
+        $user = null;
         $crmUser = $this->crmPluginClassObject->loadUser(trim($username), trim($password));
         if ($crmUser !== null) {
             try {

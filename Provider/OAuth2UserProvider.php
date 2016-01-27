@@ -74,6 +74,26 @@ class OAuth2UserProvider implements UserProviderInterface
     }
 
     /**
+     * Loads the user for the given crmuserId.
+     * This method must throw UsernameNotFoundException if the user is not
+     * found.
+     *
+     * @param string $crmuserId The CRM user id
+     * @throws UsernameNotFoundException if the user is not found
+     * @return UserInterface
+     */
+    public function loadUserById($id)
+    {
+        $user = $this->em->getRepository('\xrow\restBundle\Entity\OAuth2UserCRM')->findOneBy(array('id' => $id));
+
+        if (!$user) {
+            throw new UsernameNotFoundException(sprintf('User with id "%s" not found.', $id));
+        }
+
+        return $user;
+    }
+
+    /**
      * Refreshes the user for the account interface.
      *
      * It is up to the implementation to decide if the user data should be

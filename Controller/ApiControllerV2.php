@@ -10,7 +10,7 @@ use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Cache;
 
-class ApiController extends Controller
+class ApiControllerV2 extends Controller
 {
     /**
      * For authentication of an user
@@ -23,7 +23,7 @@ class ApiController extends Controller
      */
     public function setAuthenticationAction(Request $request)
     {
-        return $this->get('xrow_rest.api.helper')->setAuthentication($request);
+        return $this->get('xrow_rest.api.helper')->setAuthentication($request, 'OAuth2');
     }
 
     /**
@@ -37,7 +37,7 @@ class ApiController extends Controller
      */
     public function setCookieAction(Request $request)
     {
-        return $this->get('xrow_rest.api.helper')->setCookie($request);
+        return $this->get('xrow_rest.api.helper')->setCookie($request, 'OAuth2');
     }
 
     /**
@@ -47,11 +47,12 @@ class ApiController extends Controller
      * @Method({"PATCH", "OPTIONS", "GET"})
      * 
      * @param Request $request
+     * @throws AccessDeniedException
      * @return \Symfony\Component\HttpFoundation\JsonResponse
      */
     public function getUserAction(Request $request)
     {
-        return $this->get('xrow_rest.api.helper')->getUser($request);
+        return $this->get('xrow_rest.api.helper')->getUser($request, 'OAuth2');
     }
 
     /**
@@ -65,7 +66,7 @@ class ApiController extends Controller
      */
     public function getAccountAction(Request $request)
     {
-        return $this->get('xrow_rest.api.helper')->getAccount($request);
+        return $this->get('xrow_rest.api.helper')->getAccount($request, 'OAuth2');
     }
 
     /**
@@ -75,11 +76,12 @@ class ApiController extends Controller
      * @Method({"GET"})
      * 
      * @param Request $request
+     * @throws AccessDeniedException
      * @return \Symfony\Component\HttpFoundation\JsonResponse
      */
     public function getSubscriptionsAction(Request $request)
     {
-        return $this->get('xrow_rest.api.helper')->getSubscriptions($request);
+        return $this->get('xrow_rest.api.helper')->getSubscriptions($request, 'OAuth2');
     }
 
     /**
@@ -89,11 +91,12 @@ class ApiController extends Controller
      * @Method({"GET"})
      * 
      * @param Request $request $subscriptionId
+     * @throws AccessDeniedException
      * @return \Symfony\Component\HttpFoundation\JsonResponse
      */
     public function getSubscriptionAction(Request $request, $subscriptionId)
     {
-        return $this->get('xrow_rest.api.helper')->getSubscription($request, $subscriptionId);
+        return $this->get('xrow_rest.api.helper')->getSubscription($request, $subscriptionId, 'OAuth2');
     }
 
     /**
@@ -103,11 +106,12 @@ class ApiController extends Controller
      * @Method({"GET"})
      * 
      * @param Request $request
+     * @throws AccessDeniedException
      * @return \Symfony\Component\HttpFoundation\JsonResponse
      */
     public function checkPasswordAction(Request $request)
     {
-        return $this->get('xrow_rest.api.helper')->checkPassword($request);
+        return $this->get('xrow_rest.api.helper')->checkPassword($request, 'OAuth2');
     }
 
     /**
@@ -121,7 +125,7 @@ class ApiController extends Controller
      */
     public function getSessionAction(Request $request)
     {
-        return $this->get('xrow_rest.api.helper')->getSession($request);
+        return $this->get('xrow_rest.api.helper')->getSession($request, 'OAuth2');
     }
 
     /**

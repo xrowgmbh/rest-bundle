@@ -9,31 +9,24 @@
  * -> parameters.yml
  *        oauth_callback_function_if_token_is_set: logoutUser
  */
-if (typeof oa_params_cl != "undefined" && typeof oa_params_clsc != "undefined" && typeof oa_params_clba != "undefined") {
-    var settings = {"client_id": oa_params_cl,
-                    "client_secret": oa_params_clsc,
-                    "baseURL": oa_params_clba,
-                    "tokenURL": "/oauth/v2/token",
-                    "authURL": "/xrowapi/v1/auth",
-                    "apiSessionURL": "/xrowapi/v1/session",
-                    "apiLogoutURL": "/xrowapi/v1/sessions"};
+if (typeof oauthSettings != "undefined" && typeof oauthSettings.client_id != "undefined" && typeof oauthSettings.baseURL != "undefined") {
     var jsoObj = new JSO({
-        client_id: settings.client_id,
-        authorization: settings.baseURL+settings.authURL,
+        client_id: oauthSettings.client_id,
+        authorization: oauthSettings.baseURL+oauthSettings.authURL,
         default_lifetime: false,
-        providerID: "xrowapi/v1",
+        providerID: "xrowapi",
         scopes: ["user"],
-        debug: true
+        debug: false
     });
     JSO.enablejQuery($);
     var token = jsoObj.checkToken();
     if (token !== null && typeof token.access_token != 'undefined') {
         if(typeof callbackFunctionIfToken != "undefined" && typeof window[callbackFunctionIfToken] == "function") {
-            window[callbackFunctionIfToken](jsoObj, settings, token);
+            window[callbackFunctionIfToken](jsoObj, oauthSettings, token);
         }
     }
     else if(typeof callbackFunctionIfToken != "undefined" && typeof window[callbackFunctionIfToken] == "function") {
-        window[callbackFunctionIfToken](jsoObj, settings, token);
+        window[callbackFunctionIfToken](jsoObj, oauthSettings, token);
     }
     /**
      * you need a form with class use-api-logn
@@ -51,7 +44,7 @@ if (typeof oa_params_cl != "undefined" && typeof oa_params_clsc != "undefined" &
                         successOutputBoxId = loginForm.attr('id')+'-success',
                         counterGetToken = 0,
                         dataArray = {'form': loginForm,
-                                     'settings': settings,
+                                     'oauthSettings': oauthSettings,
                                      'jsoObj': jsoObj};
                     if ($('#'+errorOutputBoxId).length) {
                         $('#'+errorOutputBoxId).hide();
@@ -122,7 +115,7 @@ function restLoginForm(dataArray, callback){
     var request = {"grant_type": "password",
                    "scope": "user"},
         form = dataArray.form,
-        settings = dataArray.settings,
+        oauthSettings = dataArray.oauthSettings,
         jsoObj = dataArray.jsoObj;
     jsoObj.wipeTokens();
     var errorIsSet = false,
@@ -140,8 +133,8 @@ function restLoginForm(dataArray, callback){
     if (errorIsSet === true && typeof error_messages['emptyfields'] != 'undefined' && error_messages['emptyfields'] != '')
         callback({'error': error_messages['emptyfields']});
     else {
-        request.client_id = settings.client_id;
-        request.client_secret = settings.client_secret;
+        request.client_id = oauthSettings.client_id;
+        request.client_secret = oauthSettings.client_secret;
         // Request 1 --- AccessToken Request
         $.ajax({
             type       : 'POST',
@@ -149,24 +142,25 @@ function restLoginForm(dataArray, callback){
                 withCredentials: true
             },
             crossDomain: true,
-            url        : settings.baseURL+settings.tokenURL,
+            url        : oauthSettings.baseURL+oauthSettings.tokenURL,
             data       : request
         }).done(function (requestData) {
             if (typeof requestData != "undefined") {
                 if (typeof requestData.access_token != "undefined") {
                     // Request 2 --- Authenticate Request
                     $.ajax({
-                        type       : 'GET',
+                        type       : 'POST',
                         xhrFields  : {
                             withCredentials: true
                         },
                         crossDomain: true,
-                        url        : settings.baseURL+settings.authURL+"?access_token="+requestData.access_token
+                        url        : oauthSettings.baseURL+oauthSettings.authURL,
+                        data       : {"access_token": requestData.access_token}
                     }).done(function (authRequest) {
                         if (typeof authRequest !== 'undefined' && typeof authRequest.result != 'undefined') {
                             $.ajax({
                                 type : 'GET',
-                                url  : "/xrowapi/v1/setcookie?access_token="+requestData.access_token+"&idsv="+authRequest.result.session_id,
+                                url  : oauthSettings.setcookieURL+"?access_token="+requestData.access_token+"&idsv="+authRequest.result.session_id,
                                 cache: false
                             }).done(function (setCookieRequest) {
                                 if (typeof setCookieRequest.error_description != "undefined") {
@@ -207,7 +201,7 @@ function restLoginForm(dataArray, callback){
         });
     }
 };
-function restLogout(settings, jsoObj, localStorageToken, redirectURL, sessionArray){
+function restLogout(oauthSettings, jsoObj, localStorageToken, redirectURL, sessionArray){
     if (typeof sessionArray != 'undefined') {
         $.ajax({
             type    : 'DELETE',
@@ -215,7 +209,7 @@ function restLogout(settings, jsoObj, localStorageToken, redirectURL, sessionArr
                 withCredentials: true
             },
             crossDomain: true,
-            url     : settings.baseURL+settings.apiLogoutURL+'/'+sessionArray.session_id
+            url     : oauthSettings.baseURL+oauthSettings.apiLogoutURL+'/'+sessionArray.session_id
         }).done(function (logoutRequest) {
             document.cookie = sessionArray.session_name+'=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;';
             jsoObj.wipeTokens();
@@ -232,25 +226,25 @@ function restLogout(settings, jsoObj, localStorageToken, redirectURL, sessionArr
                 withCredentials: true
             },
             crossDomain: true,
-            url     : settings.baseURL+settings.apiSessionURL+'?access_token='+localStorageToken.access_token
+            url     : oauthSettings.baseURL+oauthSettings.apiSessionURL+'?access_token='+localStorageToken.access_token
         }).done(function(sessionRequest, textStatus, jqXHR){
             if (typeof sessionRequest != 'undefined') {
                 if (typeof sessionRequest.result != 'undefined')
-                    restLogout(settings, jsoObj, null, redirectURL, sessionRequest.result);
+                    restLogout(oauthSettings, jsoObj, null, redirectURL, sessionRequest.result);
                 else if (sessionRequest.responseRetryReturn != 'undefined' && typeof sessionRequest.responseRetryReturn.result != 'undefined')
-                    restLogout(settings, jsoObj, null, redirectURL, sessionRequest.responseRetryReturn.result);
+                    restLogout(oauthSettings, jsoObj, null, redirectURL, sessionRequest.responseRetryReturn.result);
             }
             else {
                 var cookie = getCookie('eZSESSID');
                 if (cookie != '')
-                    restLogout(settings, jsoObj, null, redirectURL, {session_name: 'eZSESSID', session_id: cookie});
+                    restLogout(oauthSettings, jsoObj, null, redirectURL, {session_name: 'eZSESSID', session_id: cookie});
             }
         });
     }
     else {
         var cookie = getCookie('eZSESSID');
         if (cookie != '')
-            restLogout(settings, jsoObj, null, redirectURL, {session_name: 'eZSESSID', session_id: cookie});
+            restLogout(oauthSettings, jsoObj, null, redirectURL, {session_name: 'eZSESSID', session_id: cookie});
     }
 };
 function getCookie(name) {

@@ -37,6 +37,21 @@
             <tag name="kernel.event_listener" event="kernel.response" method="onKernelResponse" />
         </service>
 
+        <service id="xrow_rest.api.helper" class="xrow\restBundle\Helper\ApiFunctions">
+            <argument type="service" id="service_container" />
+        </service>
+
+        <service id="xrow.security.authentication.provider" class="xrow\restBundle\Security\OAuth2Provider">
+            <argument type="service" id="oauth2.user_provider" />
+            <argument type="service" id="service_container" />
+        </service>
+
+        <service id="xrow.security.authentication.listener" class="xrow\restBundle\Security\OAuth2Listener" public="false">
+            <argument type="service" id="service_container" /> 
+            <argument type="service" id="security.token_storage"/>
+            <argument type="service" id="security.authentication.manager" />
+        </service>
+
     </services>
 
 </container>
