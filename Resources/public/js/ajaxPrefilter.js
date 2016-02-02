@@ -20,9 +20,9 @@ jQuery.ajaxPrefilter(function(opts, originalOpts, jqXHR) {
             if ((jqXHR.responseText + '').indexOf('Invalid refresh token', 0) !== -1) {
                 var token = jsoObj.checkToken();
                 if (token !== null && typeof token.access_token != 'undefined')
-                    restLogout(settings, jsoObj, token, '');
+                    restLogout(oauthSettings, jsoObj, token, '');
                 else
-                    restLogout(settings, jsoObj, null, '');
+                    restLogout(oauthSettings, jsoObj, null, '');
                 dfd.resolveWith(this, [{"statusText": "Access token NOT refreshed. Logout the user."}]);
             }
             else {
@@ -44,14 +44,14 @@ jQuery.ajaxPrefilter(function(opts, originalOpts, jqXHR) {
                 var token = jsoObj.checkToken();
                 if (token !== null && typeof token.access_token != 'undefined') {
                     // Refresh access token
-                    var refreshUrl = "?client_id="+settings.client_id+"&client_secret="+settings.client_secret+"&refresh_token="+token.refresh_token+"&grant_type=refresh_token";
+                    var refreshUrl = "?client_id="+oauthSettings.client_id+"&client_secret="+oauthSettings.client_secret+"&refresh_token="+token.refresh_token+"&grant_type=refresh_token";
                     jQuery.ajax({
                         type       : 'GET',
                         xhrFields  : {
                             withCredentials: true
                         },
                         crossDomain: true,
-                        url        : settings.baseURL+settings.tokenURL+refreshUrl
+                        url        : oauthSettings.baseURL+oauthSettings.tokenURL+refreshUrl
                     }).done(function (responseRequest) {
                         if (typeof responseRequest != "undefined" && responseRequest.access_token != "undefined") {
                             originObj.url = parseAndRenewURL(originObj.url, {'access_token': responseRequest.access_token});
@@ -92,20 +92,20 @@ jQuery.ajaxPrefilter(function(opts, originalOpts, jqXHR) {
                         }
                         else if (typeof restLogout == 'function') {
                             // Logout
-                            restLogout(settings, jsoObj, token, '');
+                            restLogout(oauthSettings, jsoObj, token, '');
                             dfd.resolveWith(this, [{"statusText": "Access token NOT refreshed. Log out the user."}]);
                         }
                     });
                 }
                 else if (typeof restLogout == 'function') {
                     // Logout
-                    restLogout(settings, jsoObj, null, '');
+                    restLogout(oauthSettings, jsoObj, null, '');
                     dfd.resolveWith(this, [{"statusText": "Log out the user."}]);
                 }
             }
             else if (typeof restLogout == 'function') {
                 // Logout
-                restLogout(settings, jsoObj, null, '');
+                restLogout(oauthSettings, jsoObj, null, '');
                 dfd.resolveWith(this, [{"statusText": "Log out the user."}]);
             }
         }

@@ -5,19 +5,22 @@ namespace xrow\restBundle\Helper;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\Security\Core\Authentication\Token\AbstractToken;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 use Symfony\Component\Security\Core\Exception\AuthenticationException;
 use Symfony\Component\Security\Core\Authentication\Token\AnonymousToken;
+use Symfony\Component\Security\Core\User\UserInterface;
+use Symfony\Component\Security\Http\Event\InteractiveLoginEvent;
+use Symfony\Component\Security\Core\Authentication\Token\UsernamePasswordToken;
 
 use FOS\OAuthServerBundle\Security\Authentication\Token\OAuthToken as FOSOAuthToken;
 use FOS\OAuthServerBundle\Model\AccessTokenInterface as FOSAccessTokenInterface;
 
 use OAuth2\TokenType\Bearer;
 use OAuth2\Storage\AccessTokenInterface;
+use OAuth2\ServerBundle\Entity\AccessToken as OAuth2AccessToken;
 
 use xrow\restBundle\Security\OAuth2Token;
-use xrow\restBundle\Entity\User as APIUser;
-use xrow\restBundle\Entity\OAuth2UserCRM as OAuth2User;
 use xrow\restBundle\Exception\OAuth2AuthenticateException;
 
 class ApiFunctions
@@ -41,6 +44,7 @@ class ApiFunctions
     public function __construct(ContainerInterface $container){
         $this->container = $container;
         $this->crmPlugin = $this->container->get('xrow_rest.crm.plugin');
+        $this->securityTokenStorage = $this->container->get('security.token_storage');
     }
 
     /**
@@ -56,9 +60,8 @@ class ApiFunctions
         if ($session->isStarted() === false) {
             $session->start();
         }
-
-        $oauthToken = $this->container->get('security.token_storage')->getToken();
-        if ($oauthToken instanceof AnonymousToken) {
+        $oauthToken = $this->securityTokenStorage->getToken();
+        if ($oauthToken instanceof AnonymousToken || $oauthToken->getUser() === null) {
             try {
                 $oauthTokenString = $this->getBearerToken($request, $bundle);
             }
@@ -71,29 +74,48 @@ class ApiFunctions
             if (isset($oauthTokenString)) {
                 if ($bundle == 'FOS') {
                     $oauthToken = new FOSOAuthToken();
+                    try {
+                        $oauthToken = $this->container->get('security.authentication.manager')->authenticate($oauthToken);
+                    } catch (\Exception $e) {
+                        $exception = $this->errorHandling($e);
+                        return new JsonResponse(array('error' => $exception['error'],
+                            'error_type' => $exception['type'],
+                            'error_description' => $exception['error_description']), $exception['httpCode']);
+                    }
                 }
                 else {
-                    $oauthToken = new OAuth2Token();
+                    $accessToken = $this->verifyAccessToken($oauthTokenString, 'OAuth2');
+                    if ($accessToken instanceof OAuth2AccessToken) {
+                        $user = $this->container->get('oauth2.user_provider')->loadUserById($accessToken->getUserId());
+                        if ($user instanceof UserInterface) {
+                            $oauthToken = new UsernamePasswordToken($user,
+                                                                    $user->getPassword(),
+                                                                    'xrowapiV2',
+                                                                    $user->getRoles());
+                            $oauthToken->setAttribute('access_token', $oauthTokenString);
+                        }
+                    }
                 }
-                $oauthToken->setToken($oauthTokenString);
-                try {
-                    $returnValue = $this->container->get('security.authentication.manager')->authenticate($oauthToken);
-                } catch (\Exception $e) {
-                    $exception = $this->errorHandling($e);
-                    return new JsonResponse(array('error' => $exception['error'],
-                                                  'error_type' => $exception['type'],
-                                                  'error_description' => $exception['error_description']), $exception['httpCode']);
-                }
-                if ($returnValue instanceof TokenInterface) {
-                    $this->container->get('security.token_storage')->setToken($returnValue);
-                    $session->set('access_token', $oauthTokenString);
+                if ($oauthToken instanceof TokenInterface) {
+                    $this->securityTokenStorage->setToken($oauthToken);
+                    if ($bundle != 'FOS') {
+                        // Fire the login event
+                        // Logging the user in above the way we do it doesn't do this automatically
+                        $event = new InteractiveLoginEvent($request, $oauthToken);
+                        $this->container->get("event_dispatcher")->dispatch("security.interactive_login", $event);
+                    }
+                    //$session->set('access_token', $oauthTokenString);
                 }
             }
         }
-        $oauthToken = $this->container->get('security.token_storage')->getToken();
-        if ($oauthToken instanceof FOSOAuthToken || $oauthToken instanceof OAuth2Token) {
+        $oauthToken = $this->securityTokenStorage->getToken();
+        if ($oauthToken instanceof TokenInterface) {
             $user = $oauthToken->getUser();
-            if ($user instanceof APIUser || $user instanceof OAuth2User) {
+            if ($user instanceof \eZ\Publish\Core\MVC\Symfony\Security\UserWrapped) {
+                // We have here an eZ\Publish\Core\MVC\Symfony\Security\UserWrapped, but we would like to have our api user
+                $user = $user->getWrappedUser();
+            }
+            if ($user instanceof UserInterface) {
                 // Set subscriptions to session for permissions for legacy login
                 $userData = array('user' => $this->crmPlugin->getUser($user),
                                   'subscriptions' => $this->crmPlugin->getSubscriptions($user));
@@ -120,15 +142,13 @@ class ApiFunctions
     {
         try {
             $user = $this->checkAccessGranted($request, $bundle);
-            var_dump(get_class($user));
-            return 'BLA';
         } catch (\Exception $e) {
             $exception = $this->errorHandling($e);
             return new JsonResponse(array('error' => $exception['error'],
                                           'error_type' => $exception['type'],
                                           'error_description' => $exception['error_description']), $exception['httpCode']);
         }
-        if (!$user instanceof APIUser && !$user instanceof OAuth2User) {
+        if (!$user instanceof UserInterface) {
             return new JsonResponse(array('error' => 'invalid_grant',
                                           'error_type' => 'NOUSER',
                                           'error_description' => 'This user does not have access to this section.'), 403);
@@ -161,7 +181,7 @@ class ApiFunctions
                     'error_type' => $exception['type'],
                     'error_description' => $exception['error_description']), $exception['httpCode']);
         }
-        if (!$user instanceof APIUser && !$user instanceof OAuth2User) {
+        if (!$user instanceof UserInterface) {
             return new JsonResponse(array(
                     'error' => 'invalid_grant',
                     'error_type' => 'NOUSER',
@@ -207,7 +227,7 @@ class ApiFunctions
                     'error_type' => $exception['type'],
                     'error_description' => $exception['error_description']), $exception['httpCode']);
         }
-        if (!$user instanceof APIUser && !$user instanceof OAuth2User) {
+        if (!$user instanceof UserInterface) {
             return new JsonResponse(array(
                     'error' => 'invalid_grant',
                     'error_type' => 'NOUSER',
@@ -242,7 +262,7 @@ class ApiFunctions
                     'error_type' => $exception['type'],
                     'error_description' => $exception['error_description']), $exception['httpCode']);
         }
-        if (!$user instanceof APIUser && !$user instanceof OAuth2User) {
+        if (!$user instanceof UserInterface) {
             return new JsonResponse(array(
                     'error' => 'invalid_grant',
                     'error_type' => 'NOUSER',
@@ -279,7 +299,7 @@ class ApiFunctions
                 'error_type' => $exception['type'],
                 'error_description' => $exception['error_description']), $exception['httpCode']);
         }
-        if (!$user instanceof APIUser && !$user instanceof OAuth2User) {
+        if (!$user instanceof UserInterface) {
             return new JsonResponse(array(
                 'error' => 'invalid_grant',
                 'error_type' => 'NOUSER',
@@ -314,7 +334,7 @@ class ApiFunctions
                 'error_type' => $exception['type'],
                 'error_description' => $exception['error_description']), $exception['httpCode']);
         }
-        if (!$user instanceof APIUser && !$user instanceof OAuth2User) {
+        if (!$user instanceof UserInterface) {
             return new JsonResponse(array(
                 'error' => 'invalid_grant',
                 'error_type' => 'NOUSER',
@@ -354,7 +374,7 @@ class ApiFunctions
                 'error_type' => $exception['type'],
                 'error_description' => $exception['error_description']), $exception['httpCode']);
         }
-        if (!$user instanceof APIUser && !$user instanceof OAuth2User) {
+        if (!$user instanceof UserInterface) {
             return new JsonResponse(array(
                 'error' => 'invalid_grant',
                 'error_type' => 'NOUSER',
@@ -415,12 +435,15 @@ class ApiFunctions
     public function checkAccessGranted(Request $request, $bundle)
     {
         $user = false;
-        $oauthTokenString = $this->getBearerToken($request, $bundle);
-        if ($oauthTokenString !== null) {
+        $accessTokenString = $this->getBearerToken($request, $bundle);
+        if ($accessTokenString !== null) {
             try {
                 // throw Exceptions like expired (401) or bad request (400) or forbidden (403)
-                $accessToken = $this->verifyAccessToken($oauthTokenString, $bundle);
-                if ($accessToken instanceof FOSAccessTokenInterface || $accessToken instanceof AccessTokenInterface) {
+                $accessToken = $this->verifyAccessToken($accessTokenString, $bundle);
+                if ($accessToken instanceof FOSAccessTokenInterface){
+                    $user = $accessToken->getUser();
+                }
+                else if ($accessToken instanceof OAuth2AccessToken) {
                     $user = $this->container->get('oauth2.user_provider')->loadUserById($accessToken->getUserId());
                 }
             } catch (OAuth2AuthenticateException $e) {
@@ -430,13 +453,17 @@ class ApiFunctions
         else {
             // Check if user is from same domaine
             $oauthToken = $this->get('security.token_storage')->getToken();
-            if ($oauthToken instanceof FOSOAuthToken || $oauthToken instanceof OAuth2Token) {
+            if ($oauthToken instanceof FOSOAuthToken) {
                 $user = $oauthToken->getUser();
             }
+            else if ($accessToken instanceof \eZ\Publish\Core\MVC\Symfony\Security\InteractiveLoginToken) {
+                // We have here an eZ\Publish\Core\MVC\Symfony\Security\UserWrapped, but we would like to have our api user
+                $user = $oauthToken->getUser()->getWrappedUser();
+            }
         }
+
         return $user;
     }
-    
 
     /**
      * Gets bearer token out of request
@@ -447,17 +474,17 @@ class ApiFunctions
      */
     public function getBearerToken(Request $request, $bundle = '')
     {
-        $oauthTokenString = '';
+        $bearerTokenString = null;
         if ($bundle == 'FOS' || $bundle == '') {
-            $oauthTokenString = $this->container->get('fos_oauth_server.server')->getBearerToken($request, true);
+            $bearerTokenString = $this->container->get('fos_oauth_server.server')->getBearerToken($request, true);
         }
-        if ($oauthTokenString == '') {
+        if ($bearerTokenString === null) {
             $bearer = new Bearer();
             $oauth2Request = $this->container->get('oauth2.request');
             $oauth2Response = $this->container->get('oauth2.response');
-            $oauthTokenString = $bearer->getAccessTokenParameter($oauth2Request, $oauth2Response);
+            $bearerTokenString = $bearer->getAccessTokenParameter($oauth2Request, $oauth2Response);
         }
-        return $oauthTokenString;
+        return $bearerTokenString;
     }
 
     /**

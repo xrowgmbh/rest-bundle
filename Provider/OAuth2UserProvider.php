@@ -5,10 +5,12 @@ namespace xrow\restBundle\Provider;
 use Symfony\Component\Security\Core\User\UserInterface;
 use Symfony\Component\Security\Core\User\UserProviderInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
-use Doctrine\ORM\EntityManager;
 use Symfony\Component\Security\Core\Encoder\EncoderFactoryInterface;
 use Symfony\Component\Security\Core\Exception\UsernameNotFoundException;
 use Symfony\Component\Security\Core\Exception\UnsupportedUserException;
+
+use Doctrine\ORM\EntityManager;
+use eZ\Publish\Core\MVC\Symfony\Security\UserWrapped as eZUserWrapped;
 
 class OAuth2UserProvider implements UserProviderInterface
 {
@@ -36,7 +38,7 @@ class OAuth2UserProvider implements UserProviderInterface
      * @param string $username
      * @param string $password
      * @throws UsernameNotFoundException
-     * @return \xrow\restBundle\Entity\User
+     * @return \xrow\restBundle\Entity\OAuth2UserCRM (UserInterface)
      */
     public function loadUserFromCRM($username, $password)
     {
@@ -60,7 +62,7 @@ class OAuth2UserProvider implements UserProviderInterface
      *
      * @param string $crmuserId The CRM user id
      * @throws UsernameNotFoundException if the user is not found
-     * @return UserInterface
+     * @return \xrow\restBundle\Entity\OAuth2UserCRM (UserInterface)
      */
     public function loadUserByUsername($crmuserId)
     {
@@ -80,7 +82,7 @@ class OAuth2UserProvider implements UserProviderInterface
      *
      * @param string $crmuserId The CRM user id
      * @throws UsernameNotFoundException if the user is not found
-     * @return UserInterface
+     * @return \xrow\restBundle\Entity\OAuth2UserCRM (UserInterface)
      */
     public function loadUserById($id)
     {
@@ -105,10 +107,15 @@ class OAuth2UserProvider implements UserProviderInterface
      * @throws UnsupportedUserException if the account is not supported
      * @throws UsernameNotFoundException if user not found
      * 
-     * @return UserInterface
+     * @return \xrow\restBundle\Entity\OAuth2UserCRM (UserInterface)
      */
     public function refreshUser(UserInterface $user)
     {
+        $refreshedUser = $user;
+        // With InteractiveLoginEvent we get an eZ User
+        if ($user instanceof eZUserWrapped) {
+            $user = $user->getWrappedUser();
+        }
         $class = get_class($user);
         if (!$this->supportsClass($class)) {
             throw new UnsupportedUserException(
@@ -118,12 +125,10 @@ class OAuth2UserProvider implements UserProviderInterface
                 )
             );
         }
-
-        $refreshedUser = $this->loadUserByUsername($user->getCrmuserId());
-        if (null === $refreshedUser) {
+        $foundUser = $this->loadUserByUsername($user->getCrmuserId());
+        if (null === $foundUser) {
             throw new UsernameNotFoundException(sprintf('User with crmuserId %s not found', $user->getCrmuserId()));
         }
-
         return $refreshedUser;
     }
 
