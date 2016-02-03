@@ -138,6 +138,6 @@ class ApiControllerV2 extends Controller
      */
     public function deleteSessionAction(Request $request, $sessionId)
     {
-        return $this->get('xrow_rest.api.helper')->deleteSession($request);
+        return $this->get('xrow_rest.api.helper')->deleteSession($request, $sessionId);
     }
 }
