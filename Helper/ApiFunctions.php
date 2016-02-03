@@ -15,11 +15,10 @@ use Symfony\Component\Security\Core\Authentication\Token\UsernamePasswordToken;
 
 use FOS\OAuthServerBundle\Security\Authentication\Token\OAuthToken as FOSOAuthToken;
 use FOS\OAuthServerBundle\Model\AccessTokenInterface as FOSAccessTokenInterface;
-
 use OAuth2\TokenType\Bearer;
 use OAuth2\Storage\AccessTokenInterface;
 use OAuth2\ServerBundle\Entity\AccessToken as OAuth2AccessToken;
-
+use eZ\Publish\Core\MVC\Symfony\Security\UserWrapped as eZUserWrapped;
 use xrow\restBundle\Security\OAuth2Token;
 use xrow\restBundle\Exception\OAuth2AuthenticateException;
 
@@ -74,6 +73,7 @@ class ApiFunctions
             if (isset($oauthTokenString)) {
                 if ($bundle == 'FOS') {
                     $oauthToken = new FOSOAuthToken();
+                    $oauthToken->setToken($oauthTokenString);
                     try {
                         $oauthToken = $this->container->get('security.authentication.manager')->authenticate($oauthToken);
                     } catch (\Exception $e) {
@@ -110,11 +110,11 @@ class ApiFunctions
         $oauthToken = $this->securityTokenStorage->getToken();
         if ($oauthToken instanceof TokenInterface) {
             $user = $oauthToken->getUser();
-            if ($user instanceof \eZ\Publish\Core\MVC\Symfony\Security\UserWrapped) {
-                // We have here an eZ\Publish\Core\MVC\Symfony\Security\UserWrapped, but we would like to have our api user
-                $user = $user->getWrappedUser();
-            }
             if ($user instanceof UserInterface) {
+                // With InteractiveLoginEvent we get an eZ User but we would like to handle with our API user
+                if ($user instanceof eZUserWrapped) {
+                    $user = $user->getWrappedUser();
+                }
                 // Set subscriptions to session for permissions for legacy login
                 $userData = array('user' => $this->crmPlugin->getUser($user),
                                   'subscriptions' => $this->crmPlugin->getSubscriptions($user));
@@ -400,16 +400,15 @@ class ApiFunctions
      */
     public function deleteSession(Request $request, $sessionId)
     {
-        $secureContext = $this->container->get('security.token_storage');
         $sessionName = '';
         $session = $this->container->get('session');
         if ($session->isStarted() !== false && $sessionId != '' && $session->getId() == $sessionId) {
             if (method_exists($this->crmPlugin, 'logout')) {
                 $user = null;
-                $secureToken = $secureContext->getToken();
+                $secureToken = $this->securityTokenStorage->getToken();
                 if ($secureToken instanceof TokenInterface)
                     $user = $secureToken->getUser();
-                $crmPlugin->logout($user);
+                $this->crmPlugin->logout($user);
             }
             $sessionName = $session->getName();
             if (isset($_COOKIE[$sessionName])) {
@@ -418,7 +417,7 @@ class ApiFunctions
             }
             $session->invalidate();
         }
-        $secureContext->setToken(null);
+        $this->securityTokenStorage->setToken(null);
         return new JsonResponse(array(
                                     'result' => null,
                                     'type' => 'LOGOUT',
@@ -451,7 +450,7 @@ class ApiFunctions
         }
         else {
             // Check if user is from same domaine
-            $oauthToken = $this->get('security.token_storage')->getToken();
+            $oauthToken = $this->securityTokenStorage->getToken();
             if ($oauthToken instanceof FOSOAuthToken) {
                 $user = $oauthToken->getUser();
             }
@@ -509,10 +508,16 @@ class ApiFunctions
         if (!isset($token)) {
             throw new OAuth2AuthenticateException(self::HTTP_UNAUTHORIZED, self::TOKEN_TYPE_BEARER, self::WWW_REALM, 'invalid_grant', 'The access token provided is invalid.');
         }
-
         // Check token expiration (expires is a mandatory paramter)
-        if (time() > $token->getExpires()->getTimestamp()) {
-            throw new OAuth2AuthenticateException(self::HTTP_UNAUTHORIZED, self::TOKEN_TYPE_BEARER, self::WWW_REALM, 'invalid_grant', 'The access token provided has expired.');
+        if (method_exists($token, 'hasExpired')) {
+            if ($token->hasExpired()) {
+                throw new OAuth2AuthenticateException(self::HTTP_UNAUTHORIZED, self::TOKEN_TYPE_BEARER, self::WWW_REALM, 'invalid_grant', 'The access token provided has expired.');
+            }
+        }
+        elseif (method_exists($token, 'getExpires')) {
+            if (time() > $token->getExpires()->getTimestamp()) {
+                throw new OAuth2AuthenticateException(self::HTTP_UNAUTHORIZED, self::TOKEN_TYPE_BEARER, self::WWW_REALM, 'invalid_grant', 'The access token provided has expired.');
+            }
         }
         return $token;
     }

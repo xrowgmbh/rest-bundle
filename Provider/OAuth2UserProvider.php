@@ -11,6 +11,7 @@ use Symfony\Component\Security\Core\Exception\UnsupportedUserException;
 
 use Doctrine\ORM\EntityManager;
 use eZ\Publish\Core\MVC\Symfony\Security\UserWrapped as eZUserWrapped;
+use xrow\restBundle\Entity\OAuth2UserCRM;
 
 class OAuth2UserProvider implements UserProviderInterface
 {
@@ -120,7 +121,7 @@ class OAuth2UserProvider implements UserProviderInterface
                 )
             );
         }
-        // With InteractiveLoginEvent we get an eZ User
+        // With InteractiveLoginEvent we get an eZ User but we would like to handle with our API user
         if ($user instanceof eZUserWrapped) {
             $user = $user->getWrappedUser();
             /*
@@ -166,7 +167,7 @@ class OAuth2UserProvider implements UserProviderInterface
      */
     public function createUser($crmUser, $password, array $roles = array(), array $scopes = array())
     {
-        $user = new \xrow\restBundle\Entity\OAuth2UserCRM($crmUser['id']);
+        $user = new OAuth2UserCRM($crmUser['id']);
         $user->setUsername(md5($crmUser['id']));
         $user->setRoles($roles);
         $user->setScopes($scopes);
