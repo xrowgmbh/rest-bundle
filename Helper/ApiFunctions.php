@@ -90,7 +90,7 @@ class ApiFunctions
                         if ($user instanceof UserInterface) {
                             $oauthToken = new UsernamePasswordToken($user,
                                                                     $user->getPassword(),
-                                                                    'xrowapiV2',
+                                                                    'sso',
                                                                     $user->getRoles());
                             $oauthToken->setAttribute('access_token', $oauthTokenString);
                         }
@@ -104,7 +104,6 @@ class ApiFunctions
                         $event = new InteractiveLoginEvent($request, $oauthToken);
                         $this->container->get("event_dispatcher")->dispatch("security.interactive_login", $event);
                     }
-                    //$session->set('access_token', $oauthTokenString);
                 }
             }
         }

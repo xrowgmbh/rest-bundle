@@ -111,11 +111,6 @@ class OAuth2UserProvider implements UserProviderInterface
      */
     public function refreshUser(UserInterface $user)
     {
-        $refreshedUser = $user;
-        // With InteractiveLoginEvent we get an eZ User
-        if ($user instanceof eZUserWrapped) {
-            $user = $user->getWrappedUser();
-        }
         $class = get_class($user);
         if (!$this->supportsClass($class)) {
             throw new UnsupportedUserException(
@@ -125,8 +120,19 @@ class OAuth2UserProvider implements UserProviderInterface
                 )
             );
         }
-        $foundUser = $this->loadUserByUsername($user->getCrmuserId());
-        if (null === $foundUser) {
+        // With InteractiveLoginEvent we get an eZ User
+        if ($user instanceof eZUserWrapped) {
+            $user = $user->getWrappedUser();
+            /*
+            Maybe we would like to set an eZ User later than activate this part for user with contentId 165105
+            $repository = $this->container->get('ezpublish.api.repository');
+            $refreshedAPIUser = $repository->getUserService()->loadUser(165105);
+            $originalUser->setAPIUser($refreshedAPIUser);
+            $repository->setCurrentUser($refreshedAPIUser);
+            */
+        }
+        $refreshedUser = $this->loadUserByUsername($user->getCrmuserId());
+        if (null === $refreshedUser) {
             throw new UsernameNotFoundException(sprintf('User with crmuserId %s not found', $user->getCrmuserId()));
         }
         return $refreshedUser;
@@ -141,7 +147,7 @@ class OAuth2UserProvider implements UserProviderInterface
      */
     public function supportsClass($class)
     {
-        if ($class == '\xrow\restBundle\Entity\OAuth2UserCRM') {
+        if ($class == 'xrow\\restBundle\\Entity\\OAuth2UserCRM' || $class == 'eZ\\Publish\\Core\\MVC\\Symfony\\Security\\UserWrapped') {
             return true;
         }
 
