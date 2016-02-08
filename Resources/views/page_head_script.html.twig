@@ -4,6 +4,7 @@ var oauthSettings = {"client_id": "{{oa_params.clid}}",
                      "baseURL": "{{oa_params.clba}}",
                      "tokenURL": "{{oa_params.endpoint_token}}/token",
                      "authURL": "{{oa_params.endpoint_rest}}/auth",
+                     "openIDConnectURL": "{{oa_params.endpoint_rest}}/oicauth",
                      "apiSessionURL": "{{oa_params.endpoint_rest}}/session",
                      "apiLogoutURL": "{{oa_params.endpoint_rest}}/sessions",
                      "setcookieURL": "{{oa_params.endpoint_rest}}/setcookie"};
@@ -13,4 +14,8 @@ var callbackFunctionIfToken = '{{oa_params.callback_function_if_token_is_set}}';
 {% if oa_params.callback_function_if_restLogin_fail is defined %}
 var callbackRestLoginFormErrorHandling = '{{oa_params.callback_function_if_restLogin_fail}}';
 {% endif %}
+
+document.addEventListener('DOMContentLoaded', function() {
+    startChecking();
+}, false);
 </script>

@@ -1,0 +1,52 @@
+<script type='text/javascript'>
+/**
+ * OpenID Connect Relying-Party functions
+ */
+window.addEventListener("message", receiveMessage, false);
+function startChecking() {
+    window.console.log('function startChecking, wird alle 60 Sekunden aufgerufen.');
+    checkStatus();
+    // Status alle 60 Sekunden überprüfen
+    setInterval("checkStatus()", 1000*60);
+};
+function getCookieValue(cookieName) {
+    window.console.log('function getCookieValue, wurde von checkStatus aufgerufen.');
+    var name = cookieName + "=";
+    var cookies = document.cookie.split(';');
+    if (!cookies) {
+        return null;
+    }
+    for (var i = 0; i < cookies.length; i++) {
+        var cookie = cookies[i].trim();
+        if (cookie.indexOf(name) == 0) {
+            return cookie.substring(name.length, cookie.length);
+        }
+    }
+    return null;
+};
+function checkStatus() {
+    window.console.log('function checkStatus, wurde von startChecking aufgerufen.');
+    var client = oauthSettings.client_id;
+    var sessionState = getCookieValue("session_state");
+    var text = client + " " + sessionState;
+    var iframe = document.getElementById("iframeOP");
+    iframe.contentWindow.postMessage(text, targetOP);
+};
+function receiveMessage(event) {
+    var targetOP = oauthSettings.baseURL;
+    if (event.origin !== targetOP) {
+        // Ursprung ist nicht der OP. Diese Nachricht muss zurückgewiesen werden.
+        window.console.log('Ursprung ist nicht der OP. Diese Nachricht muss zurückgewiesen werden.');
+        return;
+    }
+    stat = event.data;
+    if (stat === "unchanged") {
+        // Benutzer ist noch beim OP angemeldet
+        window.console.log('Benutzer ist noch beim OP angemeldet.');
+    } else {
+        // Benutzer hat sich beim OP abgemeldet.
+        window.console.log('Benutzer hat sich beim OP abgemeldet.');
+        //restLogout(oauthSettings, jsoObjOIC, token, '', sessionRequest.result);
+    }
+}
+</script>

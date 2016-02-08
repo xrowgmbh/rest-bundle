@@ -34,12 +34,12 @@ class OAuth2UserCredentials implements GrantTypeInterface
     public function validateRequest(RequestInterface $request, ResponseInterface $response)
     {
 
-        if (!$request->request("password") || !$request->request("username")) {
+        if (!$request->get("password") || !$request->get("username")) {
             $response->setError(400, 'invalid_request', 'Missing parameters: "username" and "password" required');
 
             return null;
         }
-        $user = $this->storage->checkUserCredentials($request->request("username"), $request->request("password"));
+        $user = $this->storage->checkUserCredentials($request->get("username"), $request->get("password"));
         if (is_array($user) && isset($user['error'])) {
             $response->setError(400, 'invalid_grant', $user['error'][2]);
 
@@ -69,7 +69,7 @@ class OAuth2UserCredentials implements GrantTypeInterface
 
     public function getUserId()
     {
-        return $this->userInfo['user_id'];
+        return isset($this->userInfo['user_id']) ? $this->userInfo['user_id'] : null;
     }
 
     public function getScope()

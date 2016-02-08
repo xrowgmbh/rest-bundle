@@ -13,6 +13,33 @@ use Sensio\Bundle\FrameworkExtraBundle\Configuration\Cache;
 class ApiControllerV2 extends Controller
 {
     /**
+     * For an OpenID Connect token
+     *
+     * @Route("/oicauth")
+     * @Method({"GET", "POST"})
+     *
+     * @param Request $request
+     * @return \Symfony\Component\HttpFoundation\JsonResponse
+     */
+    public function setOpenIDConnectAuthenticationAction(Request $request)
+    {
+        return $this->get('xrow_rest.api.helper')->setAuthenticationCodeForOpenIDConnect($request);
+    }
+
+    /**
+     * Check session via iframe for OpenID Connect
+     * 
+     * @Route("/check_session_iframe")
+     * @Method({"GET"})
+     * 
+     * @param Request $request
+     */
+    public function checkSessionIframeAction(Request $request)
+    {
+        
+    }
+
+    /**
      * For authentication of an user
      * 
      * @Route("/auth")
