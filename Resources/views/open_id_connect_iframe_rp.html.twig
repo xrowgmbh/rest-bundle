@@ -1,0 +1,99 @@
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html;charset=UTF-8" />
+<title>RP Frame</title>
+<script src="https://crypto-js.googlecode.com/svn/tags/3.0.2/build/rollups/sha256.js"></script>
+<script type='text/javascript'>//<![CDATA[
+/**
+ * OpenID Connect Relying-Party functions
+ */
+if (typeof oauthSettings != 'undefined') {
+    var opss, timer_id = null;
+
+    var client_id = oauthSettings.client_id,
+        rp_origin = {{app.request.getSchemeAndHttpHost}},
+        op_target_origin = oauthSettings.baseURL,
+        current_userid = {{user_id}},
+        state = "unchanged",
+        mes = client_id + " " + {{session_state}},
+        salt = CryptoJS.lib.WordArray.random(128/8);
+
+    console.log('mes = ' + mes);
+    console.log('salt = ' + salt);
+
+    function update_mes(new_ops)
+    {
+        salt = CryptoJS.lib.WordArray.random(128/8);
+        mes = CryptoJS.SHA256(client_id + rp_origin + new_ops + salt) + "." + salt;
+        console.log('mes = ' + mes);
+    };
+
+    function check_session()
+    {
+        console.log('check_session');
+        var targetOrigin = op_target_origin;
+        console.log('session_state = <?php echo $session_state ?>');
+        var opFrame = window.parent.document.getElementById("opFrame");
+        if(opFrame) {
+            var win = opFrame.contentWindow;
+            if(win) {
+                win.postMessage( mes, targetOrigin);
+                console.log('client_id : ' + client_id + ' origin : ' + rp_origin + ' salt : ' + salt);
+            }
+        } else {
+            console.log('no opFrame');
+        }
+    };
+
+    function setTimer()
+    {
+        console.log('setTimer');
+        check_session();
+         clearTimer();
+        timer_id = setInterval("check_session()",3*1000);
+    };
+
+    function clearTimer()
+    {
+        if(timer_id) {
+            window.clearInterval(timer_id);
+            timer_id = null;
+            console.log('Cleared timer ID');
+        }
+    };
+
+    window.addEventListener("message", receiveMessage, false);
+
+    function receiveMessage(e)
+    {
+        var targetOrigin  = op_target_origin;
+        if (e.origin !== targetOrigin ){
+            console.log(e.origin + ' !== ' + targetOrigin);
+            return;
+        }
+        state = e.data;
+        console.log('rpframe received ' + state);
+        if(state == 'changed') {
+            clearTimer();
+            alert("session state changed");
+            perform_authcheck();
+        }
+    };
+
+    console.log('testing');
+    setTimer();
+    console.log('called setTimer');
+
+    function perform_authcheck() {
+        var frame = document.getElementById('authcheckframe');
+        if(frame) {
+            frame.src = oauthSettings.baseURL+'/authcheck';
+        }
+    }
+}
+//]]></script>
+</head>
+<body>
+    <iframe id="authcheckframe" name="authcheckframe" width="0" height="0" style="display: none; visibility: hidden"></iframe>
+</body>
+</html>

@@ -9,24 +9,22 @@ class ResponseListener
     {
         $request = $event->getRequest();
         $response = $event->getResponse();
-        $responseHeaders = $response->headers;
-        $requestHeaders = $request->headers;
         if (strpos($request->getRequestUri(), '/xrowapi/v1/') !== false || strpos($request->getRequestUri(), '/oauth/v2/') !== false ||
             strpos($request->getRequestUri(), '/xrowapi/v2/') !== false) {
-            $responseHeaders->set('Access-Control-Allow-Headers', 'Content-type');
-            if ($requestHeaders->get('Origin')) {
-                $responseHeaders->set('Access-Control-Allow-Origin', $requestHeaders->get('Origin'));
+            $response->headers->set('Access-Control-Allow-Headers', 'Content-type');
+            if ($request->headers->get('Origin')) {
+                $response->headers->set('Access-Control-Allow-Origin', $request->headers->get('Origin'));
             }
             else {
-                $responseHeaders->set('Access-Control-Allow-Origin', '*');
+                $response->headers->set('Access-Control-Allow-Origin', '*');
             }
-            $responseHeaders->set('Access-Control-Allow-Methods', 'POST, GET, OPTIONS, PATCH, DELETE');
-            $responseHeaders->set('Access-Control-Allow-Credentials', 'true');
+            $response->headers->set('Access-Control-Allow-Methods', 'POST, GET, OPTIONS, PATCH, DELETE');
+            $response->headers->set('Access-Control-Allow-Credentials', 'true');
             $response->setPrivate();
             $response->setMaxAge(0);
             $response->setSharedMaxAge(0);
             $response->mustRevalidate();
-            $responseHeaders->addCacheControlDirective('no-store', true);
+            $response->headers->addCacheControlDirective('no-store', true);
         }
     }
 }

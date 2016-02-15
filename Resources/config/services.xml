@@ -4,18 +4,13 @@
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:schemaLocation="http://symfony.com/schema/dic/services http://symfony.com/schema/dic/services/services-1.0.xsd">
 
-    <parameters>
-        <parameter key="xrowsso.platform.entity.user.class">xrow\restBundle\Entity\User</parameter>
-        <parameter key="xrowsso.platform.user.provider.class">xrow\restBundle\Provider\UserProvider</parameter>
-    </parameters>
-
     <services>
         <service id="xrowsso.platform.user.manager" class="Doctrine\ORM\EntityManager"
                     factory-service="doctrine" factory-method="getManagerForClass">
-            <argument>%xrowsso.platform.entity.user.class%</argument>
+            <argument>xrow\restBundle\Entity\User</argument>
         </service>
 
-        <service id="xrowsso.platform.user.provider" class="%xrowsso.platform.user.provider.class%">
+        <service id="xrowsso.platform.user.provider" class="xrow\restBundle\Provider\UserProvider">
             <argument type="service" id="service_container" />
         </service>
 
@@ -30,6 +25,10 @@
             <argument type="service" id="fos_oauth_server.auth_code_manager" />
             <argument type="service" id="fos_oauth_server.user_provider" on-invalid="null" />
             <argument type="service" id="security.encoder_factory" />
+            <argument type="service" id="service_container" /> 
+        </service>
+
+        <service id="xrow.oauth2.server.storage" class="xrow\restBundle\Storage\OAuth2ServerStorage">
             <argument type="service" id="service_container" /> 
         </service>
 

@@ -12,12 +12,12 @@ class CreateClientCommand extends ContainerAwareCommand
 {
     /**
      * Example: 
-     * php ezpublish/console xrow:oauth-server:create-client --bundle="fos|oauth2" --redirect-uri="http://localhost" --grant-types="password,refresh_token,client_credentials" --scopes="user,openid"
+     * php ezpublish/console xrow:oauth:create-client --bundle="fos|oauth2" --redirect-uri="http://localhost" --grant-types="password,refresh_token,client_credentials" --scopes="user,openid"
      */
     protected function configure()
     {
         $this
-            ->setName('xrow:oauth-server:create-client')
+            ->setName('xrow:oauth:create-client')
             ->setDescription('Creates a new client')
             ->addOption(
                 'bundle',

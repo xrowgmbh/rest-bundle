@@ -15,7 +15,7 @@ if (typeof oauthSettings != "undefined" && typeof oauthSettings.client_id != "un
         authorization: oauthSettings.baseURL+oauthSettings.openIDConnectURL,
         default_lifetime: false,
         providerID: "xrowapi",
-        scopes: ["user"],
+        scopes: ["user", "openid"],
         debug: false
     });
     JSO.enablejQuery($);
@@ -113,7 +113,7 @@ if (typeof oauthSettings != "undefined" && typeof oauthSettings.client_id != "un
 
 function restLoginForm(dataArray, callback){
     var request = {"grant_type": "password",
-                   "scope": "user"},
+                   "scope": "openid"},
         form = dataArray.form,
         oauthSettings = dataArray.oauthSettings,
         jsoObjOIC = dataArray.jsoObjOIC;
@@ -135,36 +135,62 @@ function restLoginForm(dataArray, callback){
     else {
         request.client_id = oauthSettings.client_id;
         request.client_secret = oauthSettings.client_secret;
-        // Request 1 --- AccessToken Request
+        // 1. Request: get access_token
         $.ajax({
             type       : 'POST',
             xhrFields  : {
                 withCredentials: true
             },
             crossDomain: true,
-            url        : oauthSettings.baseURL+oauthSettings.openIDConnectURL,
+            url        : oauthSettings.baseURL+'/xrowapi/v2/oictoken',
             data       : request
-        }).done(function (authRequest) {
-            if (typeof authRequest !== 'undefined' && typeof authRequest.result != 'undefined') {
-                $('body').load(authRequest.result.kernelpath+"/../vendor/xrow/rest-bunble/Resources/views/open_id_connect_iframe.html.twig", function() {
-                    alert( "Load was performed." );
-                    window.addEventListener("message", receiveMessage, false);
-                });
-                $.ajax({
-                    type : 'GET',
-                    url  : oauthSettings.setcookieURL+"?idsv="+authRequest.result.session_id,
-                    cache: false
-                }).done(function (setCookieRequest) {
-                    if (typeof setCookieRequest.error_description != "undefined") {
-                        var error = {'error': setCookieRequest.error_description};
-                        callback(error);
-                    }
-                    else {
-                        jsoObjOIC.getToken(function(data) {
-                            callback(data);
-                        }, requestData);
-                    }
-                });
+        }).done(function (requestData) {
+            if (typeof requestData != "undefined") {
+                if (typeof requestData.access_token != "undefined") {
+                    // 2. Request: authenticate user
+                    $.ajax({
+                        type       : 'POST',
+                        xhrFields  : {
+                            withCredentials: true
+                        },
+                        crossDomain: true,
+                        url        : oauthSettings.baseURL+oauthSettings.openIDConnectURL,
+                        data       : {"access_token": requestData.access_token, "id_token": requestData.id_token}
+                    }).done(function (authRequest) {
+                        if (typeof authRequest !== 'undefined' && typeof authRequest.result != 'undefined') {
+                            $.ajax({
+                                type : 'GET',
+                                url  : oauthSettings.setcookieURL+"?&idsv="+authRequest.result.session_id,
+                                cache: false
+                            }).done(function (setCookieRequest) {
+                                if (typeof setCookieRequest.error_description != "undefined") {
+                                    var error = {'error': setCookieRequest.error_description};
+                                    callback(error);
+                                }
+                                else {
+                                    jsoObjOIC.getToken(function(data) {
+                                        callback(data);
+                                    }, requestData);
+                                }
+                            });
+                        }
+                        else {
+                            if (typeof error_messages['default'] != 'undefined' && error_messages['default'] != '')
+                                var error = {'error': error_messages['default']};
+                            else
+                                var error = {'error': 'An unexpeded error occured xrjs0.'};
+                            callback(error);
+                        }
+                    });
+                } else {
+                    if (typeof requestData.error_description != "undefined")
+                        var error = {'error': requestData.error_description};
+                    else if(typeof requestData.responseJSON != "undefined" && typeof requestData.responseJSON.error_description != "undefined")
+                        var error = {'error': requestData.responseJSON.error_description};
+                    else
+                        var error = {'error': 'An unexpeded error occured xrjs0.'};
+                    callback(error);
+                }
             }
         }).fail(function (jqXHR) {
             if(typeof jqXHR.responseJSON != "undefined" && typeof jqXHR.responseJSON.error_description != "undefined")

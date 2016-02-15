@@ -14,8 +14,4 @@ var callbackFunctionIfToken = '{{oa_params.callback_function_if_token_is_set}}';
 {% if oa_params.callback_function_if_restLogin_fail is defined %}
 var callbackRestLoginFormErrorHandling = '{{oa_params.callback_function_if_restLogin_fail}}';
 {% endif %}
-
-document.addEventListener('DOMContentLoaded', function() {
-    startChecking();
-}, false);
 </script>

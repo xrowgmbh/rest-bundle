@@ -50,7 +50,7 @@ class OAuth2UserProvider implements UserProviderInterface
             try {
                 $user = $this->loadUserByUsername($crmUser['id']);
             } catch(UsernameNotFoundException $e) {
-                $user = $this->createUser($crmUser, trim($password), array('ROLE_USER'), array('user'));
+                $user = $this->createUser($crmUser, trim($password), array('ROLE_USER'), array('user', 'openid'));
             }
         }
         return $user;
