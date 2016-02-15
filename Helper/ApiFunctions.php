@@ -44,6 +44,7 @@ class ApiFunctions
         $this->container = $container;
         $this->crmPlugin = $this->container->get('xrow_rest.crm.plugin');
         $this->securityTokenStorage = $this->container->get('security.token_storage');
+        $this->OAuth2ServerStorage = $this->container->get('xrow.oauth2.server.storage');
     }
 
     /**
@@ -86,11 +87,10 @@ class ApiFunctions
                     }
                 }
                 else {
-                    $idToken = false;
-                    if ($request->request->has('id_token')) {
-                        $idToken = $request->get('id_token');
-                        $accessToken = $this->verifyOpenIDAccessToken($accesTokenString);
-                        $userId = $accessToken['sub'];
+                    $idToken = $this->OAuth2ServerStorage->isAccessTokenOpenID($accesTokenString);
+                    if ($idToken && is_array($idToken)) {
+                        $this->OAuth2ServerStorage->verifyOpenIDAccessToken($idToken);
+                        $userId = $idToken['sub'];
                     }
                     else {
                         $accessToken = $this->verifyAccessToken($accesTokenString, 'OAuth2');
@@ -104,9 +104,10 @@ class ApiFunctions
                                                                     $user->getPassword(),
                                                                     'sso',
                                                                     $user->getRoles());
-                            $oauthToken->setAttribute('access_token', $accesTokenString);
+                            $oauthToken->setAttribute('session_state', $accesTokenString);
                             if ($idToken)
-                                $oauthToken->setAttribute('id_token', $accessToken);
+                                $oauthToken->setAttribute('id_token', true);
+                            $session->set('session_state', $accesTokenString);
                         }
                     }
                 }
@@ -123,7 +124,6 @@ class ApiFunctions
         }
         $oauthToken = $this->securityTokenStorage->getToken();
         if ($oauthToken instanceof TokenInterface) {
-            #var_dump($oauthToken);
             $user = $oauthToken->getUser();
             if ($user instanceof UserInterface) {
                 // With InteractiveLoginEvent we get an eZ User but we would like to handle with our API user
@@ -156,6 +156,8 @@ class ApiFunctions
      */
     public function setCookie(Request $request, $bundle = 'FOS')
     {
+        #$session = $request->getSession();
+        #var_dump('session '.$session->get('session_state'));
         $user = $this->checkAccessGranted($request, $bundle);
         if ($user instanceof JsonResponse) {
             return $user;
@@ -379,13 +381,20 @@ class ApiFunctions
         $accessTokenString = $this->getBearerToken($request, $bundle);
         if ($accessTokenString !== null) {
             try {
-                // throw Exceptions like expired (401) or bad request (400) or forbidden (403)
-                $accessToken = $this->verifyAccessToken($accessTokenString, $bundle);
-                if ($accessToken instanceof FOSAccessTokenInterface){
-                    $user = $accessToken->getUser();
+                $idToken = $this->OAuth2ServerStorage->isAccessTokenOpenID($accessTokenString);
+                if ($idToken && is_array($idToken)) {
+                    if ($this->OAuth2ServerStorage->verifyOpenIDAccessToken($idToken))
+                        $user = $this->container->get('oauth2.user_provider')->loadUserById($idToken['sub']);
                 }
-                else if ($accessToken instanceof OAuth2AccessToken) {
-                    $user = $this->container->get('oauth2.user_provider')->loadUserById($accessToken->getUserId());
+                else {
+                    // throw Exceptions like expired (401) or bad request (400) or forbidden (403)
+                    $accessToken = $this->verifyAccessToken($accessTokenString, $bundle);
+                    if ($accessToken instanceof FOSAccessTokenInterface){
+                        $user = $accessToken->getUser();
+                    }
+                    else if ($accessToken instanceof OAuth2AccessToken) {
+                        $user = $this->container->get('oauth2.user_provider')->loadUserById($accessToken->getUserId());
+                    }
                 }
             } catch (OAuth2AuthenticateException $e) {
                 //throw new AuthenticationException('OAuth2 authentication failed', 0, $e);
@@ -395,11 +404,6 @@ class ApiFunctions
                     'error_type' => $exception['type'],
                     'error_description' => $exception['error_description']), $exception['httpCode']);
             }
-        }
-        else {
-            // Check if user is from same domaine
-            $oauthToken = $this->securityTokenStorage->getToken();
-            $user = $oauthToken->getUser();
         }
         if (!$user instanceof UserInterface) {
             return new JsonResponse(array(
@@ -467,47 +471,6 @@ class ApiFunctions
             }
         }
         return $token;
-    }
-    
-
-    /**
-     * Verifys the OpenID Connect AccessToken
-     *
-     * @param string $tokenParam
-     * @throws OAuth2AuthenticateException
-     * @return TokenInterface
-     */
-    public function verifyOpenIDAccessToken($tokenParam)
-    {
-        if ($tokenParam == '') {
-            throw new OAuth2AuthenticateException(self::HTTP_BAD_REQUEST, self::TOKEN_TYPE_BEARER, self::WWW_REALM, 'invalid_grant', 'The request is missing a required parameter, includes an unsupported parameter or parameter value, repeats the same parameter, uses more than one method for including an access token, or is otherwise malformed.');
-        }
-        $serverStorage = $this->container->get('xrow.oauth2.server.storage');
-        $clientId = $this->container->getParameter('oauth2.client_id');
-        $token = $serverStorage->decodeJwtAccessToken($tokenParam, $clientId);
-        // Check token expiration (expires is a mandatory paramter)
-        if (isset($token['exp'])) {
-            if (time() > $token['exp']) {
-                throw new OAuth2AuthenticateException(self::HTTP_UNAUTHORIZED, self::TOKEN_TYPE_BEARER, self::WWW_REALM, 'invalid_grant', 'The access token provided has expired.');
-            }
-        }
-        // Check if user is set
-        if (!isset($token['sub']) || $token['sub'] <= 0) {
-            throw new OAuth2AuthenticateException(self::HTTP_UNAUTHORIZED, self::TOKEN_TYPE_BEARER, self::WWW_REALM, 'invalid_grant', 'The access token provided has no user.');
-        }
-        return $token;
-    }
-
-    public function encodeUserId($userId)
-    {
-        $secret = $this->container->getParameter('secret');
-        return base64_encode($secret . $userId);
-    }
-
-    public function decodeUserId($decodedString)
-    {
-        $secret = $this->container->getParameter('secret');
-        return preg_replace('/' . $secret . '/', '', base64_decode($decodedString));
     }
 
     /**

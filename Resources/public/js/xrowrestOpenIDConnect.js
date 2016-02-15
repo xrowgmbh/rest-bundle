@@ -142,7 +142,7 @@ function restLoginForm(dataArray, callback){
                 withCredentials: true
             },
             crossDomain: true,
-            url        : oauthSettings.baseURL+'/xrowapi/v2/oictoken',
+            url        : oauthSettings.baseURL+oauthSettings.tokenURL,
             data       : request
         }).done(function (requestData) {
             if (typeof requestData != "undefined") {
@@ -155,12 +155,12 @@ function restLoginForm(dataArray, callback){
                         },
                         crossDomain: true,
                         url        : oauthSettings.baseURL+oauthSettings.openIDConnectURL,
-                        data       : {"access_token": requestData.access_token, "id_token": requestData.id_token}
+                        data       : {"access_token": requestData.access_token}
                     }).done(function (authRequest) {
                         if (typeof authRequest !== 'undefined' && typeof authRequest.result != 'undefined') {
                             $.ajax({
                                 type : 'GET',
-                                url  : oauthSettings.setcookieURL+"?&idsv="+authRequest.result.session_id,
+                                url  : oauthSettings.setcookieURL+'?access_token='+requestData.access_token+'&idsv='+authRequest.result.session_id+"",
                                 cache: false
                             }).done(function (setCookieRequest) {
                                 if (typeof setCookieRequest.error_description != "undefined") {
