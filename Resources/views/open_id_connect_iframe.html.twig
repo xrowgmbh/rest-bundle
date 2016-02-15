@@ -1,0 +1,4 @@
+{% if app.session.has('session_state') %}
+<iframe id="iframeOP" name="iframeOP" src="{{oa_params.clba}}{{oa_params.endpoint_rest}}/check_session_iframe" frameborder="0" width="0" height="0" style="display: none; visibility: hidden"></iframe>
+<iframe id="iframeRP" name="iframeRP" src="{{app.request.getSchemeAndHttpHost}}{{oa_params.endpoint_rest}}/get_rp_iframe" frameborder="0" width="0" height="0" style="display: none; visibility: hidden"></iframe>
+{% endif %}
