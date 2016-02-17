@@ -13,7 +13,7 @@ var snDomains = new Array(),
 {% set oicdomains = oa_params.oicdomains|split(',') %}
 {% for OpenIDConnectDomain in oicdomains %}
 {% if app.request.schemeAndHttpHost != OpenIDConnectDomain %}
-snDomains[counter] = '{{OpenIDConnectDomain}}';
+snDomains[counter] = '{{OpenIDConnectDomain|trim}}';
 counter++;
 {% endif %}
 {% endfor %}

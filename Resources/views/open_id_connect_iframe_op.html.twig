@@ -17,7 +17,7 @@ var snDomains = new Array(),
     counter = 0;
 {% set oicdomains = oa_params.oicdomains|split(',') %}
 {% for OpenIDConnectDomain in oicdomains %}
-snDomains[counter] = '{{OpenIDConnectDomain}}';
+snDomains[counter] = '{{OpenIDConnectDomain|trim}}';
 counter++;
 {% endfor %}
 {# Get all allowed domains for sharing the session cookie END #}
