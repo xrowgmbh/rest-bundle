@@ -49,9 +49,11 @@ if (typeof oauthSettings != "undefined" && typeof oauthSettings.client_id != "un
                         window[callbackFunctionIfToken](jsoObj, oauthSettings, token);
                     }
                 }, requestData);
-                var sesionCookieIsSet = JSON.parse(localStorage.getItem('xrowOIC'));
-                if (!sesionCookieIsSet) {
-                    localStorage.setItem('xrowOIC', JSON.stringify(sessionDomains));
+                if (snDomains.length > 0) {
+                    var sesionCookieIsSet = JSON.parse(localStorage.getItem('xrowOIC'));
+                    if (!sesionCookieIsSet) {
+                        localStorage.setItem('xrowOIC', JSON.stringify(snDomains));
+                    }
                 }
             }
             else {
