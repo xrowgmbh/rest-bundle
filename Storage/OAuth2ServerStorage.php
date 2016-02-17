@@ -7,6 +7,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\JsonResponse;
 
 use xrow\restBundle\Exception\OAuth2AuthenticateException;
+use xrow\restBundle\Helper\ApiFunctions;
 use OAuth2\Encryption\Jwt as EncryptionUtil;
 
 class OAuth2ServerStorage
@@ -27,33 +28,6 @@ class OAuth2ServerStorage
     }
 
     /**
-     * Creates a request to get the id_token
-     *
-     * @param JsonResponse $response
-     * @return string|\Symfony\Component\HttpFoundation\JsonResponse|unknown
-     */
-    public function handleAuthorizeRequest(JsonResponse $response)
-    {
-        if ($user instanceof UserInterface) {
-            $oauthToken = new UsernamePasswordToken($user,
-                $user->getPassword(),
-                'sso',
-                $user->getRoles());
-            $oauthToken->setAttribute('oiccode', $code);
-            $result = $this->get('xrow_rest.api.helper')->setTokenAndUserData($oauthToken, $request, $session, 'OAuth2');
-            // Set ops
-            $ops = bin2hex(mcrypt_create_iv(16, MCRYPT_DEV_URANDOM));
-            $session->set('ops', $ops);
-            setcookie('ops', $ops, 0, '/');
-            // Set session_state
-            $salt = bin2hex(mcrypt_create_iv(16, MCRYPT_DEV_URANDOM));
-            $session_state = hash('sha256', "{$this->container->getParameter('oauth2.client_id')}{$issuer}{$ops}{$salt}") . '.' . $salt;
-            $session->set('session_state', $session_state);
-            return $result;
-        }
-    }
-
-    /**
      * Verifys the OpenID Connect AccessToken
      *
      * @param string $tokenParam
@@ -66,12 +40,12 @@ class OAuth2ServerStorage
         // Check token expiration (expires is a mandatory paramter)
         if (isset($token['exp'])) {
             if (time() > $token['exp']) {
-                throw new OAuth2AuthenticateException(self::HTTP_UNAUTHORIZED, self::TOKEN_TYPE_BEARER, self::WWW_REALM, 'invalid_grant', 'The access token provided has expired.');
+                throw new OAuth2AuthenticateException(ApiFunctions::HTTP_UNAUTHORIZED, ApiFunctions::TOKEN_TYPE_BEARER, ApiFunctions::WWW_REALM, 'invalid_grant', 'The access token provided has expired.');
             }
         }
         // Check if user is set
         if (!isset($token['sub']) || $token['sub'] <= 0) {
-            throw new OAuth2AuthenticateException(self::HTTP_UNAUTHORIZED, self::TOKEN_TYPE_BEARER, self::WWW_REALM, 'invalid_grant', 'The access token provided has no user.');
+            throw new OAuth2AuthenticateException(ApiFunctions::HTTP_UNAUTHORIZED, ApiFunctions::TOKEN_TYPE_BEARER, ApiFunctions::WWW_REALM, 'invalid_grant', 'The access token provided has no user.');
         }
         return true;
     }

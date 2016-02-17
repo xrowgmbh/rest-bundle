@@ -4,8 +4,11 @@ namespace xrow\restBundle\Controller;
 
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
+use Symfony\Component\Security\Core\User\UserInterface;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Cache;
@@ -139,5 +142,123 @@ class ApiControllerV2 extends Controller
     public function deleteSessionAction(Request $request, $sessionId)
     {
         return $this->get('xrow_rest.api.helper')->deleteSession($request, $sessionId);
+    }
+
+
+    /**
+     * To check session via iframe for OpenID Connect
+     * We need here only the access_token and client id, 
+     * if both are empty the session will be invalid and we should logout the user
+     *
+     * @Route("/check_session_iframe")
+     * @Method({"GET", "POST"})
+     *
+     * @param Request $request
+     */
+    public function checkSessionIframeAction(Request $request)
+    {
+        $parameters = array();
+        $session = $request->getSession();
+        $session_state = '';
+        $clientId = '';
+        if ($session->isStarted() !== false) {
+            $oauthToken = $this->get('security.token_storage')->getToken();
+            if ($oauthToken instanceof TokenInterface) {
+                $user = $oauthToken->getUser();
+                if ($user instanceof UserInterface) {
+                    $parameters['user_id'] = $user->getId();
+                    if ($session->has('session_state')) {
+                        $session_state = $session->get('session_state');
+                        $OAuth2ServerStorage = $this->get('xrow.oauth2.server.storage');
+                        $clientId = $this->getParameter('oauth2.client_id');
+                        $token = $OAuth2ServerStorage->decodeJwtAccessToken($session_state, $clientId);
+                        try {
+                            $OAuth2ServerStorage->verifyOpenIDAccessToken($token);
+                        }
+                        catch(\Exception $e) {
+                            // do nothing
+                        }
+                    }
+                }
+            }
+        }
+        return $this->render('xrowRestBundle::open_id_connect_iframe_op.html.twig',
+            array('session_state' => $session_state, 'clientId' => $clientId),
+            $this->get('wuv.helper.functions')->getNoCacheResponse());
+    }
+
+    /**
+     * Get session data to all selected domains
+     *
+     * @Route("/oicsession")
+     * @Method({"POST"})
+     *
+     * @param Request $request
+     * @return \Symfony\Component\HttpFoundation\Response
+     */
+    public function setOpenIDConnectSessionToAllowedDomainsAction(Request $request)
+    {
+        $sessionName = 'eZSESSID';
+        $sessionValue = $request->get('idsv');
+        if ($sessionValue !== null) {
+            if (isset($_COOKIE[$sessionName])) {
+                setcookie($sessionName, null, -1, '/');
+                unset($_COOKIE[$sessionName]);
+            }
+            setcookie($sessionName, $sessionValue, 0, '/', '', 0, 1);
+        }
+        return new Response();
+    }
+
+    /**
+     * Check session for set localStorage token
+     *
+     * @Route("/storage")
+     * @Method({"GET", "POST"})
+     *
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function setLocalstorageTokenAction(Request $request)
+    {
+        $parameters = array();
+        $session = $request->getSession();
+        if ($session->isStarted() !== false) {
+            $oauthToken = $this->get('security.token_storage')->getToken();
+            if ($oauthToken instanceof TokenInterface) {
+                $user = $oauthToken->getUser();
+                if ($user instanceof UserInterface) {
+                    $parameters['user_id'] = $user->getId();
+                    if ($session->has('session_state')) {
+                        $result = array('session_state' => $session->get('session_state'));
+                        $OAuth2ServerStorage = $this->get('xrow.oauth2.server.storage');
+                        $clientId = $this->getParameter('oauth2.client_id');
+                        $token = $OAuth2ServerStorage->decodeJwtAccessToken($session->get('session_state'), $clientId);
+                        $qb = $this->get('doctrine.orm.entity_manager')->getRepository('OAuth2ServerBundle:RefreshToken')->createQueryBuilder('token');
+                        $refreshTokenResult = $qb->select('token')
+                            ->where('token.user_id = ?1')
+                            ->setParameter(1, $parameters['user_id'])
+                            ->orderBy('token.expires', 'DESC')
+                            ->setFirstResult(0)
+                            ->setMaxResults(1)
+                            ->getQuery()
+                            ->getResult();
+                        if (isset($refreshTokenResult[0]))
+                            $result['refresh_token'] = $refreshTokenResult[0]->getToken();
+                        try {
+                            $OAuth2ServerStorage->verifyOpenIDAccessToken($token);
+                            return new JsonResponse(array(
+                                'result' => $result,
+                                'type' => 'CONTENT',
+                                'message' => 'AccessToken is valid'));
+                        }
+                        catch(\Exception $e) {
+                            // Do nothing
+                        }
+                    }
+                }
+            }
+        }
+        return new JsonResponse();
     }
 }

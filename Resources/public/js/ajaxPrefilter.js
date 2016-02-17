@@ -4,7 +4,6 @@ jQuery.ajaxPrefilter(function(opts, originalOpts, jqXHR) {
     if (opts.retryAttempt) {
         return;
     }
-
     var dfd = jQuery.Deferred(),
         doAjaxPrefilterLogg = false;
 
@@ -39,19 +38,23 @@ jQuery.ajaxPrefilter(function(opts, originalOpts, jqXHR) {
             }
         }
         else {
-            if ((jqXHR.responseText + '').indexOf('TOKENEXPIREDERROR', 0) !== -1) {
+        	if ((jqXHR.responseText + '').indexOf('TOKENEXPIREDERROR', 0) !== -1) {
                 var originObj = this;
                 var token = jsoObj.checkToken();
                 if (token !== null && typeof token.access_token != 'undefined') {
                     // Refresh access token
-                    var refreshUrl = "?client_id="+oauthSettings.client_id+"&client_secret="+oauthSettings.client_secret+"&refresh_token="+token.refresh_token+"&grant_type=refresh_token";
+                    var refreshParams = {'client_id': oauthSettings.client_id,
+                                         'client_secret': oauthSettings.client_secret,
+                                         'refresh_token': token.refresh_token,
+                                         'grant_type': 'refresh_token'};
                     jQuery.ajax({
-                        type       : 'GET',
+                        type       : 'POST',
                         xhrFields  : {
                             withCredentials: true
                         },
                         crossDomain: true,
-                        url        : oauthSettings.baseURL+oauthSettings.tokenURL+refreshUrl
+                        url        : oauthSettings.baseURL+oauthSettings.tokenURL,
+                        data       : refreshParams
                     }).done(function (responseRequest) {
                         if (typeof responseRequest != "undefined" && responseRequest.access_token != "undefined") {
                             originObj.url = parseAndRenewURL(originObj.url, {'access_token': responseRequest.access_token});

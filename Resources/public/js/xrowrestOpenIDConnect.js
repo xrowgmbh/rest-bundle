@@ -10,7 +10,7 @@
  *        oauth_callback_function_if_token_is_set: logoutUser
  */
 if (typeof oauthSettings != "undefined" && typeof oauthSettings.client_id != "undefined" && typeof oauthSettings.baseURL != "undefined") {
-    var jsoObjOIC = new JSO({
+    var jsoObj = new JSO({
         client_id: oauthSettings.client_id,
         authorization: oauthSettings.baseURL+oauthSettings.openIDConnectURL,
         default_lifetime: false,
@@ -19,14 +19,47 @@ if (typeof oauthSettings != "undefined" && typeof oauthSettings.client_id != "un
         debug: false
     });
     JSO.enablejQuery($);
-    var token = jsoObjOIC.checkToken();
+    var token = jsoObj.checkToken();
     if (token !== null && typeof token.access_token != 'undefined') {
         if(typeof callbackFunctionIfToken != "undefined" && typeof window[callbackFunctionIfToken] == "function") {
-            window[callbackFunctionIfToken](jsoObjOIC, oauthSettings, token);
+            window[callbackFunctionIfToken](jsoObj, oauthSettings, token);
         }
     }
     else if(typeof callbackFunctionIfToken != "undefined" && typeof window[callbackFunctionIfToken] == "function") {
-        window[callbackFunctionIfToken](jsoObjOIC, oauthSettings, token);
+        // If we set cookie via OpenID Connect iframe, we will set here the localStorageToken
+        $.ajax({
+            type       : 'GET',
+            xhrFields  : {
+                withCredentials: true,
+            },
+            crossDomain: true,
+            url        : oauthSettings.baseURL+'/xrowapi/v2/storage',
+            cache:     false
+        }).done(function (storageRequest, textStatus, jqXHR) {
+            if (typeof storageRequest != 'undefined' && typeof storageRequest.result != 'undefined' && storageRequest.result.session_state != 'undefined') {
+                var requestData = {'client_id': oauthSettings.client_id,
+                                   'access_token': storageRequest.result.session_state,
+                                   'refresh_token': storageRequest.result.refresh_token,
+                                   'response_type': 'token'};
+                jsoObj.getToken(function(tokenData) {
+                    if (typeof tokenData === "string") {
+                        var queryHash = "#" + tokenData.split("?");
+                        jsoObj.callback(queryHash, false);
+                        var token = jsoObj.checkToken();
+                        window[callbackFunctionIfToken](jsoObj, oauthSettings, token);
+                    }
+                }, requestData);
+                var sesionCookieIsSet = JSON.parse(localStorage.getItem('xrowOIC'));
+                if (!sesionCookieIsSet) {
+                    localStorage.setItem('xrowOIC', JSON.stringify(sessionDomains));
+                }
+            }
+            else {
+                window[callbackFunctionIfToken](jsoObj, oauthSettings, token);
+            }
+        }).fail(function (){
+            window[callbackFunctionIfToken](jsoObj, oauthSettings, token);
+        });
     }
     /**
      * you need a form with class use-api-logn
@@ -45,7 +78,7 @@ if (typeof oauthSettings != "undefined" && typeof oauthSettings.client_id != "un
                         counterGetToken = 0,
                         dataArray = {'form': loginForm,
                                      'oauthSettings': oauthSettings,
-                                     'jsoObjOIC': jsoObjOIC};
+                                     'jsoObj': jsoObj};
                     if ($('#'+errorOutputBoxId).length) {
                         $('#'+errorOutputBoxId).hide();
                     }
@@ -66,11 +99,11 @@ if (typeof oauthSettings != "undefined" && typeof oauthSettings.client_id != "un
                         }
                         else if (typeof getTokenData === "string") {
                             var queryHash = "#" + getTokenData.split("?"); 
-                            jsoObjOIC.callback(queryHash, false);
+                            jsoObj.callback(queryHash, false);
                         }
                         if (counterGetToken == 0) {
                             counterGetToken++;
-                            var token = jsoObjOIC.checkToken();
+                            var token = jsoObj.checkToken();
                             if (token !== null) {
                                 if (typeof token.access_token != "undefined") {
                                     var redirectAfterApiLoginObject = loginForm.find('input[name="redirectAfterApiLogin"]');
@@ -108,16 +141,17 @@ if (typeof oauthSettings != "undefined" && typeof oauthSettings.client_id != "un
         }
     });
 } else {
-    window.console.log("Please set oauth_client_id, oauth_client_secret in parameters.yml for xrowrest.js.");
+    window.console.log('Please set oauth_client_id, oauth_client_secret in parameters.yml for xrowrest.js.');
 }
 
 function restLoginForm(dataArray, callback){
-    var request = {"grant_type": "password",
-                   "scope": "openid"},
+    var request = {'grant_type': 'password',
+                   'scope': 'openid'},
         form = dataArray.form,
         oauthSettings = dataArray.oauthSettings,
-        jsoObjOIC = dataArray.jsoObjOIC;
-    jsoObjOIC.wipeTokens();
+        jsoObj = dataArray.jsoObj;
+    jsoObj.wipeTokens();
+    localStorage.removeItem('xrowOIC');
     var errorIsSet = false,
         error_messages = {};
     $.each(form.serializeArray(), function(i, field) {
@@ -168,7 +202,7 @@ function restLoginForm(dataArray, callback){
                                     callback(error);
                                 }
                                 else {
-                                    jsoObjOIC.getToken(function(data) {
+                                    jsoObj.getToken(function(data) {
                                         callback(data);
                                     }, requestData);
                                 }
@@ -201,7 +235,7 @@ function restLoginForm(dataArray, callback){
         });
     }
 };
-function restLogout(oauthSettings, jsoObjOIC, localStorageToken, redirectURL, sessionArray){
+function restLogout(oauthSettings, jsoObj, localStorageToken, redirectURL, sessionArray){
     if (typeof sessionArray != 'undefined') {
         $.ajax({
             type    : 'DELETE',
@@ -212,7 +246,7 @@ function restLogout(oauthSettings, jsoObjOIC, localStorageToken, redirectURL, se
             url     : oauthSettings.baseURL+oauthSettings.apiLogoutURL+'/'+sessionArray.session_id
         }).done(function (logoutRequest) {
             document.cookie = sessionArray.session_name+'=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;';
-            jsoObjOIC.wipeTokens();
+            jsoObj.wipeTokens();
             if (redirectURL && redirectURL != '')
                 window.location.href = redirectURL;
             else
@@ -230,21 +264,21 @@ function restLogout(oauthSettings, jsoObjOIC, localStorageToken, redirectURL, se
         }).done(function(sessionRequest, textStatus, jqXHR){
             if (typeof sessionRequest != 'undefined') {
                 if (typeof sessionRequest.result != 'undefined')
-                    restLogout(oauthSettings, jsoObjOIC, null, redirectURL, sessionRequest.result);
+                    restLogout(oauthSettings, jsoObj, null, redirectURL, sessionRequest.result);
                 else if (sessionRequest.responseRetryReturn != 'undefined' && typeof sessionRequest.responseRetryReturn.result != 'undefined')
-                    restLogout(oauthSettings, jsoObjOIC, null, redirectURL, sessionRequest.responseRetryReturn.result);
+                    restLogout(oauthSettings, jsoObj, null, redirectURL, sessionRequest.responseRetryReturn.result);
             }
             else {
                 var cookie = getCookie('eZSESSID');
                 if (cookie != '')
-                    restLogout(oauthSettings, jsoObjOIC, null, redirectURL, {session_name: 'eZSESSID', session_id: cookie});
+                    restLogout(oauthSettings, jsoObj, null, redirectURL, {session_name: 'eZSESSID', session_id: cookie});
             }
         });
     }
     else {
         var cookie = getCookie('eZSESSID');
         if (cookie != '')
-            restLogout(oauthSettings, jsoObjOIC, null, redirectURL, {session_name: 'eZSESSID', session_id: cookie});
+            restLogout(oauthSettings, jsoObj, null, redirectURL, {session_name: 'eZSESSID', session_id: cookie});
     }
 };
 function getCookie(name) {

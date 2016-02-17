@@ -4,6 +4,7 @@ namespace xrow\restBundle\Helper;
 
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Security\Core\Authentication\Token\AbstractToken;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
@@ -156,21 +157,20 @@ class ApiFunctions
      */
     public function setCookie(Request $request, $bundle = 'FOS')
     {
-        #$session = $request->getSession();
-        #var_dump('session '.$session->get('session_state'));
         $user = $this->checkAccessGranted($request, $bundle);
         if ($user instanceof JsonResponse) {
             return $user;
         }
         $sessionName = 'eZSESSID';
         $sessionValue = $request->get('idsv');
-        if ($sessionValue !== null)
-        if (isset($_COOKIE[$sessionName])) {
-            setcookie($sessionName, null, -1, '/');
-            unset($_COOKIE[$sessionName]);
+        if ($sessionValue !== null) {
+            if (isset($_COOKIE[$sessionName])) {
+                setcookie($sessionName, null, -1, '/');
+                unset($_COOKIE[$sessionName]);
+            }
+            setcookie($sessionName, $sessionValue, 0, '/', '', 0, 1);
         }
-        setcookie($sessionName, $sessionValue, 0, '/' );
-        return new JsonResponse();
+        return new JsonResponse(); 
     }
 
     /**
