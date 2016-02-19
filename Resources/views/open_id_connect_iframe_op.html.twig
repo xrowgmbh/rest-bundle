@@ -3,49 +3,77 @@
 <head>
     <meta http-equiv="content-type" content="text/html;charset=UTF-8" />
     <title>OP IFrame</title>
+{% javascripts '@jquery' %}
+    <script src="{{ asset_url }}"></script>
+{% endjavascripts %}
 </head>
 <body>
-{% if oa_params.oicdomains is defined%}
 <script>
 /*
  *
  * Server Side API
  *
  */
+{# Check the postmessage from RP #}
+var allowedDomains = new Array(),
+    allowedCounter = 0;
+
 {# Get all allowed domains for sharing the session cookie #}
-var snDomains = new Array(),
-    counter = 0;
+{% if oa_params.oicdomains is defined %}
 {% set oicdomains = oa_params.oicdomains|split(',') %}
 {% for OpenIDConnectDomain in oicdomains %}
-snDomains[counter] = '{{OpenIDConnectDomain|trim}}';
-counter++;
+allowedDomains[allowedCounter] = '{{OpenIDConnectDomain|trim}}';
+allowedCounter++;
 {% endfor %}
-{# Get all allowed domains for sharing the session cookie END #}
-
-{# Check the postmessage from RP #}
-window.addEventListener("message", function(event){
-    var allowed = false;
-    for (i = 0; i < snDomains.length; i++) {
-        if (snDomains[i] == event.origin) {
-            var parts = event.data.split(' ');
-            //window.console.log('parts', parts);
-            if (typeof parts[0] != 'undefined' && typeof parts[1] != 'undefined') {
-                var client_id = parts[0],
-                    session_state = parts[1];
-                if (session_state != '' && client_id != '' &&
-                    "{{session_state}}" == session_state && "{{clientId}}" == client_id) {
-                    var state = 'unchanged';
-                }
-                else {
-                    var state = '';
-                }
-                event.source.postMessage(state, event.origin);
+{% endif %}
+if (typeof allowedDomains != 'undefined' && allowedDomains.length > 0) {
+    window.addEventListener("message", function(event){
+        var domainIsAllowed = false;
+        for (i = 0; i < allowedDomains.length; i++) {
+            if (allowedDomains[i] == event.origin) {
+                domainIsAllowed = allowedDomains[i];
+                break;
             }
         }
-    }
-});
+        if (domainIsAllowed !== false) {
+            window.console.log("OP antwortet: RP Anfrage von Domain '"+domainIsAllowed+"' ist erlaubt.");
+            var parts = event.data.split(' ');
+            if (typeof parts[0] != 'undefined' && typeof parts[1] != 'undefined') {
+                var RPClientId = parts[0],
+                    RPSessionState = parts[1];
+                $.ajax({
+                    type       : 'GET',
+                    url        : '/xrowapi/v2/storage',
+                    cache      : false
+                }).done(function (storageRequest, textStatus, jqXHR) {
+                    if (typeof storageRequest != 'undefined' && typeof storageRequest.result != 'undefined' && storageRequest.result.session_state != 'undefined') {
+                        var OPSessionState = storageRequest.result.session_state,
+                            OPClientID = "{{oa_params.clid}}";
+                        //window.console.log("RP ClientId: "+RPClientId);
+                        //window.console.log("RP AccessToken: "+RPSessionState);
+                        //window.console.log("OP ClientId: "+OPClientID);
+                        //window.console.log("OP AccessToken: "+OPSessionState);
+                        if (RPSessionState != '' && RPClientId != '' && OPClientID == RPClientId && OPSessionState == RPSessionState) {
+                            event.source.postMessage('unchanged', event.origin);
+                        }
+                        else {
+                            event.source.postMessage('', event.origin);
+                        }
+                    }
+                    else {
+                        event.source.postMessage('', event.origin);
+                    }
+                }).fail(function (){
+                    event.source.postMessage('', event.origin);
+                });
+            }
+        }
+        else {
+            window.console.log("OP antwortet: RP Anfrage von Domain '"+event.origin+"' ist NICHT erlaubt.");
+        }
+    });
+}
 {# Check the postmessage from RP END #}
 </script>
-{% endif %}
 </body>
 </html>

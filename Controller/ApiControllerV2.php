@@ -230,23 +230,24 @@ class ApiControllerV2 extends Controller
                 if ($user instanceof UserInterface) {
                     $parameters['user_id'] = $user->getId();
                     if ($session->has('session_state')) {
-                        $result = array('session_state' => $session->get('session_state'));
+                        $session_state = $session->get('session_state');
                         $OAuth2ServerStorage = $this->get('xrow.oauth2.server.storage');
                         $clientId = $this->getParameter('oauth2.client_id');
-                        $token = $OAuth2ServerStorage->decodeJwtAccessToken($session->get('session_state'), $clientId);
-                        $qb = $this->get('doctrine.orm.entity_manager')->getRepository('OAuth2ServerBundle:RefreshToken')->createQueryBuilder('token');
-                        $refreshTokenResult = $qb->select('token')
-                            ->where('token.user_id = ?1')
-                            ->setParameter(1, $parameters['user_id'])
-                            ->orderBy('token.expires', 'DESC')
-                            ->setFirstResult(0)
-                            ->setMaxResults(1)
-                            ->getQuery()
-                            ->getResult();
-                        if (isset($refreshTokenResult[0]))
-                            $result['refresh_token'] = $refreshTokenResult[0]->getToken();
+                        $token = $OAuth2ServerStorage->decodeJwtAccessToken($session_state, $clientId);
                         try {
                             $OAuth2ServerStorage->verifyOpenIDAccessToken($token);
+                            $result = array('session_state' => $session_state);
+                            $qb = $this->get('doctrine.orm.entity_manager')->getRepository('OAuth2ServerBundle:RefreshToken')->createQueryBuilder('token');
+                            $refreshTokenResult = $qb->select('token')
+                                ->where('token.user_id = ?1')
+                                ->setParameter(1, $parameters['user_id'])
+                                ->orderBy('token.expires', 'DESC')
+                                ->setFirstResult(0)
+                                ->setMaxResults(1)
+                                ->getQuery()
+                                ->getResult();
+                            if (isset($refreshTokenResult[0]))
+                                $result['refresh_token'] = $refreshTokenResult[0]->getToken();
                             return new JsonResponse(array(
                                 'result' => $result,
                                 'type' => 'CONTENT',

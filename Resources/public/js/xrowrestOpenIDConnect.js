@@ -26,7 +26,7 @@ if (typeof oauthSettings != "undefined" && typeof oauthSettings.client_id != "un
         }
     }
     else if(typeof callbackFunctionIfToken != "undefined" && typeof window[callbackFunctionIfToken] == "function") {
-        // If we set cookie via OpenID Connect iframe, we will set here the localStorageToken
+        // If we set cookie via OpenID Connect iframe, we will set here the localStorageToken per domain
         $.ajax({
             type       : 'GET',
             xhrFields  : {
@@ -49,10 +49,10 @@ if (typeof oauthSettings != "undefined" && typeof oauthSettings.client_id != "un
                         window[callbackFunctionIfToken](jsoObj, oauthSettings, token);
                     }
                 }, requestData);
-                if (snDomains.length > 0) {
-                    var sesionCookieIsSet = JSON.parse(localStorage.getItem('xrowOIC'));
+                if (typeof snDomains != 'undefined' && snDomains.length > 0) {
+                    var sesionCookieIsSet = JSON.parse(localStorage.getItem(lsKeyName));
                     if (!sesionCookieIsSet) {
-                        localStorage.setItem('xrowOIC', JSON.stringify(snDomains));
+                        localStorage.setItem(lsKeyName, JSON.stringify(snDomains));
                     }
                 }
             }
@@ -153,7 +153,7 @@ function restLoginForm(dataArray, callback){
         oauthSettings = dataArray.oauthSettings,
         jsoObj = dataArray.jsoObj;
     jsoObj.wipeTokens();
-    localStorage.removeItem('xrowOIC');
+    localStorage.removeItem(lsKeyName);
     var errorIsSet = false,
         error_messages = {};
     $.each(form.serializeArray(), function(i, field) {
