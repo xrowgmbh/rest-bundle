@@ -112,6 +112,17 @@ class OAuth2UserProvider implements UserProviderInterface
      */
     public function refreshUser(UserInterface $user)
     {
+        // With InteractiveLoginEvent we get an eZ User but we would like to handle with our API user
+        if ($user instanceof eZUserWrapped) {
+            $user = $user->getWrappedUser();
+            /*
+             Maybe we would like to set an eZ User later than activate this part for user with contentId 165105
+            $repository = $this->container->get('ezpublish.api.repository');
+            $refreshedAPIUser = $repository->getUserService()->loadUser(165105);
+            $originalUser->setAPIUser($refreshedAPIUser);
+            $repository->setCurrentUser($refreshedAPIUser);
+            */
+        }
         $class = get_class($user);
         if (!$this->supportsClass($class)) {
             throw new UnsupportedUserException(
@@ -120,17 +131,6 @@ class OAuth2UserProvider implements UserProviderInterface
                     $class
                 )
             );
-        }
-        // With InteractiveLoginEvent we get an eZ User but we would like to handle with our API user
-        if ($user instanceof eZUserWrapped) {
-            $user = $user->getWrappedUser();
-            /*
-            Maybe we would like to set an eZ User later than activate this part for user with contentId 165105
-            $repository = $this->container->get('ezpublish.api.repository');
-            $refreshedAPIUser = $repository->getUserService()->loadUser(165105);
-            $originalUser->setAPIUser($refreshedAPIUser);
-            $repository->setCurrentUser($refreshedAPIUser);
-            */
         }
         $refreshedUser = $this->loadUserByUsername($user->getCrmuserId());
         if (null === $refreshedUser) {
@@ -148,11 +148,7 @@ class OAuth2UserProvider implements UserProviderInterface
      */
     public function supportsClass($class)
     {
-        if ($class == 'xrow\\restBundle\\Entity\\OAuth2UserCRM' || $class == 'eZ\\Publish\\Core\\MVC\\Symfony\\Security\\UserWrapped') {
-            return true;
-        }
-
-        return false;
+        return $class === 'xrow\\restBundle\\Entity\\OAuth2UserCRM';
     }
 
     /**

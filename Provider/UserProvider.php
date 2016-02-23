@@ -46,7 +46,7 @@ class UserProvider implements UserProviderInterface
      * @throws UsernameNotFoundException
      * @return \xrow\restBundle\Entity\User
      */
-    public function loadUserFromCRM($username, $password, $openIdConnect = false)
+    public function loadUserFromCRM($username, $password)
     {
         $user = null;
         $crmUser = $this->crmPluginClassObject->loadUser(trim($username), trim($password));
@@ -137,7 +137,6 @@ class UserProvider implements UserProviderInterface
 
     public function supportsClass($class)
     {
-        return $this->userRepository->getClassName() === $class
-        || is_subclass_of($class, $this->userRepository->getClassName());
+        return $class === 'xrow\\restBundle\\Entity\\User';
     }
 }

@@ -45,8 +45,9 @@ if (typeof oauthSettings != "undefined" && typeof oauthSettings.client_id != "un
                     if (typeof tokenData === "string") {
                         var queryHash = "#" + tokenData.split("?");
                         jsoObj.callback(queryHash, false);
-                        var token = jsoObj.checkToken();
-                        window[callbackFunctionIfToken](jsoObj, oauthSettings, token);
+                        var localStorageToken = jsoObj.checkToken();
+                        checkSessionIframe(localStorageToken);
+                        window[callbackFunctionIfToken](jsoObj, oauthSettings, localStorageToken);
                     }
                 }, requestData);
                 if (typeof snDomains != 'undefined' && snDomains.length > 0) {
@@ -287,4 +288,78 @@ function getCookie(name) {
     function escape(s) { return s.replace(/([.*+?\^${}()|\[\]\/\\])/g, '\\$1'); };
     var match = document.cookie.match(RegExp('(?:^|;\\s*)' + escape(name) + '=([^;]*)'));
     return match ? match[1] : null;
+};
+var checkSessionDuration = 30;
+function checkSessionIframe(localStorageToken) {
+    if (localStorageToken !== null && typeof localStorageToken.access_token != "undefined") {
+        // Add iframe with source to OP
+        sessionIFrame = document.createElement("iframe");
+        sessionIFrame.setAttribute("src", oauthSettings.baseURL+oauthSettings.checkSessionIframeURL);
+        sessionIFrame.setAttribute("id", "receiveOPData");
+        sessionIFrame.style.width = "0px";
+        sessionIFrame.style.height = "0px";
+        sessionIFrame.style.display = "none";
+        document.body.appendChild(sessionIFrame);
+        // Start checking the status on OP
+        window.onload = function() {
+            checkStatus(localStorageToken);
+            // Check the status every [checkSessionDuration] seconds
+            setInterval(function() {
+                checkStatus(localStorageToken);
+            }, 1000*checkSessionDuration);
+        };
+
+         // Get OP post message
+         window.addEventListener('message', function(event){
+             window.console.log('Client hat Sessionstatus vom OpenIDConnect-Provider erhalten: '+event.data);
+             // Source is not the OP. Reject this request.
+             if (event.origin !== oauthSettings.baseURL) {
+                 window.console.log('Source is not the OpenIDConnect-Provider. Reject this request.');
+                 return;
+             }
+             // User is logged out on API server.
+             if (event.data != 'unchanged') {
+                 window.console.log('User  has been logged out on API server.');
+                 $.ajax({
+                     type    : 'GET',
+                     url     : oauthSettings.apiSessionURL+'?access_token='+localStorageToken.access_token,
+                     cache   : false
+                 }).done(function(sessionRequest, textStatus, jqXHR){
+                     if (typeof sessionRequest != 'undefined') {
+                         if (typeof sessionRequest.result != 'undefined')
+                             var sessionData = sessionRequest.result;
+                         else if (sessionRequest.responseRetryReturn != 'undefined' && typeof sessionRequest.responseRetryReturn.result != 'undefined')
+                             var sessionData = sessionRequest.responseRetryReturn.result;
+                         // Destroy the session cookie on every domains
+                         if (snDomains.length > 0) {
+                             for (i = 0; i < snDomains.length; i++) {
+                                 window.console.log('Destroy session on domain '+snDomains[i]);
+                                 $.ajax({
+                                     type    : 'DELETE',
+                                     xhrFields  : {
+                                         withCredentials: true
+                                     },
+                                     crossDomain: true,
+                                     url     : snDomains[i]+oauthSettings.apiLogoutURL+'/'+sessionData.session_id
+                                 }).done(function (logoutRequest) {
+                                     if (snDomains.length == i) {
+                                         // Destroy also localStoragItem for xrowOIC
+                                         localStorage.removeItem(lsKeyName);
+                                         restLogout(oauthSettings, jsoObj, null, '', sessionData);
+                                     }
+                                 });
+                             }
+                         }
+                     }
+                 });
+             }
+         });
+    }
+};
+function checkStatus(localStorageToken) {
+    var client = oauthSettings.client_id,
+        text = client + ' ' + localStorageToken.access_token,
+        receverWindow = document.getElementById('receiveOPData').contentWindow;
+    receverWindow.postMessage(text, oauthSettings.baseURL);
+    window.console.log('Sessionstatus wird alle '+checkSessionDuration+' Sekunden geprüft.');
 };
