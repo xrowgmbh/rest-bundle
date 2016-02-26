@@ -397,12 +397,17 @@ class ApiFunctions
                     }
                 }
             } catch (OAuth2AuthenticateException $e) {
-                //throw new AuthenticationException('OAuth2 authentication failed', 0, $e);
                 $exception = $this->errorHandling($e);
                 return new JsonResponse(array(
                     'error' => $exception['error'],
                     'error_type' => $exception['type'],
                     'error_description' => $exception['error_description']), $exception['httpCode']);
+            }
+        }
+        elseif ($bundle == 'FOS') {
+            $oauthToken = $this->securityTokenStorage->getToken();
+            if ($oauthToken instanceof FOSOAuthToken) {
+                $user = $oauthToken->getUser();
             }
         }
         if (!$user instanceof UserInterface) {
