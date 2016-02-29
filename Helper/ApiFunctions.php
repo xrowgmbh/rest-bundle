@@ -168,7 +168,12 @@ class ApiFunctions
                 setcookie($sessionName, null, -1, '/');
                 unset($_COOKIE[$sessionName]);
             }
-            setcookie($sessionName, $sessionValue, 0, '/', '', 1, 1); 
+            if ($request->isSecure()) {
+                setcookie($sessionName, $sessionValue, 0, '/', '', 1, 1);
+            }
+            else {
+                setcookie($sessionName, $sessionValue, 0, '/', '', 0, 1);
+            }
         }
         return new JsonResponse(); 
     }
