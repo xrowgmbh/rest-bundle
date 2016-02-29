@@ -10,9 +10,12 @@ var lsKeyName = 'xrowOpenIDConnect',
                      "apiLogoutURL": "{{oa_params.endpoint_rest}}/sessions",
                      "setcookieURL": "{{oa_params.endpoint_rest}}/setcookie",
                      "checkSessionIframeURL": "{{oa_params.endpoint_rest}}/check_session_iframe"},
+    checkSessionDuration = 10,
     snDomains = new Array(),
     snCounter = 0;
-
+{% if oa_params.checkSessionDuration is defined %}
+checkSessionDuration = {{oa_params.checkSessionDuration}};
+{% endif %}
 {# Get all allowed domains for sharing the session cookie #}
 {% if oa_params.oicdomains is defined and oa_params.clba != app.request.schemeAndHttpHost %}
 {% set oicdomains = oa_params.oicdomains|split(',') %}
