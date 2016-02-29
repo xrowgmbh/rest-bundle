@@ -112,7 +112,7 @@ class ApiController extends Controller
                 setcookie($sessionName, null, -1, '/');
                 unset($_COOKIE[$sessionName]);
             }
-            setcookie($sessionName, $sessionValue, 0, '/' );
+            setcookie($sessionName, $sessionValue, 0, '/', '', 1, 1);
             return new JsonResponse();
         } catch (\Exception $e) {
             $exception = $this->errorHandling($e);
