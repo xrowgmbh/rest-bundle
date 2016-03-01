@@ -289,7 +289,6 @@ function getCookie(name) {
     var match = document.cookie.match(RegExp('(?:^|;\\s*)' + escape(name) + '=([^;]*)'));
     return match ? match[1] : null;
 };
-var checkSessionDuration = 30;
 function checkSessionIframe(localStorageToken) {
     if (localStorageToken !== null && typeof localStorageToken.access_token != "undefined") {
         // Add iframe with source to OP
