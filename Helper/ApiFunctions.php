@@ -5,7 +5,8 @@ namespace xrow\restBundle\Helper;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\JsonResponse as BaseJsonResponse;
+use Symfony\Component\HttpFoundation\Cookie;
 use Symfony\Component\Security\Core\Authentication\Token\AbstractToken;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 use Symfony\Component\Security\Core\Exception\AuthenticationException;
@@ -22,6 +23,7 @@ use OAuth2\ServerBundle\Entity\AccessToken as OAuth2AccessToken;
 use eZ\Publish\Core\MVC\Symfony\Security\UserWrapped as eZUserWrapped;
 use xrow\restBundle\Security\OAuth2Token;
 use xrow\restBundle\Exception\OAuth2AuthenticateException;
+use xrow\restBundle\HttpFoundation\xrowJsonResponse as JsonResponse;
 
 class ApiFunctions
 {
@@ -161,21 +163,19 @@ class ApiFunctions
         if ($user instanceof JsonResponse) {
             return $user;
         }
+        $newResponse = new JsonResponse();
         $sessionName = 'eZSESSID';
         $sessionValue = $request->get('idsv');
         if ($sessionValue !== null) {
-            if (isset($_COOKIE[$sessionName])) {
-                setcookie($sessionName, null, -1, '/');
-                unset($_COOKIE[$sessionName]);
-            }
             if ($request->isSecure()) {
-                setcookie($sessionName, $sessionValue, 0, '/', '', 1, 1);
+                $cookie = new Cookie($sessionName, $sessionValue, 0, '/', null, 1, 1);
             }
             else {
-                setcookie($sessionName, $sessionValue, 0, '/', '', 0, 1);
+                $cookie = new Cookie($sessionName, $sessionValue, 0, '/', null, 0, 1);
             }
+            $newResponse->headers->setCookie($cookie);
         }
-        return new JsonResponse(); 
+        return $newResponse;
     }
 
     /**
