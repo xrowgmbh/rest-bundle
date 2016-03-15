@@ -4,8 +4,6 @@ namespace xrow\restBundle\Helper;
 
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\HttpFoundation\JsonResponse as BaseJsonResponse;
 use Symfony\Component\HttpFoundation\Cookie;
 use Symfony\Component\Security\Core\Authentication\Token\AbstractToken;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
@@ -54,7 +52,7 @@ class ApiFunctions
      * For authentication of an user
      * 
      * @param Request $request
-     * @return \Symfony\Component\HttpFoundation\JsonResponse
+     * @return \xrow\restBundle\HttpFoundation\xrowJsonResponse
      */
     public function setAuthentication(Request $request, $bundle = 'FOS')
     {
@@ -155,7 +153,7 @@ class ApiFunctions
      * Set cookie from API server to my server
      * 
      * @param Request $request
-     * @return \Symfony\Component\HttpFoundation\JsonResponse
+     * @return \xrow\restBundle\HttpFoundation\xrowJsonResponse
      */
     public function setCookie(Request $request, $bundle = 'FOS')
     {
@@ -182,7 +180,7 @@ class ApiFunctions
      * Get or update user data
      * 
      * @param Request $request
-     * @return \Symfony\Component\HttpFoundation\JsonResponse
+     * @return \xrow\restBundle\HttpFoundation\xrowJsonResponse
      */
     public function getUser(Request $request, $bundle = 'FOS')
     {
@@ -217,7 +215,7 @@ class ApiFunctions
      * Get account data
      * 
      * @param Request $request
-     * @return \Symfony\Component\HttpFoundation\JsonResponse
+     * @return \xrow\restBundle\HttpFoundation\xrowJsonResponse
      */
     public function getAccount(Request $request, $bundle = 'FOS')
     {
@@ -241,7 +239,7 @@ class ApiFunctions
      * Get subscriptions
      * 
      * @param Request $request
-     * @return \Symfony\Component\HttpFoundation\JsonResponse
+     * @return \xrow\restBundle\HttpFoundation\xrowJsonResponse
      */
     public function getSubscriptions(Request $request, $bundle = 'FOS')
     {
@@ -267,7 +265,7 @@ class ApiFunctions
      * Get subscription
      * 
      * @param Request $request $subscriptionId
-     * @return \Symfony\Component\HttpFoundation\JsonResponse
+     * @return \xrow\restBundle\HttpFoundation\xrowJsonResponse
      */
     public function getSubscription(Request $request, $subscriptionId, $bundle = 'FOS')
     {
@@ -291,7 +289,7 @@ class ApiFunctions
      * Check password to allow an update of portal_profile_data
      * 
      * @param Request $request
-     * @return \Symfony\Component\HttpFoundation\JsonResponse
+     * @return \xrow\restBundle\HttpFoundation\xrowJsonResponse
      */
     public function checkPassword(Request $request, $bundle = 'FOS')
     {
@@ -320,7 +318,7 @@ class ApiFunctions
      * Get session data
      * 
      * @param Request $request
-     * @return \Symfony\Component\HttpFoundation\JsonResponse
+     * @return \xrow\restBundle\HttpFoundation\xrowJsonResponse
      */
     public function getSession(Request $request, $bundle = 'FOS')
     {
@@ -345,12 +343,16 @@ class ApiFunctions
     /**
      * Logout user
      * 
-     * @return \Symfony\Component\HttpFoundation\JsonResponse
+     * @return \xrow\restBundle\HttpFoundation\xrowJsonResponse
      */
     public function deleteSession(Request $request, $sessionId)
     {
         $sessionName = '';
         $session = $this->container->get('session');
+        $newResponse = new JsonResponse(array(
+                                    'result' => null,
+                                    'type' => 'LOGOUT',
+                                    'message' => 'User is logged out'));
         if ($session->isStarted() !== false && $sessionId != '' && $session->getId() == $sessionId) {
             if (method_exists($this->crmPlugin, 'logout')) {
                 $user = null;
@@ -360,17 +362,11 @@ class ApiFunctions
                 $this->crmPlugin->logout($user);
             }
             $sessionName = $session->getName();
-            if (isset($_COOKIE[$sessionName])) {
-                setcookie($sessionName, null, -1, '/');
-                unset($_COOKIE[$sessionName]);
-            }
+            $newResponse->headers->clearCookie($sessionName);
             $session->invalidate();
         }
         $this->securityTokenStorage->setToken(null);
-        return new JsonResponse(array(
-                                    'result' => null,
-                                    'type' => 'LOGOUT',
-                                    'message' => 'User is logged out'));
+        return $newResponse;
     }
 
     /**
