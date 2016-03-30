@@ -66,6 +66,28 @@ This is a bundle which creates an API for third party application. The data for 
         oauth2.grant_type.user_credentials.class: xrow\restBundle\GrantType\UserCredentials
         oauth2.storage.user_credentials.class: xrow\restBundle\Storage\UserCredentials
 
+3. Set the right route in your app/config/routing.yml
+
+3.1 For oauth2-server-bundle (https://github.com/bshaffer/oauth2-server-bundle)
+    ```yml
+    # app/config/routing.yml
+
+    xrow_rest_api:
+        resource: "@xrowRestBundle/Controller/ApiController.php"
+        type:     annotation
+        prefix:   /xrowapi/v1
+
+3.2 For oauth2-server-bundle (https://github.com/bshaffer/oauth2-server-bundle)
+    ```yml
+    # app/config/routing.yml
+
+    xrow_rest_apiV2:
+        resource: "@xrowRestBundle/Controller/ApiControllerV2.php"
+        type:     annotation
+        prefix:   /xrowapi/v2
+
+3.3 Or both if you would like to use both on the same time
+
 ## License
 
 This bundle is under the MIT license. See the complete license in the bundle:
