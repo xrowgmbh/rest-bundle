@@ -1,9 +1,9 @@
-import {Component, OnInit} from 'angular2/core';
-import {HTTP_PROVIDERS}    from 'angular2/http';
+import {Component, OnInit} from "angular2/core";
+import {HTTP_PROVIDERS}    from "angular2/http";
 
-import {HttpService} from "http.service";
-import {Login} from "login/login";
-import {Home} from "home/home";
+import {HttpService}       from "http.service";
+import {Login}             from "login/login";
+import {Home}              from "home/home";
 #import {Login} from "../login/login";
 #import {Home} from "../home/home";
 

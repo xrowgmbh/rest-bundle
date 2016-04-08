@@ -2,7 +2,7 @@
 
 const gulp = require("gulp");
 const del = require("del");
-const replace = require("gulp-regex-replace");
+const replace = require("gulp-replace");
 const tsc = require("gulp-typescript");
 const sourcemaps = require("gulp-sourcemaps");
 const tsProject = tsc.createProject("tsconfig.json");
@@ -19,7 +19,7 @@ gulp.task("clean", (cb) => {
  * Lint all custom TypeScript files.
  */
 gulp.task("tslint", () => {
-    return gulp.src("src/**/*.ts")
+    return gulp.src(["app/*.ts", "app/**/*.ts"])
         .pipe(tslint())
         .pipe(tslint.report("prose"));
 });
@@ -29,13 +29,14 @@ gulp.task("tslint", () => {
  */
 gulp.task("compile", ["tslint"], () => {
     let tsResult = gulp.src([
-            "src/**/*.ts",
+            "app/*.ts",
+            "app/**/*.ts",
             "node_modules/angular2/typings/browser.d.ts"])
         .pipe(sourcemaps.init())
         .pipe(tsc(tsProject));
     return tsResult.js
         .pipe(sourcemaps.write("."))
-        .pipe(replace({regex:'..\/app', replace:'app'}))
+        .pipe(replace(/..\/app/g, 'app'))
         .pipe(gulp.dest("build"));
 });
 
@@ -43,7 +44,7 @@ gulp.task("compile", ["tslint"], () => {
  * Copy all resources that are not TypeScript files into build directory.
  */
 gulp.task("resources", () => {
-    return gulp.src(["src/**/*", "!**/*.ts"])
+    return gulp.src(["app/*", "app/**/*", "!**/*.ts"])
         .pipe(gulp.dest("build"));
 });
 
@@ -59,21 +60,32 @@ gulp.task("libs", () => {
 });
 
 /**
+ * Replace ../app, ../home and so on in app.component.replaced.js
+ */
+gulp.task("replaceApp", ["compile"], () => {
+    return gulp.src("build/app.component.js")
+        .pipe(replace(/..\/home/g, 'home'))
+        .pipe(replace(/..\/login/g, 'login'))
+        .pipe(gulp.dest("build/app.component.replaced.js"));
+});
+
+/**
  * Replace ../app, ../home and so on
  */
-gulp.task("replace", ["resources"], () => {
-    return gulp.src("build/app/app.component.js")
-        .pipe(replace({regex:'..\/home', replace:'home'}, {regex:'..\/login', replace:'login'}));
+gulp.task("replaceLogin", ["compile"], () => {
+    return gulp.src("build/login/login.js")
+        .pipe(replace(/..\/home/g, 'home'))
+        .pipe(gulp.dest("build/login/login.replaced.js"));
 });
 
 /**
  * Watch for changes in TypeScript, HTML and CSS files.
  */
 gulp.task("watch", function () {
-    gulp.watch(["src/**/*.ts"], ["compile"]).on("change", function (e) {
+    gulp.watch(["app/*.ts", "app/**/*.ts"], ["compile"]).on("change", function (e) {
         console.log("TypeScript file " + e.path + " has been changed. Compiling.");
     });
-    gulp.watch(["src/**/*.html", "src/**/*.css"], ["resources"]).on("change", function (e) {
+    gulp.watch(["app/**/*.html"], ["resources"]).on("change", function (e) {
         console.log("Resource file " + e.path + " has been changed. Updating.");
     });
 });
@@ -81,6 +93,6 @@ gulp.task("watch", function () {
 /**
  * Build the project.
  */
-gulp.task("build", ["compile", "libs", "resources"], () => {
+gulp.task("build", ["replaceApp", "libs", "resources"], () => {
     console.log("Building the project ...");
 });

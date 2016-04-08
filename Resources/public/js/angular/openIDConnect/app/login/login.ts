@@ -1,7 +1,7 @@
 import {Component}                        from "angular2/core";
 import {CORE_DIRECTIVES, FORM_DIRECTIVES} from "angular2/common";
 
-import {HttpService}                      from 'http.service';
+import {HttpService}                      from "http.service";
 
 @Component({
     selector: "container",

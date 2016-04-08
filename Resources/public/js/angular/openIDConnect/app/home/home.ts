@@ -1,8 +1,8 @@
-import {Component} from "angular2/core";
+import {Component}       from "angular2/core";
 import {CORE_DIRECTIVES} from "angular2/common";
-import {Http, Headers} from "angular2/http";
-import {AuthHttp} from "angular2-jwt";
-import {Router} from "angular2/router";
+import {Http, Headers}   from "angular2/http";
+import {AuthHttp}        from "angular2-jwt";
+import {Router}          from "angular2/router";
 
 @Component({
     selector: "home",
@@ -24,7 +24,7 @@ export class Home {
 
   logout() {
     localStorage.removeItem("jwt");
-    this.router.parent.navigateByUrl("/login");
+    //this.router.parent.navigateByUrl("/login");
   }
 
   callAnonymousApi() {
