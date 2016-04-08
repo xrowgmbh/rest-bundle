@@ -14,30 +14,26 @@ use Sensio\Bundle\FrameworkExtraBundle\Configuration\Cache;
 class AngularController extends Controller
 {
     /**
-     * @Route("/test1")
-     * @Method({"GET", "POST"})
-     * 
-     * @param Request $request
-     * @return \Symfony\Component\HttpFoundation\Response
-     */
-    public function showTestContentAction(Request $request)
-    {
-        return $this->render(
-            'xrowRestBundle:angular:test1/index.html.twig', array(
-                'postData' => array('user' => 'kristina', 'password' => 'Xr0wpasX')));
-    }
-
-    /**
-     * @Route("/test1forts")
+     * @Route("/showoicauth")
      * @Method({"GET", "POST"})
      *
      * @param Request $request
      * @return \Symfony\Component\HttpFoundation\Response
      */
-    public function showTestForTsContentAction(Request $request)
+    public function showOauth2Action(Request $request)
     {
-        return $this->render(
-            'xrowRestBundle:angular:test1forts/index.html.twig', array(
-                'postData' => array('user' => 'kristina', 'password' => 'Xr0wpasX')));
+        return $this->render('xrowRestBundle:angular:oicauth/index.html.twig');
+    }
+
+    /**
+     * @Route("/oicauth")
+     * @Method({"GET", "POST"})
+     *
+     * @param Request $request
+     * @return \Symfony\Component\HttpFoundation\Response
+     */
+    public function setOpenIDConnectAuthenticationAction(Request $request)
+    {
+        return $this->get('xrow_rest.api.helper')->setAuthentication($request, 'OAuth2');
     }
 }

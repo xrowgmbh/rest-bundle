@@ -1,0 +1,36 @@
+{
+  "name": "xrow-openid-connect",
+  "version": "1.0.0",
+  "description": "xrow OpenIDConnect Client",
+  "scripts": {
+    "preinstall": "npm install concurrently",
+    "gulp-install": "concurrently \"npm i -g gulp gulp-cli typings typescript ts-node\" \"npm install --save-dev gulp-regex-replace\"",
+    "tsd-bugfix": "tsd install es6-shim",
+    "clean": "gulp clean",
+    "compile": "gulp compile",
+    "build": "gulp build",
+    "tslint": "gulp tslint",
+    "postinstall": "typings install"
+  },
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "angular2": "2.0.0-beta.12",
+    "angular2-jwt": "0.1.8",
+    "es7-reflect-metadata": "^1.6.0",
+    "jwt-decode": "^1.5.1",
+    "systemjs": "0.19.24",
+    "es6-promise": "^3.0.2",
+    "es6-shim": "^0.35.0",
+    "reflect-metadata": "0.1.2",
+    "rxjs": "5.0.0-beta.2",
+    "zone.js": "0.6.6"
+  },
+  "devDependencies": {
+    "del": "^2.2.0",
+    "gulp-sourcemaps": "^1.6.0",
+    "gulp-tslint": "^4.3.3",
+    "gulp-typescript": "^2.12.0",
+    "tslint": "^3.5.0"
+  }
+}
