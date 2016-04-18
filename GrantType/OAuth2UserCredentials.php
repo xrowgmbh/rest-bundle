@@ -8,22 +8,27 @@ use OAuth2\ResponseType\AccessTokenInterface;
 use OAuth2\RequestInterface;
 use OAuth2\ResponseInterface;
 
+use Symfony\Component\DependencyInjection\ContainerInterface;
+
 /**
  *
  * @author Brent Shaffer <bshafs at gmail dot com>
  */
 class OAuth2UserCredentials implements GrantTypeInterface
 {
-    private $userInfo;
-
     protected $storage;
+    public $container;
+
+    public $userInfo;
 
     /**
      * @param OAuth2\Storage\UserCredentialsInterface $storage REQUIRED Storage class for retrieving user credentials information
+     * @param Symfony\Component\DependencyInjection\ContainerInterface $container
      */
-    public function __construct(UserCredentialsInterface $storage)
+    public function __construct(UserCredentialsInterface $storage, ContainerInterface $container)
     {
         $this->storage = $storage;
+        $this->container = $container;
     }
 
     public function getQuerystringIdentifier()
@@ -35,7 +40,7 @@ class OAuth2UserCredentials implements GrantTypeInterface
     {
 
         if (!$request->get("password") || !$request->get("username")) {
-            $response->setError(400, 'invalid_request', 'Missing parameters: "username" and "password" required');
+            $response->setError(400, 'invalid_request', $this->container->get('translator')->trans("Invalid username and password combination"));
 
             return null;
         }

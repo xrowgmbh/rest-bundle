@@ -4,6 +4,7 @@ namespace xrow\restBundle\Helper;
 
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\JsonResponse as BaseJsonResponse;
 use Symfony\Component\HttpFoundation\Cookie;
 use Symfony\Component\Security\Core\Authentication\Token\AbstractToken;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
@@ -185,6 +186,9 @@ class ApiFunctions
     public function getUser(Request $request, $bundle = 'FOS')
     {
         $user = $this->checkAccessGranted($request, $bundle);
+        //$session = $request->getSession();
+        //var_dump($session->getId());
+        //return 'bla';
         if ($user instanceof JsonResponse) {
             return $user;
         }
@@ -206,7 +210,7 @@ class ApiFunctions
             return new JsonResponse(array(
                 'error_description' => $CRMUser['error']), 500);
         }
-        $response = new JsonResponse('', 204);
+        $response = new BaseJsonResponse('', 204);
         $response->prepare($request);
         return $response;
     }
@@ -230,7 +234,7 @@ class ApiFunctions
                     'type' => 'CONTENT',
                     'message' => 'Account data'));
         }
-        $response = new JsonResponse('', 204);
+        $response = new BaseJsonResponse('', 204);
         $response->prepare($request);
         return $response;
     }
@@ -256,7 +260,7 @@ class ApiFunctions
             $jsonContent = $jsonContent->setEncodingOptions(JSON_FORCE_OBJECT);
             return $jsonContent;
         }
-        $response = new JsonResponse('', 204);
+        $response = new BaseJsonResponse('', 204);
         $response->prepare($request);
         return $response;
     }
@@ -280,7 +284,7 @@ class ApiFunctions
                 'type' => 'CONTENT',
                 'message' => 'User subscription'));
         }
-        $response = new JsonResponse('', 204);
+        $response = new BaseJsonResponse('', 204);
         $response->prepare($request);
         return $response;
     }
@@ -309,7 +313,7 @@ class ApiFunctions
                                         'message' => 'User data'));
             }
         }
-        $response = new JsonResponse('', 204);
+        $response = new BaseJsonResponse('', 204);
         $response->prepare($request);
         return $response;
     }
@@ -326,9 +330,9 @@ class ApiFunctions
         if ($user instanceof JsonResponse) {
             return $user;
         }
-        $session = $this->container->get('session');
+        $session = $request->getSession();
         if ($session->isStarted() === false) {
-            $response = new JsonResponse('', 204);
+            $response = new BaseJsonResponse('', 204);
             $response->prepare($request);
             return $response;
         }
@@ -348,7 +352,7 @@ class ApiFunctions
     public function deleteSession(Request $request, $sessionId)
     {
         $sessionName = '';
-        $session = $this->container->get('session');
+        $session = $request->getSession();
         $newResponse = new JsonResponse(array(
                                     'result' => null,
                                     'type' => 'LOGOUT',

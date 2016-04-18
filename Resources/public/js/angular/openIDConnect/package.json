@@ -10,13 +10,14 @@
     "compile": "gulp compile",
     "build": "gulp build",
     "tslint": "gulp tslint",
+    "watch": "gulp watch",
     "postinstall": "typings install"
   },
   "author": "",
   "license": "MIT",
   "dependencies": {
     "angular2": "2.0.0-beta.12",
-    "angular2-jwt": "0.1.8",
+    "ng2-jwt": "0.2.0",
     "es7-reflect-metadata": "^1.6.0",
     "jwt-decode": "^1.5.1",
     "systemjs": "0.19.24",
@@ -28,9 +29,13 @@
   },
   "devDependencies": {
     "del": "^2.2.0",
+    "gulp": "^3.9.1",
     "gulp-sourcemaps": "^1.6.0",
     "gulp-tslint": "^4.3.3",
     "gulp-typescript": "^2.12.0",
+    "gulp-replace": "^0.5.4",
+    "gulp-rename": "^1.2.2",
+    "typescript": "^1.8.9",
     "tslint": "^3.5.0"
   }
 }

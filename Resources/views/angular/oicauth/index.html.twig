@@ -2,7 +2,8 @@
     <head>
         <title>Angular 2 TypeScript Gulp QuickStart</title>
         <meta name="viewport" content="width=device-width, initial-scale=1">
-        <script>document.write('<base href="' + document.location + '" />');</script>
+        <!-- script>document.write('<base href="' + document.location + '" />');</script -->
+        <base href="/angular/v1" />
 
         <link href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.6/css/bootstrap.min.css" rel="stylesheet">
 
@@ -33,17 +34,57 @@
         <!-- script src="{{ asset('bundles/xrowrest/js/angular/oauth2/build/lib/rxjs/bundles/Rx.js') }}"></script-->
         <!-- script src="{{ asset('bundles/xrowrest/js/angular/oauth2/build/lib/angular2/bundles/angular2.js') }}"></script-->
 
+        <script type='text/javascript'>
+            var lsKeyName = 'xrowOpenIDConnect',
+                oauthSettings = {"client_id": "{{oa_params.clid}}",
+                                 "client_secret": "{{oa_params.clsc}}",
+                                 "baseURL": "{{oa_params.clba}}",
+                                 "endpointPrefix": "{{oa_params.endpoint_rest}}",
+                                 "tokenURL": "{{oa_params.endpoint_token}}/token",
+                                 "authURL": "{{oa_params.endpoint_rest}}/auth",
+                                 "openIDConnectURL": "{{oa_params.endpoint_rest}}/oicauth",
+                                 "apiSessionURL": "{{oa_params.endpoint_rest}}/session",
+                                 "apiLogoutURL": "{{oa_params.endpoint_rest}}/sessions",
+                                 "setcookieURL": "{{oa_params.endpoint_rest}}/setcookie",
+                                 "checkSessionIframeURL": "{{oa_params.endpoint_rest}}/check_session_iframe"},
+                checkSessionDuration = 10,
+                snDomains = new Array(),
+                snCounter = 0;
+            {% if oa_params.checkSessionDuration is defined %}
+            checkSessionDuration = {{oa_params.checkSessionDuration}};
+            {% endif %}
+            {# Get all allowed domains for sharing the session cookie #}
+            {% if oa_params.oicdomains is defined and oa_params.clba != app.request.schemeAndHttpHost %}
+            {% set oicdomains = oa_params.oicdomains|split(',') %}
+            {% for OpenIDConnectDomain in oicdomains %}
+            {% if app.request.schemeAndHttpHost != OpenIDConnectDomain|trim %}
+            snDomains[snCounter] = '{{OpenIDConnectDomain|trim}}';
+            snCounter++;
+            {% endif %}
+            {% endfor %}
+            {% endif %}
+
+            {% if oa_params.callback_function_if_token_is_set is defined %}
+            var callbackFunctionIfToken = '{{oa_params.callback_function_if_token_is_set}}';
+            {% endif %}
+            {% if oa_params.callback_function_if_restLogin_fail is defined %}
+            var callbackRestLoginFormErrorHandling = '{{oa_params.callback_function_if_restLogin_fail}}';
+            {% endif %}
+        </script>
+
         <!-- 2. Configure SystemJS -->
         <script>
             System.config({
                 packages: {
-                    'angular2-jwt':      {main: '../../../bundles/xrowrest/js/angular/oauth2/build/lib/angular2-jwt/angular2-jwt.js'},
-                    'jwt-decode':        {main: '../../../bundles/xrowrest/js/angular/oauth2/build/lib/jwt-decode/build/jwt-decode.js'},
-                    'app/main':          {main: '../../../../bundles/xrowrest/js/angular/oauth2/build/app/main.js'},
-                    'app/app.component': {main: '../../../../bundles/xrowrest/js/angular/oauth2/build/app/app.component.js'},
-                    'home/home':         {main: '../../../../bundles/xrowrest/js/angular/oauth2/build/home/home.js'},
-                    'login/login':       {main: '../../../../bundles/xrowrest/js/angular/oauth2/build/login/login.js'},
-                    'common/headers':    {main: '../../../../bundles/xrowrest/js/angular/oauth2/build/common/headers.js'}
+                    /* NOT NECESSARY ANYMORE
+                    'ng2-jwt':           {main: '../../../bundles/xrowrest/js/angular/openIDConnect/build/lib/ng2-jwt/src/services/ng2-jwt.js'},
+                    'jwt-decode':        {main: '../../../bundles/xrowrest/js/angular/openIDConnect/build/lib/jwt-decode/build/jwt-decode.js'},*/
+                    'app/main':                    {main: '../../../../bundles/xrowrest/js/angular/openIDConnect/build/src/app/main.js'},
+                    'app/app.component':           {main: '../../../../bundles/xrowrest/js/angular/openIDConnect/build/src/app/app.component.js'},
+                    'app/http.service':            {main: '../../../../bundles/xrowrest/js/angular/openIDConnect/build/src/app/http.service.js'},
+                    'app/jwt.service':             {main: '../../../../bundles/xrowrest/js/angular/openIDConnect/build/src/app/jwt.service.js'},
+                    'app/cast.response.to.object': {main: '../../../../bundles/xrowrest/js/angular/openIDConnect/build/src/app/cast.response.to.object.js'},
+                    'login/login':                 {main: '../../../../bundles/xrowrest/js/angular/openIDConnect/build/src/login/login.js'}
                 }
             });
 
