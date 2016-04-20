@@ -1,0 +1,33 @@
+<div class="container">
+    <h3 class="title">OpenID Connect Client</h3>
+    <div class="login" [hidden]="showUserData">
+        <h4>Login</h4>
+        <div [hidden]="!showErrorText" class="alert alert-danger">{{errorText}}</div>
+        <form role="form" (submit)="login($event, username.value, password.value)">
+            <div class="form-group">
+                <label for="username">Username</label>
+                <input type="text" #username class="form-control" id="username" placeholder="Username">
+            </div>
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" #password class="form-control" id="password" placeholder="Password">
+            </div>
+            <button type="submit" class="btn btn-default">Login</button>
+        </form>
+    </div>
+    <user-data [hidden]="!showUserData">
+        <h4 *ngIf="userData">Personendaten</h4>
+        <ul *ngIf="userData">
+            <li>Vorname: {{userData?.first_name}}</li>
+            <li>Nachname: {{userData?.last_name}}</li>
+        </ul>
+        <h4 *ngIf="accountData">Accountdaten</h4>
+        <ul *ngIf="accountData">
+            <li>Id: {{accountData?.id}}</li>
+            <li>Name: {{accountData?.name}}</li>
+        </ul>
+        <form role="form" (submit)="logout($event)">
+            <button type="submit" class="btn btn-default">Logout</button>
+        </form>
+    </user-data>
+</div>

@@ -3,15 +3,9 @@
   "version": "1.0.0",
   "description": "xrow OpenIDConnect Client",
   "scripts": {
-    "preinstall": "npm install concurrently",
-    "gulp-install": "concurrently \"npm i -g gulp gulp-cli typings typescript ts-node\" \"npm install --save-dev gulp-regex-replace\"",
-    "tsd-bugfix": "tsd install es6-shim",
-    "clean": "gulp clean",
-    "compile": "gulp compile",
     "build": "gulp build",
-    "tslint": "gulp tslint",
     "watch": "gulp watch",
-    "postinstall": "typings install"
+    "prod": "gulp prod"
   },
   "author": "",
   "license": "MIT",

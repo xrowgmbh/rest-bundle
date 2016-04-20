@@ -1,11 +1,10 @@
-import {Injectable, Inject}                      from 'angular2/core';
-import {Http, Response, Headers, RequestOptions} from 'angular2/http';
-import {Observable}                              from 'rxjs/Observable';
+import {Injectable, Inject}                      from "angular2/core";
+import {Http, Response, Headers, RequestOptions} from "angular2/http";
+import {Observable}                              from "rxjs/Observable";
 import 'rxjs/Rx';
 
-//import {AppComponent}                            from "../app/app.component";
-import {JwtService}                              from "../app/jwt.service";
-import {CastResponseToOobject}                   from "../app/cast.response.to.object";
+import {JwtService}                              from "./jwt.service";
+import {CastResponseToOobject}                   from "./cast.response.to.object";
 
 @Injectable()
 export class HttpService {

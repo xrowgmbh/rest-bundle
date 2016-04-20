@@ -79,16 +79,15 @@
                     /* NOT NECESSARY ANYMORE
                     'ng2-jwt':           {main: '../../../bundles/xrowrest/js/angular/openIDConnect/build/lib/ng2-jwt/src/services/ng2-jwt.js'},
                     'jwt-decode':        {main: '../../../bundles/xrowrest/js/angular/openIDConnect/build/lib/jwt-decode/build/jwt-decode.js'},*/
-                    'app/main':                    {main: '../../../../bundles/xrowrest/js/angular/openIDConnect/build/src/app/main.js'},
-                    'app/app.component':           {main: '../../../../bundles/xrowrest/js/angular/openIDConnect/build/src/app/app.component.js'},
-                    'app/http.service':            {main: '../../../../bundles/xrowrest/js/angular/openIDConnect/build/src/app/http.service.js'},
-                    'app/jwt.service':             {main: '../../../../bundles/xrowrest/js/angular/openIDConnect/build/src/app/jwt.service.js'},
-                    'app/cast.response.to.object': {main: '../../../../bundles/xrowrest/js/angular/openIDConnect/build/src/app/cast.response.to.object.js'},
-                    'login/login':                 {main: '../../../../bundles/xrowrest/js/angular/openIDConnect/build/src/login/login.js'}
+                    'main':                    {main: '../../../../bundles/xrowrest/js/angular/openIDConnect/build/main.js'},
+                    'app.component':           {main: '../../../../bundles/xrowrest/js/angular/openIDConnect/build/app.component.js'},
+                    'http.service':            {main: '../../../../bundles/xrowrest/js/angular/openIDConnect/build/http.service.js'},
+                    'jwt.service':             {main: '../../../../bundles/xrowrest/js/angular/openIDConnect/build/jwt.service.js'},
+                    'cast.response.to.object': {main: '../../../../bundles/xrowrest/js/angular/openIDConnect/build/cast.response.to.object.js'}
                 }
             });
 
-            System.import('app/main')
+            System.import('main')
                 .then(null, console.error.bind(console));
         </script>
     </head>

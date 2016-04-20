@@ -35,9 +35,10 @@ gulp.task("compile", ["tslint"], () => {
         .pipe(tsc(tsProject));
     return tsResult.js
         .pipe(sourcemaps.write("."))
-        .pipe(replace(/\.\.\/app/g, 'app'))
-        .pipe(replace(/\.\.\/home/g, 'home'))
-        .pipe(replace(/\.\.\/login/g, 'login'))
+        .pipe(replace(/\.\/app/g, 'app'))
+        .pipe(replace(/\.\/http/g, 'http'))
+        .pipe(replace(/\.\/jwt/g, 'jwt'))
+        .pipe(replace(/\.\/cast/g, 'cast'))
         .pipe(gulp.dest("build"));
 });
 
@@ -46,7 +47,7 @@ gulp.task("compile", ["tslint"], () => {
  */
 gulp.task("resources", () => {
     return gulp.src(["src/*", "!**/*.ts"])
-        .pipe(gulp.dest("build/src"));
+        .pipe(gulp.dest("build"));
 });
 
 /**
@@ -76,6 +77,15 @@ gulp.task("watch", ["compile"], function () {
 /**
  * Build the project.
  */
-gulp.task("build", ["compile", "resources"], () => {
+gulp.task("build", ["clean", "compile", "resources"], () => {
     console.log("Building the project ...");
+});
+
+/**
+ * Clear the project for PROD:
+ * Remove node_modules directory.
+ */
+gulp.task("prod", (cb) => {
+    console.log("Remove all unnecessary folders/files (node_modules) ...");
+    return del(["node_modules"], cb);
 });

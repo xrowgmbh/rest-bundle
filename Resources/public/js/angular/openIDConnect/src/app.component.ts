@@ -1,17 +1,17 @@
 import {Component, Injectable, OnInit, Input} from "angular2/core";
 import {HTTP_PROVIDERS}                       from "angular2/http";
 import {CORE_DIRECTIVES, FORM_DIRECTIVES}     from "angular2/common";
-import {Observable}                           from 'rxjs/Observable';
+import {Observable}                           from "rxjs/Observable";
 import 'rxjs/Rx';
 
-import {HttpService}                          from "../app/http.service";
-import {JwtService}                           from "../app/jwt.service";
-import {CastResponseToOobject}                from "../app/cast.response.to.object";
+import {HttpService}                          from "./http.service";
+import {JwtService}                           from "./jwt.service";
+import {CastResponseToOobject}                from "./cast.response.to.object";
 
 @Injectable()
 @Component({
     selector: "app",
-    templateUrl: "/bundles/xrowrest/js/angular/openIDConnect/build/src/app/app.html",
+    templateUrl: "/bundles/xrowrest/js/angular/openIDConnect/build/app.html",
     directives: [CORE_DIRECTIVES, FORM_DIRECTIVES],
     providers: [
         HTTP_PROVIDERS,
