@@ -7,50 +7,48 @@
  *
  */
 {# Do the whole stuff for OpenID Connect session #}
-if (typeof jsoObj != 'undefined') {
-    var localStorageToken = jsoObj.checkToken();
-    if (localStorageToken !== null && typeof localStorageToken.access_token != "undefined") {
-        checkSessionIframe(localStorageToken);
+var localStorageToken = JSON.parse(localStorage.getItem(jwtProviderId));
+if (localStorageToken !== null && typeof localStorageToken.access_token != "undefined") {
+    checkSessionIframe(localStorageToken);
 
-        var xrowOICIsSet = JSON.parse(localStorage.getItem(lsKeyName));
-        if (!xrowOICIsSet && snDomains.length > 0) {
-            // Get at first session data
-            $.ajax({
-                type    : 'GET',
-                url     : oauthSettings.apiSessionURL+'?access_token='+localStorageToken.access_token
-            }).done(function(sessionRequest, textStatus, jqXHR){
-                if (typeof sessionRequest != 'undefined') {
-                    if (typeof sessionRequest.result != 'undefined')
-                        var sessionData = sessionRequest.result;
-                    else if (sessionRequest.responseRetryReturn != 'undefined' && typeof sessionRequest.responseRetryReturn.result != 'undefined')
-                        var sessionData = sessionRequest.responseRetryReturn.result;
-                    // Set session cookie for allowed domains
-                    for (i = 0; i < snDomains.length; i++) {
-                        $.ajax({
-                            type       : 'POST',
-                            xhrFields  : {
-                                withCredentials: true
-                            },
-                            crossDomain: true,
-                            url        : snDomains[i]+'{{oa_params.endpoint_rest}}/oicsession',
-                            data       : {'idsv': sessionData.session_id}
-                        }).done(function(setSessionRequest, textStatus, jqXHR){
-                            if (snDomains.length == i) {
-                                // Set localStoragItem for xrowOIC
-                                localStorage.setItem(lsKeyName, JSON.stringify(snDomains));
-                                window.console.log(lsKeyName, snDomains);
-                            }
-                        }).fail(function(){
-                            // Error during set cookie
-                        });
-                    }
+    var xrowOICIsSet = JSON.parse(localStorage.getItem(lsKeyName));
+    if (!xrowOICIsSet && snDomains.length > 0) {
+        // Get at first session data
+        $.ajax({
+            type    : 'GET',
+            url     : oauthSettings.apiSessionURL+'?access_token='+localStorageToken.access_token
+        }).done(function(sessionRequest, textStatus, jqXHR){
+            if (typeof sessionRequest != 'undefined') {
+                if (typeof sessionRequest.result != 'undefined')
+                    var sessionData = sessionRequest.result;
+                else if (sessionRequest.responseRetryReturn != 'undefined' && typeof sessionRequest.responseRetryReturn.result != 'undefined')
+                    var sessionData = sessionRequest.responseRetryReturn.result;
+                // Set session cookie for allowed domains
+                for (i = 0; i < snDomains.length; i++) {
+                    $.ajax({
+                        type       : 'POST',
+                        xhrFields  : {
+                            withCredentials: true
+                        },
+                        crossDomain: true,
+                        url        : snDomains[i]+'{{oa_params.endpoint_rest}}/oicsession',
+                        data       : {'idsv': sessionData.session_id}
+                    }).done(function(setSessionRequest, textStatus, jqXHR){
+                        if (snDomains.length == i) {
+                            // Set localStoragItem for xrowOIC
+                            localStorage.setItem(lsKeyName, JSON.stringify(snDomains));
+                            window.console.log(lsKeyName, snDomains);
+                        }
+                    }).fail(function(){
+                        // Error during set cookie
+                    });
                 }
-            });
-        }
+            }
+        });
     }
-    else {
-        localStorage.removeItem(lsKeyName);
-    }
+}
+else {
+    localStorage.removeItem(lsKeyName);
 }
 </script>
 {% endif %}

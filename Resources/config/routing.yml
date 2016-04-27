@@ -1,0 +1,19 @@
+xrow_rest_api:
+    resource: "@xrowRestBundle/Controller/ApiController.php"
+    type:     annotation
+    prefix:   /xrowapi/v1
+
+xrow_rest_apiV2:
+    resource: "@xrowRestBundle/Controller/ApiControllerV2.php"
+    type:     annotation
+    prefix:   /xrowapi/v2
+
+oauth2_server:
+    resource: "@OAuth2ServerBundle/Controller/"
+    type:     annotation
+    prefix:   /xrowapi/v2
+
+xrow_rest_angular:
+    resource: "@xrowRestBundle/Controller/AngularController.php"
+    type:     annotation
+    prefix:   /angular/v1

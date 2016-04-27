@@ -14,7 +14,7 @@ if (typeof oauthSettings != "undefined" && typeof oauthSettings.client_id != "un
         client_id: oauthSettings.client_id,
         authorization: oauthSettings.baseURL+oauthSettings.authURL,
         default_lifetime: false,
-        providerID: "xrowapi",
+        providerID: jwtProviderId,
         scopes: ["user"],
         debug: false
     });

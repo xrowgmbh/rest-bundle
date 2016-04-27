@@ -1,123 +1,156 @@
-import {Component, Injectable, OnInit, Input} from "angular2/core";
-import {HTTP_PROVIDERS}                       from "angular2/http";
-import {CORE_DIRECTIVES, FORM_DIRECTIVES}     from "angular2/common";
-import {Observable}                           from "rxjs/Observable";
-import 'rxjs/Rx';
+import {Component, Injectable, Injector, OnInit, ElementRef} from "angular2/core";
+import {CORE_DIRECTIVES, FORM_DIRECTIVES}                    from "angular2/common";
+import {Observable}                                          from "rxjs/Observable";
+import {Subscription}                                        from "rxjs/Subscription";
+import "rxjs/Rx";
 
-import {HttpService}                          from "./http.service";
-import {JwtService}                           from "./jwt.service";
-import {CastResponseToOobject}                from "./cast.response.to.object";
+import {ApiService}   from "./api.service";
+import {JwtService}   from "./jwt.service";
+import {ErrorHandler} from "./error.handler";
 
 @Injectable()
 @Component({
-    selector: "app",
-    templateUrl: "/bundles/xrowrest/js/angular/openIDConnect/build/app.html",
-    directives: [CORE_DIRECTIVES, FORM_DIRECTIVES],
-    providers: [
-        HTTP_PROVIDERS,
-        HttpService,
-        JwtService
-    ]
+    selector: "angular-sso-login-app",
+    templateUrl: pathToLoginTemplate,
+    directives: [CORE_DIRECTIVES, FORM_DIRECTIVES]
 })
 
 export class AppComponent implements OnInit{
 
-    userData;
-    accountData;
-    showUserData: Boolean;
-    errorText: string;
-    showErrorText: Boolean;
-    loginDataEmpty: string;
+    private currentSubscription: Subscription;
 
-    constructor(private _httpService: HttpService, private _jwtService: JwtService) {
-        this.showUserData = false;
-        this.showErrorText = false;
-        this.loginDataEmpty = 'Bitte geben Sie Ihren Benutzernamen und Ihr Passwort ein.';
+    showErrorText: Boolean = false;
+    userIsLoggedIn: Boolean = false;
+    errorText: string = 'Please fill in required data.';
+    isOn: Boolean;
+    buttonText: string = 'Login';
+    buttonActiveText: string = 'Login';
+    buttonWaitingText: string = 'Please wait...';
+    redirectUrl: string = '';
+    doLogg: Boolean = false;
+    jwtProviderId: string = 'xrow-rest-token';
+    lsKeyName: string = 'xrowOpenIDConnect';
+
+    constructor(
+        private _apiService: ApiService,
+        private _jwtService: JwtService,
+        private _elRef: ElementRef,
+        injector: Injector
+    ) {
+        injector.get(ErrorHandler);
+
+        // Enable button
+        this.setButton('enabled');
+
+        // Set login empty fields error if exists
+        if (_elRef.nativeElement.getAttribute('errorLoginEmptyfields') != '')
+            this.errorText = _elRef.nativeElement.getAttribute('errorLoginEmptyfields');
+
+        // Set redirect url if exists
+        if (_elRef.nativeElement.getAttribute('redirectAfterApiLogin') !== null && _elRef.nativeElement.getAttribute('redirectAfterApiLogin') != '') {
+            this.redirectUrl = _elRef.nativeElement.getAttribute('redirectAfterApiLogin');
+            if (!this.redirectUrl.match(/^http/) && !this.redirectUrl.match(/^\//)) {
+                this.redirectUrl = '/'+this.redirectUrl;
+            }
+        }
+
+        if (_elRef.nativeElement.getAttribute('buttonActiveText') !== null && _elRef.nativeElement.getAttribute('buttonActiveText') != '')
+            this.buttonActiveText = _elRef.nativeElement.getAttribute('buttonActiveText');
+
+        if (_elRef.nativeElement.getAttribute('buttonWaitingText') !== null && _elRef.nativeElement.getAttribute('buttonWaitingText') != '')
+            this.buttonWaitingText = _elRef.nativeElement.getAttribute('buttonWaitingText');
+
+        if (_elRef.nativeElement.getAttribute('jwtProviderId') !== null && _elRef.nativeElement.getAttribute('jwtProviderId') != '')
+            this.jwtProviderId = _elRef.nativeElement.getAttribute('jwtProviderId');
     }
 
     ngOnInit() {
-        console.log("Application component initialized ...");
         // Get the JWT
-        let jwToken = this._jwtService.get();
+        let jwToken = this._jwtService.get(this.jwtProviderId);
         if (jwToken !== null) {
-            this.showUserData = true;
-            this._httpService.getUserData(jwToken.access_token)
-                .subscribe(
-                    response => {
-                        if (typeof this._httpService.responseUser != "undefined") {
-                            let castedUser = new CastResponseToOobject(this._httpService.responseUser);
-                            if (castedUser.result === "undefined") {
-                                this.handleErrors(castedUser);
-                            }
-                            else {
-                                this.userData = castedUser.result;
-                            }
-                        }
-                        if (typeof this._httpService.responseAccount != "undefined") {
-                            let castedAccount = new CastResponseToOobject(this._httpService.responseAccount);
-                            if (castedAccount.result === "undefined") {
-                                this.handleErrors(castedAccount);
-                            }
-                            else {
-                                this.accountData = castedAccount.result;
-                            }
-                        }
-                    },
-                    errorResponse => {
-                        this.handleErrors(errorResponse);
-                    }
-                );
-            //this.jwtService.checkSessionIframe(jwToken);
+            this.userIsLoggedIn = true;
+            if (this.doLogg)
+                console.log('jwToken', jwToken);
         }
     }
 
     login(event, username, password) {
-        event.preventDefault();
+        this.setButton('disabled');
         this.showErrorText = false;
-        this.errorText = '';
+        event.preventDefault();
         if (username == '' || password == '') {
-            this.errorText = this.loginDataEmpty;
+            this.setButton('enabled');
             this.showErrorText = true;
         }
         else {
-            let loginRequestData = "grant_type=password&client_id="+this._httpService._oauthSettings.client_id+"&client_secret="+this._httpService._oauthSettings.client_secret+"&username="+username+"&password="+password;
-            this._httpService._http
-                .post(this._httpService._oauthSettings.baseURL+this._httpService._oauthSettings.tokenURL, loginRequestData, this._httpService._headerOptions)
+            // If we have an existing request subscription, cancel it.
+            if (this.currentSubscription) {
+                this.currentSubscription.unsubscribe();
+            }
+
+            // Keep track of the response subscription so that we can cancel it in the future.
+            // Login user
+            this.currentSubscription = this._apiService
+                .login(username, password)
                 .subscribe(
                     loginResponse => {
-                        this._httpService.authenticate(loginResponse.json());
+                        if (this.doLogg)
+                            console.log('loginResponse', loginResponse);
+                        // Authenticate user
+                        this._apiService
+                            .authenticate(loginResponse)
+                            .subscribe(
+                                authenticateResponse => {
+                                    if (this.doLogg)
+                                        console.log('authenticateResponse', authenticateResponse);
+                                    // Set session cookie for user
+                                    this._apiService
+                                        .setDomainCookie(loginResponse, authenticateResponse)
+                                        .subscribe(
+                                            cookieResponse => {
+                                                if (this.doLogg)
+                                                    console.log('cookieResponse', cookieResponse);
+                                                // Set jwToken
+                                                this._jwtService.set(this.jwtProviderId, loginResponse);
+                                                if (this.redirectUrl != '')
+                                                    window.location.href = this.redirectUrl;
+                                                else
+                                                    window.location.reload();
+                                            },
+                                            (error: any) => {
+                                                this.setError(error);
+                                            });
+                                },
+                                (error: any) => {
+                                    this.setError(error);
+                                });
                     },
-                    errorLoginResponse => {
-                        let castedLoginResponse = new CastResponseToOobject(errorLoginResponse);
-                        this.handleErrors(castedLoginResponse);
-                    }
-                );
+                    (error: any) => {
+                        this.setError(error);
+                    });
         }
     }
 
-    logout(event) {
-        event.preventDefault();
-        this._httpService.logout();
+    setButton(type) {
+        this.buttonText = this.buttonActiveText;
+        this.isOn = true;
+        if (type == 'disabled') {
+            this.buttonText = this.buttonWaitingText;
+            this.isOn = false;
+        }
     }
 
-    handleErrors(errorResponse) {
-        let errorJson = errorResponse.json();
-        let errorStatus = errorResponse.status;
-        let error = new CastResponseToOobject(errorJson);
-
-        // Token is expired
-        if (errorStatus == 401) {
-            return this._httpService.refreshToken();
+    setError(error) {
+        if (error.error_description != 'undefined') {
+            this.errorText = error.error_description;
         }
-        else {
-            if (error.error_description != 'undefined') {
-                this.errorText = error.error_description;
-                this.showErrorText = true;
-            }
-            else if (error.error != 'undefined') {
-                this.errorText = error.error;
-                this.showErrorText = true;
-            }
+        else if (error.error != 'undefined') {
+            this.errorText = error.error;
         }
+        this.setButton('enabled');
+        this.showErrorText = true;
+        window.scroll(0, 0);
+        if (this.doLogg)
+            console.warn("In app.components");
     }
 }

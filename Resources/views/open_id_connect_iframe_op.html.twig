@@ -16,7 +16,8 @@
  */
 {# Check the postmessage from RP #}
 var allowedDomains = new Array(),
-    allowedCounter = 0;
+    allowedCounter = 0,
+    xrowRestDoLogg = true;
 
 {# Get all allowed domains for sharing the session cookie #}
 {% if oa_params.oicdomains is defined %}
@@ -36,7 +37,8 @@ if (typeof allowedDomains != 'undefined' && allowedDomains.length > 0) {
             }
         }
         if (domainIsAllowed !== false) {
-            window.console.log("OP antwortet: RP Anfrage von Domain '"+domainIsAllowed+"' ist erlaubt.");
+            if (xrowRestDoLogg)
+                console.log("OP antwortet: RP Anfrage von Domain '"+domainIsAllowed+"' ist erlaubt.");
             var parts = event.data.split(' ');
             if (typeof parts[0] != 'undefined' && typeof parts[1] != 'undefined') {
                 var RPClientId = parts[0],
@@ -49,10 +51,6 @@ if (typeof allowedDomains != 'undefined' && allowedDomains.length > 0) {
                     if (typeof storageRequest != 'undefined' && typeof storageRequest.result != 'undefined' && storageRequest.result.session_state != 'undefined') {
                         var OPSessionState = storageRequest.result.session_state,
                             OPClientID = "{{oa_params.clid}}";
-                        //window.console.log("RP ClientId: "+RPClientId);
-                        //window.console.log("RP AccessToken: "+RPSessionState);
-                        //window.console.log("OP ClientId: "+OPClientID);
-                        //window.console.log("OP AccessToken: "+OPSessionState);
                         if (RPSessionState != '' && RPClientId != '' && OPClientID == RPClientId && OPSessionState == RPSessionState) {
                             event.source.postMessage('unchanged', event.origin);
                         }
@@ -69,7 +67,8 @@ if (typeof allowedDomains != 'undefined' && allowedDomains.length > 0) {
             }
         }
         else {
-            window.console.log("OP antwortet: RP Anfrage von Domain '"+event.origin+"' ist NICHT erlaubt.");
+            if (xrowRestDoLogg)
+                console.log("OP antwortet: RP Anfrage von Domain '"+event.origin+"' ist NICHT erlaubt.");
         }
     });
 }

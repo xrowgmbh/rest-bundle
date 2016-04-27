@@ -57,8 +57,27 @@ This is a bundle which creates an API for third party application. The data for 
             class: xrow\restBundle\Provider\OAuth2UserProvider
             arguments:
                 - "@service_container"
-                - "doctrine.orm.entity_manager"
-                - "security.encoder_factory"
+                - "@doctrine.orm.entity_manager"
+                - "@security.encoder_factory"
+        oauth2.openid.storage.authorization_code:
+            class: xrow\restBundle\Storage\OAuth2Memory
+            arguments:
+                - {client_credentials: {%oauth2.client_id%: {client_secret: %oauth2.client_secret%}}, keys: {%oauth2.client_id%: {public_key: %oauth2.public_key%, private_key: %oauth2.private_key%}}}
+        oauth2.openid.grant_type.authorization_code:
+            class: OAuth2\OpenID\GrantType\AuthorizationCode
+            arguments:
+                - "@oauth2.openid.storage.authorization_code"
+        oauth2.grant_type.user_credentials:
+            class: xrow\restBundle\GrantType\OAuth2UserCredentials
+            arguments:
+                - "@oauth2.storage.user_credentials"
+                - "@service_container"
+        oauth2.server:
+            class: "%oauth2.server.class%"
+            arguments:
+                - ["@oauth2.storage.client_credentials", "@oauth2.storage.access_token", "@oauth2.openid.storage.authorization_code", "@oauth2.storage.user_credentials", "@oauth2.storage.refresh_token", "@oauth2.storage.scope"]
+                - {refresh_token_lifetime: 15552000, use_openid_connect: true, issuer: %oauth_baseurl%, use_jwt_access_tokens: true, always_issue_new_refresh_token: true}
+                - {authorization_code: "@oauth2.openid.grant_type.authorization_code", refresh_token: "@oauth2.grant_type.refresh_token", user_credentials: "@oauth2.grant_type.user_credentials"}
 
     ```yml
     # app/config/parameters.yml
@@ -87,6 +106,12 @@ This is a bundle which creates an API for third party application. The data for 
         prefix:   /xrowapi/v2
 
 3.3 Or both if you would like to use both on the same time
+
+4. Add the page_head_script.html.twig to html head-tag and page_footer_script.html.twig to your footer (!!!important: after you load the tag <angular-sso-login-app>)
+
+{% block footer %}
+    {% include 'wuvaboshopBundle::page_footer_script.html.twig' %}
+{% endblock %}
 
 ## License
 

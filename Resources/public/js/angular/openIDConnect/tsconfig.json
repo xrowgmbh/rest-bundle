@@ -1,6 +1,5 @@
 {
   "compilerOptions": {
-    "outDir": "build/app",
     "target": "es5",
     "module": "system",
     "moduleResolution": "node",
@@ -9,7 +8,11 @@
     "experimentalDecorators": true,
     "removeComments": false,
     "noImplicitAny": false,
-    "allowUnreachableCode": true
+    "declaration": false,
+    "stripInternal": true,
+    "noEmitOnError": false,
+    "inlineSourceMap": true,
+    "inlineSources": true
   },
   "exclude": [
     "gulpfile.js",

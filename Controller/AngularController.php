@@ -22,18 +22,6 @@ class AngularController extends Controller
      */
     public function showOauth2Action(Request $request)
     {
-        return $this->render('xrowRestBundle:angular:oicauth/index.html.twig');
-    }
-
-    /**
-     * @Route("/oicauth")
-     * @Method({"GET", "POST"})
-     *
-     * @param Request $request
-     * @return \Symfony\Component\HttpFoundation\Response
-     */
-    public function setOpenIDConnectAuthenticationAction(Request $request)
-    {
-        return $this->get('xrow_rest.api.helper')->setAuthentication($request, 'OAuth2');
+        return $this->render('xrowRestBundle:angular:openIDConnect/login.html.twig');
     }
 }
