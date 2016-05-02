@@ -9,7 +9,15 @@ export class JwtService {
     }
 
     set(name, token) {
-        localStorage.setItem(name, JSON.stringify(token));
+        var jwToken = JSON.stringify(token);
+        // If token is refreshed
+        if (typeof jwToken.refresh_token == 'undefined') {
+            var oldJwToken = this.get(name);
+            if (typeof oldJwToken.refresh_token != 'undefined') {
+                jwToken.refresh_token = oldJwToken.refresh_token;
+            }
+        }
+        localStorage.setItem(name, jwToken);
         return true;
     }
 

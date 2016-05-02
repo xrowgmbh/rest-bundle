@@ -3,7 +3,7 @@ xrow RestBundle Angular 2 OpenID Connect Client
 
 ## Documentation
 
-This is a OpenID Connect client for login an user and creating a jwt token on selected domains.
+This is a OpenID Connect client with using a jwt token on selected domains.
 
 1. For developing please edit the .ts-files in Resources/public/js/angular/openIDConnect/app and compile with
 - cd vendor/xrow/rest-bundle/Resources/public/js/angular/openIDConnect
@@ -29,7 +29,7 @@ like here:
      errorLoginEmptyfields="Your custom error output for empty fields" 
      buttonText="Your custom button submit text" 
      buttonWaitingText="Please wait custom text..." 
-     jwtProviderId="yourCustomLocaleStorageTokenName">Loading...</angular-sso-login-app>
+     jwtProviderId="yourCustomLocalStorageTokenName">Loading...</angular-sso-login-app>
 
 4. For define your own template with the login form you have to set this in your html head:
 <script>

@@ -12,7 +12,8 @@
 var xrowRestDoLogg = true;
 if (typeof oauthSettings != "undefined" && typeof oauthSettings.client_id != "undefined" && typeof oauthSettings.baseURL != "undefined") {
     var localStorageToken = JSON.parse(localStorage.getItem(jwtProviderId));
-    console.log('localStorageToken', localStorageToken);
+    if (xrowRestDoLogg)
+        console.log('localStorageToken', localStorageToken);
     if (localStorageToken === null) {
         $.ajax({
             type       : 'GET',

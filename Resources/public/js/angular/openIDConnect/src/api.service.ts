@@ -1,5 +1,5 @@
-import {Injectable, Inject, Injector, OpaqueToken} from "angular2/core";
-import {Observable}                      from "rxjs/Observable";
+import {Injectable, Inject, Injector} from "angular2/core";
+import {Observable}                   from "rxjs/Observable";
 import "rxjs/Rx";
 
 import {ApiGateway} from "./api.gateway.service";
