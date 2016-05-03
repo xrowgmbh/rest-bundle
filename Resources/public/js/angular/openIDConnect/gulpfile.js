@@ -133,7 +133,7 @@ gulp.task("rename-dev", (cb) => {
 /**
  * Watch for changes in TypeScript, HTML and CSS files.
  */
-gulp.task("watch", ["compile", "resources"], function () {
+gulp.task("watch", ["compile"], function () {
     gulp.watch(["src/*.ts"], ["compile"]).on("change", function (e) {
         console.log("TypeScript file " + e.path + " has been changed. Compiling.");
     });
