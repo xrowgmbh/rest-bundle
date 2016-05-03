@@ -5,7 +5,7 @@ xrow RestBundle Angular 2 OpenID Connect Client
 
 This is a OpenID Connect client with using a jwt token on selected domains.
 
-1. For developing please edit the .ts-files in Resources/public/js/angular/openIDConnect/app and compile with
+1. For developing please edit the .ts-files in Resources/public/js/angular/openIDConnect/src and compile with
 - cd vendor/xrow/rest-bundle/Resources/public/js/angular/openIDConnect
 - npm install              // Add node_modules to your app root folder.
 - npm run build-dev        // Remove build folder, compile ts to js and copy them to new build-folder, rename .htaccessDISABLED to .htaccess to "disable" caching on varnish for your angular project...
