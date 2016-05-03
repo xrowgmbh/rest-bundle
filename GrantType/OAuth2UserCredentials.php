@@ -10,10 +10,6 @@ use OAuth2\ResponseInterface;
 
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
-/**
- *
- * @author Brent Shaffer <bshafs at gmail dot com>
- */
 class OAuth2UserCredentials implements GrantTypeInterface
 {
     protected $storage;
@@ -38,28 +34,21 @@ class OAuth2UserCredentials implements GrantTypeInterface
 
     public function validateRequest(RequestInterface $request, ResponseInterface $response)
     {
-
         if (!$request->get("password") || !$request->get("username")) {
             $response->setError(400, 'invalid_request', $this->container->get('translator')->trans("Invalid username and password combination"));
-
             return null;
         }
+
         $user = $this->storage->checkUserCredentials($request->get("username"), $request->get("password"));
         if (is_array($user) && isset($user['error'])) {
             $response->setError(400, 'invalid_grant', $user['error'][2]);
-
             return null;
         }
 
         $userInfo = $this->storage->getUserDetails('');
-        if (empty($userInfo)) {
-            $response->setError(400, 'invalid_grant', 'Unable to retrieve user information');
-
-            return null;
-        }
-
         if (!isset($userInfo['user_id'])) {
-            throw new \LogicException("you must set the user_id on the array returned by getUserDetails");
+            $response->setError(400, 'invalid_grant', 'Unable to retrieve user information');
+            return null;
         }
 
         $this->userInfo = $userInfo;

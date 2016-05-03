@@ -20,6 +20,8 @@ class OAuth2UserProvider implements UserProviderInterface
     private $encoderFactory;
     private $crmPluginClassObject;
 
+    const CLASSNAME = '\xrow\restBundle\Entity\OAuth2UserCRM';
+
     /**
      * @param \Symfony\Component\DependencyInjection\ContainerInterface $container
      * @param \Doctrine\ORM\EntityManager $entityManager
@@ -67,7 +69,7 @@ class OAuth2UserProvider implements UserProviderInterface
      */
     public function loadUserByUsername($crmuserId)
     {
-        $user = $this->em->getRepository('\xrow\restBundle\Entity\OAuth2UserCRM')->findOneBy(array('crmuserId' => $crmuserId));
+        $user = $this->em->getRepository(self::CLASSNAME)->findOneBy(array('crmuserId' => $crmuserId));
 
         if (!$user) {
             throw new UsernameNotFoundException(sprintf('User with crmuserId "%s" not found.', $crmuserId));
@@ -87,7 +89,7 @@ class OAuth2UserProvider implements UserProviderInterface
      */
     public function loadUserById($id)
     {
-        $user = $this->em->getRepository('\xrow\restBundle\Entity\OAuth2UserCRM')->findOneBy(array('id' => $id));
+        $user = $this->em->getRepository(self::CLASSNAME)->findOneBy(array('id' => $id));
 
         if (!$user) {
             throw new UsernameNotFoundException(sprintf('User with id "%s" not found.', $id));
@@ -178,7 +180,19 @@ class OAuth2UserProvider implements UserProviderInterface
         // Store User
         $this->em->persist($user);
         $this->em->flush();
-
+        // Workaround for getId == NULL (don't know why getId returns NULL)
+        if ($user->getId() === NULL) {
+            $connection = $this->em->getConnection();
+            $query = "SELECT id 
+                      FROM oauth_user_crm
+                      WHERE crmuserId = '".$crmUser['id']."'";
+            // Doctrine\DBAL\Driver\PDOStatement
+            $statement = $connection->executeQuery($query);
+            $result = $statement->fetch();
+            if (is_array($result) && count($result) > 0) {
+                $user->setId($result['id']);
+            }
+        }
         return $user;
     }
 

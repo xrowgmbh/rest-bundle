@@ -40,10 +40,6 @@ class OAuth2UserCredentials implements UserCredentialsInterface
                 $errorText = explode("=>", $user);
                 return array('error' => array($badRequest, 'invalid_grant', $errorText[1]));
             }
-            if ($user->getId() === NULL) {
-                $this->em->persist($user);
-                $this->em->flush();
-            }
             $this->user = $user;
         }
         else {
@@ -65,10 +61,12 @@ class OAuth2UserCredentials implements UserCredentialsInterface
      */
     public function getUserDetails($username)
     {
-        return array(
-            'user_id' => $this->user->getId(),
-            'crmuserId' => $this->user->getCrmuserId(),
-            'scope' => $this->user->getScope()
-        );
+        $userDetails = array();
+        if ($this->user->getId()) {
+            $userDetails['user_id'] = $this->user->getId();
+            $userDetails['crmuserId'] = $this->user->getCrmuserId();
+            $userDetails['scope'] = $this->user->getScope();
+        }
+        return $userDetails;
     }
 }
