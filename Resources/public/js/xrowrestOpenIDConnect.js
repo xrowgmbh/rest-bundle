@@ -9,7 +9,7 @@
  * -> parameters.yml
  *        oauth_callback_function_if_token_is_set: logoutUser
  */
-var xrowRestDoLogg = true;
+var xrowRestDoLogg = false;
 if (typeof oauthSettings != "undefined" && typeof oauthSettings.client_id != "undefined" && typeof oauthSettings.baseURL != "undefined") {
     var localStorageToken = JSON.parse(localStorage.getItem(jwtProviderId));
     if (xrowRestDoLogg)

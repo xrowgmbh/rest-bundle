@@ -7,13 +7,12 @@ This is a OpenID Connect client with using a jwt token on selected domains.
 
 1. For developing please edit the .ts-files in Resources/public/js/angular/openIDConnect/app and compile with
 - cd vendor/xrow/rest-bundle/Resources/public/js/angular/openIDConnect
-- sudo npm install              /* add node_modules to your app root folder */
-- sudo npm run build-dev        /* Remove build folder, compile ts to js and copy them to new build-folder */
-If you would like to develope without executing "clean and build" you can use "sudo npm run watch" and you will get your changes on the fly.
-For developing without expire everytime the varnish please rename .htaccessDISABLED to .htaccess and restart your varnish. From now on varnish do not cache your files.
+- npm install              // Add node_modules to your app root folder.
+- npm run build-dev        // Remove build folder, compile ts to js and copy them to new build-folder, rename .htaccessDISABLED to .htaccess to "disable" caching on varnish for your angular project...
+1.1. If you would like to develope without executing always "npm run build-xyz" you can use "npm run watch" and you will get your changes on the fly.
 
 2. For get the prod version of your code:
-- sudo npm run build-prod       /* See "sudo npm run build-dev" plus removing node_modules. Now you can't execute any gulp or typescript commands. */
+- npm run build-prod       /* See "npm run build-dev" plus removing node_modules and renaming .htaccess to .htaccessDISABLED. */
 
 3. Add this tag to your template for loading a login form:
 <angular-sso-login-app>Loading...</angular-sso-login-app>

@@ -10,6 +10,8 @@ const tsProject = tsc.createProject("tsconfig.json", {
         typescript: require("typescript"),
         outFile: "main.js"});
 const tslint = require("gulp-tslint");
+const rename = require("gulp-rename");
+const fileExists = require('file-exists');
 
 /**
  * Remove build directory.
@@ -78,7 +80,7 @@ gulp.task("resources", () => {
 /**
  * Copy all required libraries into build directory.
  */
-gulp.task("vendor-bundle", function() {
+gulp.task("vendor-bundle", ["resources"], function() {
     console.log("Create vendor file for necessary node_modules ...");
     gulp.src([
         "node_modules/es6-shim/es6-shim.min.js",
@@ -97,6 +99,38 @@ gulp.task("vendor-bundle", function() {
 });
 
 /**
+ * Rename .htaccess
+ */
+gulp.task("rename-prod", (cb) => {
+    if (fileExists(".htaccess")) {
+        gulp.src(".htaccess")
+            .pipe(rename(".htaccessDISABLED"))
+            .pipe(gulp.dest("."));
+        return del([".htaccess"], cb);
+    }
+    else {
+        console.log(".htaccess does not exist.");
+    }
+});
+
+
+/**
+ * Rename .htaccessDISABLED
+ */
+gulp.task("rename-dev", (cb) => {
+    if (fileExists(".htaccessDISABLED")) {
+        console.log("RENAME .htaccessDISABLED.");
+        gulp.src(".htaccessDISABLED")
+            .pipe(rename(".htaccess"))
+            .pipe(gulp.dest("."));
+        return del([".htaccessDISABLED"], cb);
+    }
+    else {
+        console.log(".htaccessDISABLED does not exist.");
+    }
+});
+
+/**
  * Watch for changes in TypeScript, HTML and CSS files.
  */
 gulp.task("watch", ["compile", "resources"], function () {
@@ -111,13 +145,13 @@ gulp.task("watch", ["compile", "resources"], function () {
 /**
  * Build the project for DEV.
  */
-gulp.task("build-dev", ["compile", "resources"], () => {
+gulp.task("build-dev", ["compile", "rename-dev"], () => {
     console.log("Building the project for DEV environment...");
 });
 
 /**
  * Build the project for PROD.
  */
-gulp.task("build-prod", ["create-prod", "resources"], () => {
+gulp.task("build-prod", ["create-prod", "resources", "rename-prod"], () => {
     console.log("Building the project for PROD environment...");
 });
