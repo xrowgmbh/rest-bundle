@@ -15,7 +15,7 @@ export class ApiService {
      * Login
      */
     login(username, password): Observable<any> {
-        let loginRequestData = "grant_type=password&client_id="+this._apiSettings.client_id+"&client_secret="+this._apiSettings.client_secret+"&username="+username+"&password="+password;
+        let loginRequestData = "grant_type=password&client_id="+this._apiSettings.client_id+"&client_secret="+this._apiSettings.client_secret+"&username="+encodeURIComponent(username)+"&password="+password;
 
         return this._apiGateway.post(this._apiSettings.baseURL+this._apiSettings.tokenURL, loginRequestData);
     }
