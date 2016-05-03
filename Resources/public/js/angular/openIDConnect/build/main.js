@@ -147,7 +147,7 @@ System.register("api.service", ["angular2/core", "rxjs/Rx", "api.gateway.service
                  * Login
                  */
                 ApiService.prototype.login = function (username, password) {
-                    var loginRequestData = "grant_type=password&client_id=" + this._apiSettings.client_id + "&client_secret=" + this._apiSettings.client_secret + "&username=" + username + "&password=" + password;
+                    var loginRequestData = "grant_type=password&client_id=" + this._apiSettings.client_id + "&client_secret=" + this._apiSettings.client_secret + "&username=" + encodeURIComponent(username) + "&password=" + password;
                     return this._apiGateway.post(this._apiSettings.baseURL + this._apiSettings.tokenURL, loginRequestData);
                 };
                 /*
@@ -198,7 +198,17 @@ System.register("jwt.service", ["angular2/core"], function(exports_3, context_3)
                     return token;
                 };
                 JwtService.prototype.set = function (name, token) {
-                    localStorage.setItem(name, JSON.stringify(token));
+                    // If token is refreshed
+                    if (typeof token.refresh_token == 'undefined') {
+                        var oldJwToken = this.get(name);
+                        if (oldJwToken !== null) {
+                            if (typeof oldJwToken.refresh_token != 'undefined') {
+                                token.refresh_token = oldJwToken.refresh_token;
+                            }
+                        }
+                    }
+                    var jwToken = JSON.stringify(token);
+                    localStorage.setItem(name, jwToken);
                     return true;
                 };
                 JwtService.prototype.remove = function (name) {
