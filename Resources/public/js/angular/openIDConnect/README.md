@@ -6,14 +6,21 @@ xrow RestBundle Angular 2 OpenID Connect Client
 This is a OpenID Connect client with using a jwt token on selected domains.
 
 For developing please edit the .ts-files in Resources/public/js/angular/openIDConnect/src and compile with
-- cd vendor/xrow/rest-bundle/Resources/public/js/angular/openIDConnect
-- npm install              // Add node_modules to your app root folder.
-- npm run build-dev        // Remove build folder, compile ts to js and copy them to new build-folder, rename .htaccessDISABLED to .htaccess to "disable" caching on varnish for your angular project, restart varnish.
+```
+cd vendor/xrow/rest-bundle/Resources/public/js/angular/openIDConnect
+npm install              // Add node_modules to your app root folder.
+npm run build-dev        // Remove build folder, compile ts to js and copy them to new build-folder, rename .htaccessDISABLED to .htaccess to "disable" caching on varnish for your angular project, restart varnish.
+```
 
-If you would like to develope without executing always "npm run build-xyz" you can use "npm run watch" and you will get your changes on the fly.
+If you would like to develope without executing always "npm run build-xyz" and wo get your changes on the fly you can use
+```
+npm run watch
+```
 
 For get the prod version of your code:
-- npm run build-prod       /* See "npm run build-dev" plus removing node_modules and renaming .htaccess to .htaccessDISABLED. */
+```
+npm run build-prod       // See "npm run build-dev" plus removing node_modules and renaming .htaccess to .htaccessDISABLED.
+```
 
 Add this tag to your template for loading a login form:
 ```
@@ -36,7 +43,7 @@ like here:
 ```
 
 For define your own template with the login form you have to set this in your html head:
-```javascript
+```
 <script>
     var pathToLoginTemplate = '/bundles/yourbundle/pathtologin.html';
 </script>
