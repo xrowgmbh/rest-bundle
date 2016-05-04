@@ -16,7 +16,9 @@ For get the prod version of your code:
 - npm run build-prod       /* See "npm run build-dev" plus removing node_modules and renaming .htaccess to .htaccessDISABLED. */
 
 Add this tag to your template for loading a login form:
+```
 <angular-sso-login-app>Loading...</angular-sso-login-app>
+```
 
 You could also add this attributes to your tag for custom values:
 - errorLoginEmptyfields
@@ -25,11 +27,13 @@ You could also add this attributes to your tag for custom values:
 - jwtProviderId
 
 like here:
+```
 <angular-sso-login-app
      errorLoginEmptyfields="Your custom error output for empty fields" 
      buttonText="Your custom button submit text" 
      buttonWaitingText="Please wait custom text..." 
      jwtProviderId="yourCustomLocalStorageTokenName">Loading...</angular-sso-login-app>
+```
 
 For define your own template with the login form you have to set this in your html head:
 ```javascript
