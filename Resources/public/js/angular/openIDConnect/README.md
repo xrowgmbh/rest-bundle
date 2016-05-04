@@ -32,8 +32,9 @@ like here:
      jwtProviderId="yourCustomLocalStorageTokenName">Loading...</angular-sso-login-app>
 
 For define your own template with the login form you have to set this in your html head:
+```javascript
 <script>
     var pathToLoginTemplate = '/bundles/yourbundle/pathtologin.html';
 </script>
-
+```
 Please ignore some errors regarding to included JavaScript variables like oauthSettings or jwtProviderId for example.
