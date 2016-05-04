@@ -1,0 +1,7 @@
+{# ANGULAR 2 load this only if user is not logged in #}
+{% if not is_granted('IS_AUTHENTICATED_FULLY') %}
+<script>
+System.import('main').then(null, console.error.bind(console));
+</script>
+{% endif %}
+{# ANGULAR 2 End #}

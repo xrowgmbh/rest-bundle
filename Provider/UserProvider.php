@@ -23,18 +23,19 @@ class UserProvider implements UserProviderInterface
     protected $crmPluginClassObject;
 
     /**
-     * @var Doctrine\Common\Persistence\ObjectRepository
+     * @var Doctrine\ORM\EntityManager
      */
-    protected $userRepository;
+    protected $em;
 
     /**
      * @param \Symfony\Component\DependencyInjection\ContainerInterface $container
      * @param \Doctrine\Common\Persistence\ObjectRepository $userRepository
      */
-    public function __construct(ContainerInterface $container, ObjectRepository $userRepository){
+    public function __construct(ContainerInterface $container){
         $this->container = $container;
         $this->crmPluginClassObject = $this->container->get('xrow_rest.crm.plugin');
-        $this->userRepository = $userRepository;
+        $this->em = $this->container->get('doctrine.orm.entity_manager');
+        $this->userRepository = $this->em->getRepository('\xrow\restBundle\Entity\User');
     }
 
     /**
@@ -45,62 +46,57 @@ class UserProvider implements UserProviderInterface
      * @throws UsernameNotFoundException
      * @return \xrow\restBundle\Entity\User
      */
-    public function loadUserFromCRMWithUserCredentials($username, $password)
+    public function loadUserFromCRM($username, $password)
     {
-        try {
-            $user = $this->crmPluginClassObject->loadUser(trim($username), trim($password), $this->userRepository);
-        } catch (NoResultException $e) {
-            $message = sprintf(
-                'Unable to find an active api user object identified by "%s".',
-                $username
-            );
-            throw new UsernameNotFoundException($message, 0, $e);
+        $user = null;
+        $crmUser = $this->crmPluginClassObject->loadUser(trim($username), trim($password));
+        if ($crmUser !== null) {
+            try {
+                $user = $this->loadUserByUsername($crmUser['id']);
+            } catch(UsernameNotFoundException $e) {
+                $user = $this->createUser($crmUser);
+            }
         }
-
         return $user;
     }
 
     /**
-     * Get user with id
+     * Loads the user for the given crmuserId.
+     * This method must throw UsernameNotFoundException if the user is not
+     * found.
      *
-     * @param string $id
-     * @throws UsernameNotFoundException
-     * @return \xrow\restBundle\Entity\User
+     * @param string $crmuserId The CRM user id
+     * @throws UsernameNotFoundException if the user is not found
+     * @return UserInterface
      */
-    public function loadUserFromCRMWithId($id)
+    public function loadUserByUsername($crmuserId)
     {
-        try {
-            $user = $this->crmPluginClassObject->loadUserWithId(trim($id), $this->userRepository);
-        } catch (NoResultException $e) {
+        $user = $this->userRepository->findOneBy(array('crmuserId' => $crmuserId));
+        if ($user === null) {
             $message = sprintf(
                 'Unable to find an active api user object identified by "%s".',
-                $id
+                $crmuserId
             );
-            throw new UsernameNotFoundException($message, 0, $e);
+            throw new UsernameNotFoundException($message);
         }
 
         return $user;
     }
 
     /**
-     * this function is not in use for our authorization
-     * @see \Symfony\Component\Security\Core\User\UserProviderInterface::loadUserByUsername()
+     * Refreshes the user for the account interface.
+     *
+     * It is up to the implementation to decide if the user data should be
+     * totally reloaded (e.g. from the database), or if the UserInterface
+     * object can just be merged into some internal array of users / identity
+     * map.
+     *
+     * @param UserInterface $user
+     * @throws UnsupportedUserException if the account is not supported
+     * @throws UsernameNotFoundException if user not found
+     *
+     * @return UserInterface
      */
-    public function loadUserByUsername($username)
-    {
-        try {
-            $user = $this->userRepository->findOneBy(array('username' => $username));
-        } catch (NoResultException $e) {
-            $message = sprintf(
-                'Unable to find an active api user object identified by "%s".',
-                $username
-            );
-            throw new UsernameNotFoundException($message, 0, $e);
-        }
-
-        return $user;
-    }
-
     public function refreshUser(UserInterface $user)
     {
         $class = get_class($user);
@@ -120,9 +116,27 @@ class UserProvider implements UserProviderInterface
         return $refreshedUser;
     }
 
+    /**
+     * Creates a new user
+     *
+     * @param array $crmUser
+     * 
+     * @return UserInterface
+     */
+    public function createUser($crmUser)
+    {
+        $user = new \xrow\restBundle\Entity\User($crmUser['id']);
+        $user->setUsername(md5($crmUser['id']));
+
+        // Store User
+        $this->em->persist($user);
+        $this->em->flush();
+
+        return $user;
+    }
+
     public function supportsClass($class)
     {
-        return $this->userRepository->getClassName() === $class
-        || is_subclass_of($class, $this->userRepository->getClassName());
+        return $class === 'xrow\\restBundle\\Entity\\User';
     }
 }

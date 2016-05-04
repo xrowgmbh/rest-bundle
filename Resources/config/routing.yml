@@ -1,53 +1,19 @@
-xrow_rest_api_auth:
-    path:   /auth
-    defaults: 
-        _controller: xrowRestBundle:Api:setAuthentication
-    methods: [GET|POST]
+xrow_rest_api:
+    resource: "@xrowRestBundle/Controller/ApiController.php"
+    type:     annotation
+    prefix:   /xrowapi/v1
 
-xrowapi_setcookie:
-    path: /setcookie
-    defaults: 
-        _controller: xrowRestBundle:Api:setCookie
-    methods: [GET|POST]
+xrow_rest_apiV2:
+    resource: "@xrowRestBundle/Controller/ApiControllerV2.php"
+    type:     annotation
+    prefix:   /xrowapi/v2
 
-xrowapi_user:
-    path:   /user
-    defaults: 
-        _controller: xrowRestBundle:Api:getUser
-    methods: [PATCH|OPTIONS|GET]
+oauth2_server:
+    resource: "@OAuth2ServerBundle/Controller/"
+    type:     annotation
+    prefix:   /xrowapi/v2
 
-xrowapi_account:
-    path:   /account
-    defaults:
-        _controller: xrowRestBundle:Api:getAccount
-    methods: [GET]
-
-xrowapi_subscriptions:
-    path:   /subscriptions
-    defaults:
-        _controller: xrowRestBundle:Api:getSubscriptions
-    methods: [GET]
-
-xrowapi_subscription:
-    path: /subscription/{subscriptionId}
-    defaults: 
-        _controller: xrowRestBundle:Api:getSubscription
-    methods: [GET]
-
-xrowapi_checkpassword:
-    path:   /checkpassword
-    defaults:
-        _controller: xrowRestBundle:Api:checkPassword
-    methods: [GET]
-
-xrowapi_session_delete:
-    path: /sessions/{sessionId}
-    defaults:
-        _controller: xrowRestBundle:Api:deleteSession
-    methods: [DELETE|OPTIONS]
-
-xrowapi_session_get:
-    path: /session
-    defaults:
-        _controller: xrowRestBundle:Api:getSession
-    methods: [GET|POST]
+xrow_rest_angular:
+    resource: "@xrowRestBundle/Controller/AngularController.php"
+    type:     annotation
+    prefix:   /angular/v1

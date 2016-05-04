@@ -4,25 +4,14 @@
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:schemaLocation="http://symfony.com/schema/dic/services http://symfony.com/schema/dic/services/services-1.0.xsd">
 
-    <parameters>
-        <parameter key="xrowsso.platform.entity.user.class">xrow\restBundle\Entity\User</parameter>
-        <parameter key="xrowsso.platform.user.provider.class">xrow\restBundle\Provider\UserProvider</parameter>
-    </parameters>
-
     <services>
         <service id="xrowsso.platform.user.manager" class="Doctrine\ORM\EntityManager"
                     factory-service="doctrine" factory-method="getManagerForClass">
-            <argument>%xrowsso.platform.entity.user.class%</argument>
+            <argument>xrow\restBundle\Entity\User</argument>
         </service>
 
-        <service id="xrowsso.platform.user.repository" class="xrow\restBundle\Repository\UserRepository"
-                    factory-service="xrowsso.platform.user.manager" factory-method="getRepository">
-            <argument>%xrowsso.platform.entity.user.class%</argument>
-        </service>
-
-        <service id="xrowsso.platform.user.provider" class="%xrowsso.platform.user.provider.class%">
+        <service id="xrowsso.platform.user.provider" class="xrow\restBundle\Provider\UserProvider">
             <argument type="service" id="service_container" />
-            <argument type="service" id="xrowsso.platform.user.repository" />
         </service>
 
         <service id="xrow_rest.crm.plugin" class="%xrow_rest.plugins.crmclass%">
@@ -39,8 +28,16 @@
             <argument type="service" id="service_container" /> 
         </service>
 
+        <service id="xrow.oauth2.server.storage" class="xrow\restBundle\Storage\OAuth2ServerStorage">
+            <argument type="service" id="service_container" /> 
+        </service>
+
         <service id="xrow_rest.response_listener" class="xrow\restBundle\EventListener\ResponseListener">
             <tag name="kernel.event_listener" event="kernel.response" method="onKernelResponse" />
+        </service>
+
+        <service id="xrow_rest.api.helper" class="xrow\restBundle\Helper\ApiFunctions">
+            <argument type="service" id="service_container" />
         </service>
 
     </services>

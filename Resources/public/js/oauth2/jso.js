@@ -689,19 +689,19 @@ define('store',['require','exports','module','./utils'],function(require, export
 	store.saveTokens = function(provider, tokens) {
 		//window.console.log('SAVE TOKENS ', JSON.stringify(tokens));
 		// log("Save Tokens (" + provider+ ")");
-		localStorage.setItem("tokens-" + provider, JSON.stringify(tokens));
+		localStorage.setItem(provider, JSON.stringify(tokens));
 	};
 
 	store.getTokens = function(provider) {
 		// log("Get Tokens (" + provider+ ")");
-		var tokens = JSON.parse(localStorage.getItem("tokens-" + provider));
+		var tokens = JSON.parse(localStorage.getItem(provider));
 		if (!tokens) tokens = [];
 
 		//log("Token received", tokens);
 		return tokens;
 	};
 	store.wipeTokens = function(provider) {
-		localStorage.removeItem("tokens-" + provider);
+		localStorage.removeItem(provider);
 	};
 	/*
 	 * Save a single token for a provider.

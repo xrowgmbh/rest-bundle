@@ -4,7 +4,6 @@ jQuery.ajaxPrefilter(function(opts, originalOpts, jqXHR) {
     if (opts.retryAttempt) {
         return;
     }
-
     var dfd = jQuery.Deferred(),
         doAjaxPrefilterLogg = false;
 
@@ -18,11 +17,11 @@ jQuery.ajaxPrefilter(function(opts, originalOpts, jqXHR) {
             errorText = '';
         if (jqXHR.status != 401) {
             if ((jqXHR.responseText + '').indexOf('Invalid refresh token', 0) !== -1) {
-                var token = jsoObj.checkToken();
-                if (token !== null && typeof token.access_token != 'undefined')
-                    restLogout(settings, jsoObj, token, '');
+                var localStorageToken = JSON.parse(localStorage.getItem(jwtProviderId));
+                if (localStorageToken !== null && typeof localStorageToken.access_token != 'undefined')
+                    restLogout('', null);
                 else
-                    restLogout(settings, jsoObj, null, '');
+                    restLogout('', null);
                 dfd.resolveWith(this, [{"statusText": "Access token NOT refreshed. Logout the user."}]);
             }
             else {
@@ -41,31 +40,25 @@ jQuery.ajaxPrefilter(function(opts, originalOpts, jqXHR) {
         else {
             if ((jqXHR.responseText + '').indexOf('TOKENEXPIREDERROR', 0) !== -1) {
                 var originObj = this;
-                var token = jsoObj.checkToken();
-                if (token !== null && typeof token.access_token != 'undefined') {
+                var localStorageToken = JSON.parse(localStorage.getItem(jwtProviderId));
+                if (localStorageToken !== null && typeof localStorageToken.access_token != 'undefined') {
                     // Refresh access token
-                    var refreshUrl = "?client_id="+settings.client_id+"&client_secret="+settings.client_secret+"&refresh_token="+token.refresh_token+"&grant_type=refresh_token";
+                    var refreshParams = {'client_id': oauthSettings.client_id,
+                                         'client_secret': oauthSettings.client_secret,
+                                         'refresh_token': localStorageToken.refresh_token,
+                                         'grant_type': 'refresh_token'};
                     jQuery.ajax({
-                        type       : 'GET',
+                        type       : 'POST',
                         xhrFields  : {
                             withCredentials: true
                         },
                         crossDomain: true,
-                        url        : settings.baseURL+settings.tokenURL+refreshUrl
+                        url        : oauthSettings.baseURL+oauthSettings.tokenURL,
+                        data       : refreshParams
                     }).done(function (responseRequest) {
                         if (typeof responseRequest != "undefined" && responseRequest.access_token != "undefined") {
+                            localStorage.setItem(jwtProviderId, JSON.stringify(responseRequest));
                             originObj.url = parseAndRenewURL(originObj.url, {'access_token': responseRequest.access_token});
-                            jsoObj.wipeTokens();
-                            jsoObj.getToken(function(token) {
-                                if (doAjaxPrefilterLogg)
-                                    window.console.log('TOKENEXPIRED token', token);
-                                if (typeof token === "string") {
-                                    var queryHash = "#" + token.split("?");
-                                    if (doAjaxPrefilterLogg)
-                                        window.console.log('TOKENEXPIRED callback', queryHash);
-                                    jsoObj.callback(queryHash, false);
-                                }
-                            }, responseRequest);
                             var options = {
                                 type       : originObj.type,
                                 url        : originObj.url
@@ -92,20 +85,20 @@ jQuery.ajaxPrefilter(function(opts, originalOpts, jqXHR) {
                         }
                         else if (typeof restLogout == 'function') {
                             // Logout
-                            restLogout(settings, jsoObj, token, '');
+                            restLogout('', null);
                             dfd.resolveWith(this, [{"statusText": "Access token NOT refreshed. Log out the user."}]);
                         }
                     });
                 }
                 else if (typeof restLogout == 'function') {
                     // Logout
-                    restLogout(settings, jsoObj, null, '');
+                    restLogout('', null);
                     dfd.resolveWith(this, [{"statusText": "Log out the user."}]);
                 }
             }
             else if (typeof restLogout == 'function') {
                 // Logout
-                restLogout(settings, jsoObj, null, '');
+                restLogout('', null);
                 dfd.resolveWith(this, [{"statusText": "Log out the user."}]);
             }
         }

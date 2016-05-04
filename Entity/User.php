@@ -89,7 +89,7 @@ class User implements UserInterface
      */
     public function getRoles()
     {
-        return array('ROLE_OAUTH_USER', 'ROLE_USER');
+        return array('ROLE_USER');
     }
 
     public function getCurrency()

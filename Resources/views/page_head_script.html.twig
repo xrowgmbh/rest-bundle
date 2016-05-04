@@ -1,11 +1,65 @@
 <script type='text/javascript'>
-var oa_params_cl = '{{ oa_params_cl }}',
-    oa_params_clsc = '{{ oa_params_clsc }}',
-    oa_params_clba = '{{ oa_params_clba }}';
-{% if callbackFunctionIfToken is defined %}
-var callbackFunctionIfToken = '{{ callbackFunctionIfToken }}';
+var lsKeyName = 'xrowOpenIDConnect',
+    jwtProviderId = '{{oa_params.jwtProviderId}}',
+    checkSessionDuration = 10,
+    snDomains = new Array(),
+    snCounter = 0,
+    oauthSettings = {"client_id": "{{oa_params.clid}}",
+                     "client_secret": "{{oa_params.clsc}}",
+                     "baseURL": "{{oa_params.clba}}",
+                     "endpointPrefix": "{{oa_params.endpoint_rest}}",
+                     "tokenURL": "{{oa_params.endpoint_token}}/token",
+                     "authURL": "{{oa_params.endpoint_rest}}/auth",
+                     "openIDConnectURL": "{{oa_params.endpoint_rest}}/oicauth",
+                     "apiSessionURL": "{{oa_params.endpoint_rest}}/session",
+                     "apiLogoutURL": "{{oa_params.endpoint_rest}}/sessions",
+                     "setcookieURL": "{{oa_params.endpoint_rest}}/setcookie",
+                     "checkSessionIframeURL": "{{oa_params.endpoint_rest}}/check_session_iframe"};
+
+if (typeof pathToLoginTemplate === 'undefined') {
+    var pathToLoginTemplate = '/bundles/xrowrest/js/angular/openIDConnect/build/login.html';
+}
+
+{# Get seconds to check if user is logged in if defined #}
+{% if oa_params.checkSessionDuration is defined %}
+checkSessionDuration = {{oa_params.checkSessionDuration}};
 {% endif %}
-{% if callbackRestLoginFormErrorHandling is defined %}
-var callbackRestLoginFormErrorHandling = '{{ callbackRestLoginFormErrorHandling }}';
+
+{# Get all allowed domains for sharing the session cookie #}
+{% if oa_params.oicdomains is defined and oa_params.clba != app.request.schemeAndHttpHost %}
+{% set oicdomains = oa_params.oicdomains|split(',') %}
+{% for OpenIDConnectDomain in oicdomains %}
+{% if app.request.schemeAndHttpHost != OpenIDConnectDomain|trim %}
+snDomains[snCounter] = '{{OpenIDConnectDomain|trim}}';
+snCounter++;
+{% endif %}
+{% endfor %}
+{% endif %}
+
+{% if oa_params.callback_function_if_token_is_set is defined %}
+var callbackFunctionIfToken = '{{oa_params.callback_function_if_token_is_set}}';
+{% endif %}
+{% if oa_params.callback_function_if_restLogin_fail is defined %}
+var callbackRestLoginFormErrorHandling = '{{oa_params.callback_function_if_restLogin_fail}}';
 {% endif %}
 </script>
+
+{# ANGULAR 2 Start #}
+{% if not is_granted('IS_AUTHENTICATED_FULLY') %}
+<!-- 1. Load libraries -->
+<script src="{{ asset('bundles/xrowrest/js/angular/openIDConnect/build/lib/vendors.js') }}"></script>
+<script src="{{ asset('bundles/xrowrest/js/angular/openIDConnect/build/main.js') }}"></script>
+
+<!-- 2. Configure SystemJS -->
+<script>
+    System.config({
+        packages: {
+            app: {
+                defaultExtension: 'js',
+                format: 'register'
+            }
+        }
+    });
+</script>
+{% endif %}
+{# ANGULAR 2 End #}
