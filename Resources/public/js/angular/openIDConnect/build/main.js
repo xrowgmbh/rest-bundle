@@ -201,10 +201,8 @@ System.register("jwt.service", ["angular2/core"], function(exports_3, context_3)
                     // If token is refreshed
                     if (typeof token.refresh_token == 'undefined') {
                         var oldJwToken = this.get(name);
-                        if (oldJwToken !== null) {
-                            if (typeof oldJwToken.refresh_token != 'undefined') {
-                                token.refresh_token = oldJwToken.refresh_token;
-                            }
+                        if (typeof oldJwToken.refresh_token != 'undefined') {
+                            token.refresh_token = oldJwToken.refresh_token;
                         }
                     }
                     var jwToken = JSON.stringify(token);
