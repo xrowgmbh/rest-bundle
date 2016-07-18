@@ -99,8 +99,7 @@ class UserProvider implements UserProviderInterface
      */
     public function refreshUser(UserInterface $user)
     {
-        $em = $this->container->get('doctrine')->getEntityManager();
-        $class = $em->getClassMetadata(get_class($user))->getName();
+        $class = get_class($user);
         if (!$this->supportsClass($class)) {
             throw new UnsupportedUserException(
                 sprintf(
@@ -138,6 +137,11 @@ class UserProvider implements UserProviderInterface
 
     public function supportsClass($class)
     {
-        return $class === 'xrow\\restBundle\\Entity\\User';
+        if ($class === 'xrow\\restBundle\\Entity\\User') {
+            return true;
+        } else if ($class === 'Proxies\\__CG__\\xrow\\restBundle\\Entity\\User') {
+            return true;
+        }
+        return false;
     }
 }
