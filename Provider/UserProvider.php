@@ -99,7 +99,8 @@ class UserProvider implements UserProviderInterface
      */
     public function refreshUser(UserInterface $user)
     {
-        $class = get_class($user);
+        $em = $this->container->get('doctrine')->getEntityManager();
+        $class = $em->getClassMetadata(get_class($user))->getName();
         if (!$this->supportsClass($class)) {
             throw new UnsupportedUserException(
                 sprintf(
