@@ -47,6 +47,9 @@ var callbackRestLoginFormErrorHandling = '{{oa_params.callback_function_if_restL
 {# ANGULAR 2 Start #}
 {% if not is_granted('IS_AUTHENTICATED_FULLY') %}
 <!-- 1. Load libraries -->
+<script src="{{ asset('bundles/xrowrest/js/angular/openIDConnect/build/lib/es6-shim.min.js') }}"></script>
+<script src="{{ asset('bundles/xrowrest/js/angular/openIDConnect/build/lib/system.src.js') }}"></script>
+
 <script src="{{ asset('bundles/xrowrest/js/angular/openIDConnect/build/lib/vendors.js') }}"></script>
 <script src="{{ asset('bundles/xrowrest/js/angular/openIDConnect/build/main.js') }}"></script>
 

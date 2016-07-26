@@ -82,6 +82,7 @@ gulp.task("resources", () => {
  */
 gulp.task("vendor-bundle", ["resources"], function() {
     console.log("Create vendor file for necessary node_modules ...");
+    console.log("Workaroung: Packing causes errors in IE11. Please check es6-shim and systemJS and remove them in the following file, when error is fixed. See: vendor/xrow/rest-bundle/Resources/views/page_head_script.html.twig");
     gulp.src([
         "node_modules/es6-shim/es6-shim.min.js",
         "node_modules/systemjs/dist/system-polyfills.js",
