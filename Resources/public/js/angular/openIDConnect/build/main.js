@@ -147,7 +147,7 @@ System.register("api.service", ["angular2/core", "rxjs/Rx", "api.gateway.service
                  * Login
                  */
                 ApiService.prototype.login = function (username, password) {
-                    var loginRequestData = "grant_type=password&client_id=" + this._apiSettings.client_id + "&client_secret=" + this._apiSettings.client_secret + "&username=" + encodeURIComponent(username) + "&password=" + escape(password);
+                    var loginRequestData = "grant_type=password&client_id=" + this._apiSettings.client_id + "&client_secret=" + this._apiSettings.client_secret + "&username=" + encodeURIComponent(username) + "&password=" + encodeURIComponent(password);
                     return this._apiGateway.post(this._apiSettings.baseURL + this._apiSettings.tokenURL, loginRequestData);
                 };
                 /*
