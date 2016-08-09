@@ -126,7 +126,8 @@ function restLoginForm(dataArray){
                             $.ajax({
                                 type : 'GET',
                                 url  : oauthSettings.setcookieURL+'?access_token='+requestData.access_token+'&idsv='+authRequest.result.session_id+"",
-                                cache: false
+                                cache: false,
+                                crossDomain: true
                             }).done(function (setCookieRequest) {
                                 if (typeof setCookieRequest.error_description != "undefined") {
                                     loginResult({'error': setCookieRequest.error_description}, form);
@@ -272,7 +273,8 @@ function checkSessionIframe(localStorageToken) {
                  $.ajax({
                      type    : 'GET',
                      url     : oauthSettings.apiSessionURL+'?access_token='+localStorageToken.access_token,
-                     cache   : false
+                     cache   : false,
+                     crossDomain: true
                  }).done(function(sessionRequest, textStatus, jqXHR){
                      if (typeof sessionRequest != 'undefined') {
                          if (typeof sessionRequest.result != 'undefined')
