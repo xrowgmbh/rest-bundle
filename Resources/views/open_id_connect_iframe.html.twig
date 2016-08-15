@@ -24,6 +24,12 @@ if (localStorageToken !== null && typeof localStorageToken.access_token != "unde
                 else if (sessionRequest.responseRetryReturn != 'undefined' && typeof sessionRequest.responseRetryReturn.result != 'undefined')
                     var sessionData = sessionRequest.responseRetryReturn.result;
                 // Set session cookie for allowed domains
+                var gotosub = $('a[href$="sso/subscriptions"]');
+                if ( gotosub.is('[data-buttonwaitingtext]') ) {
+                    var gotosub_href = gotosub.attr('href');
+                    var gotosub_text = gotosub.contents();
+                    gotosub.attr('href', '#').html(gotosub.data('buttonwaitingtext'));
+                }
                 for (i = 0; i < snDomains.length; i++) {
                     $.ajax({
                         type       : 'POST',
@@ -34,6 +40,9 @@ if (localStorageToken !== null && typeof localStorageToken.access_token != "unde
                         url        : snDomains[i]+'{{oa_params.endpoint_rest}}/oicsession',
                         data       : {'idsv': sessionData.session_id}
                     }).done(function(setSessionRequest, textStatus, jqXHR){
+                        if ( gotosub.is('[data-buttonwaitingtext]') ) {
+                            gotosub.html(gotosub_text).attr('href', gotosub_href).attr('target', '_blank');
+                        }
                         if (snDomains.length == i) {
                             // Set localStoragItem for xrowOIC
                             localStorage.setItem(lsKeyName, JSON.stringify(snDomains));
