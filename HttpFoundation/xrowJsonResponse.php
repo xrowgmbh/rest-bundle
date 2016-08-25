@@ -20,6 +20,7 @@ class xrowJsonResponse extends BaseJsonResponse
      */
     public function setData($data = array())
     {
+        return parent::setData( $data );
         if (count($data) > 0) {
             foreach ($data as $itemName => $dataItem) {
                 $newData = array();
