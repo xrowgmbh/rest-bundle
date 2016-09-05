@@ -35,7 +35,7 @@ System.register("api.gateway.service", ["angular2/core", "angular2/http", "rxjs/
         execute: function() {
             ApiGatewayOptions = (function () {
                 function ApiGatewayOptions() {
-                    this.headers = new http_1.Headers({ 'Content-Type': 'application/x-www-form-urlencoded',
+                    this.headers = new http_1.Headers({ 'Content-Type': 'application/x-www-form-urlencoded; charset=utf-8',
                         'Accept': 'application/json' });
                 }
                 return ApiGatewayOptions;
