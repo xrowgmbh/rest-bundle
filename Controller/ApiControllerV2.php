@@ -166,6 +166,11 @@ class ApiControllerV2 extends Controller
             $oauthToken = $this->get('security.token_storage')->getToken();
             if ($oauthToken instanceof TokenInterface) {
                 $user = $oauthToken->getUser();
+
+                if ($user instanceof \eZ\Publish\Core\MVC\Symfony\Security\UserWrapped) {
+                    $user = $user->getWrappedUser();
+                }
+
                 if ($user instanceof UserInterface) {
                     $parameters['user_id'] = $user->getId();
                     if ($session->has('session_state')) {
@@ -231,6 +236,11 @@ class ApiControllerV2 extends Controller
             $oauthToken = $this->get('security.token_storage')->getToken();
             if ($oauthToken instanceof TokenInterface) {
                 $user = $oauthToken->getUser();
+
+                if ($user instanceof \eZ\Publish\Core\MVC\Symfony\Security\UserWrapped) {
+                    $user = $user->getWrappedUser();
+                }
+
                 if ($user instanceof UserInterface) {
                     $parameters['user_id'] = $user->getId();
                     if ($session->has('session_state')) {

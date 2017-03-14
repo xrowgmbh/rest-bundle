@@ -361,8 +361,12 @@ class ApiFunctions
             if (method_exists($this->crmPlugin, 'logout')) {
                 $user = null;
                 $secureToken = $this->securityTokenStorage->getToken();
-                if ($secureToken instanceof TokenInterface)
+                if ($secureToken instanceof TokenInterface) {
                     $user = $secureToken->getUser();
+                    if ($user instanceof \eZ\Publish\Core\MVC\Symfony\Security\UserWrapped) {
+                        $user = $user->getWrappedUser();
+                    }
+                }
                 $this->crmPlugin->logout($user);
             }
             $sessionName = $session->getName();

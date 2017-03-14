@@ -116,7 +116,10 @@ class OAuth2UserProvider implements UserProviderInterface
     {
         // With InteractiveLoginEvent we get an eZ User but we would like to handle with our API user
         if ($user instanceof eZUserWrapped) {
-            $user = $user->getWrappedUser();
+
+            $repository = $this->container->get('ezpublish.api.repository');
+            $repository->setCurrentUser($user->getApiUser());
+
             /*
              Maybe we would like to set an eZ User later than activate this part for user with contentId 165105
             $repository = $this->container->get('ezpublish.api.repository');
