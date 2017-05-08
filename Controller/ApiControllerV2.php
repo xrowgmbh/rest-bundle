@@ -88,13 +88,11 @@ class ApiControllerV2 extends Controller
     {
         $subscriptionsObject = $this->get('xrow_rest.api.helper')->getSubscriptions($request, 'OAuth2');
         $subscriptionsList = json_decode($subscriptionsObject->getContent());
-        $i = 0;
-        foreach ($subscriptionsList->result as $subscriptionsItem)
+        foreach ($subscriptionsList->result as $key => $subscriptionsItem)
         {
             if ($subscriptionsItem->digital === '0') {
-                unset($subscriptionsList->result->$i);
+                unset($subscriptionsList->result->$key);
             }
-            $i++;
         }
         $jsonContent = new xrowJsonResponse(array(
             'result' => (array)$subscriptionsList->result,
