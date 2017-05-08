@@ -10,6 +10,8 @@ use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Cache;
 
+use xrow\restBundle\HttpFoundation\xrowJsonResponse;
+
 class ApiController extends Controller
 {
     /**
@@ -79,7 +81,23 @@ class ApiController extends Controller
      */
     public function getSubscriptionsAction(Request $request)
     {
-        return $this->get('xrow_rest.api.helper')->getSubscriptions($request);
+        $subscriptionsObject = $this->get('xrow_rest.api.helper')->getSubscriptions($request);
+        $subscriptionsList = json_decode($subscriptionsObject->getContent());
+        $i = 0;
+        foreach ($subscriptionsList->result as $subscriptionsItem)
+        {
+            if ($subscriptionsItem->digital === '0') {
+                unset($subscriptionsList->result->$i);
+            }
+            $i++;
+        }
+        $jsonContent = new xrowJsonResponse(array(
+            'result' => (array)$subscriptionsList->result,
+            'type' => 'CONTENT',
+            'message' => 'User subscriptions'));
+        $jsonContent = $jsonContent->setEncodingOptions(JSON_FORCE_OBJECT);
+        
+        return $jsonContent;
     }
 
     /**
