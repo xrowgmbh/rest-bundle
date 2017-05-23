@@ -142,7 +142,7 @@ function restLoginForm(dataArray){
                             if (typeof error_messages['default'] != 'undefined' && error_messages['default'] != '')
                                 var error = {'error': error_messages['default']};
                             else
-                                var error = {'error': 'An unexpeded error occured xrjs0.'};
+                                var error = {'error': 'An unexpected error occured xrjs0.'};
                             loginResult(error, form);
                         }
                     });
@@ -152,7 +152,7 @@ function restLoginForm(dataArray){
                     else if(typeof requestData.responseJSON != "undefined" && typeof requestData.responseJSON.error_description != "undefined")
                         var error = {'error': requestData.responseJSON.error_description};
                     else
-                        var error = {'error': 'An unexpeded error occured xrjs0.'};
+                        var error = {'error': 'An unexpected error occured xrjs0.'};
                     loginResult(error, form);
                 }
             }
@@ -160,7 +160,7 @@ function restLoginForm(dataArray){
             if(typeof jqXHR.responseJSON != "undefined" && typeof jqXHR.responseJSON.error_description != "undefined")
                 var error = {'error': jqXHR.responseJSON.error_description};
             else
-                var error = {'error': 'An unexpeded error occured: ' + jqXHR.statusText + ', HTTP Code ' + jqXHR.status + ':xrjs1.'};
+                var error = {'error': 'An unexpected error occured: ' + jqXHR.statusText + ', HTTP Code ' + jqXHR.status + ':xrjs1.'};
             loginResult(error, form);
         });
     }
