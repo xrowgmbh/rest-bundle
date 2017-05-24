@@ -68,11 +68,7 @@ class ApiFunctions
                 $accesTokenString = $this->getBearerToken($request, $bundle);
             }
             catch (\Exception $e) {
-                $exception = $this->errorHandling($e);
-                return new JsonResponse(array(
-                    'error' => $exception['error'],
-                    'error_type' => $exception['type'],
-                    'error_description' => $exception['error_description']), $exception['httpCode']);
+                return $this->jsonExceptionResponse($e);
             }
             if (isset($accesTokenString)) {
                 if ($bundle == 'FOS') {
@@ -81,11 +77,7 @@ class ApiFunctions
                     try {
                         $oauthToken = $this->container->get('security.authentication.manager')->authenticate($oauthToken);
                     } catch (\Exception $e) {
-                        $exception = $this->errorHandling($e);
-                        return new JsonResponse(array(
-                            'error' => $exception['error'],
-                            'error_type' => $exception['type'],
-                            'error_description' => $exception['error_description']), $exception['httpCode']);
+                        return $this->jsonExceptionResponse($e);
                     }
                 }
                 else {
@@ -406,11 +398,7 @@ class ApiFunctions
                     }
                 }
             } catch (OAuth2AuthenticateException $e) {
-                $exception = $this->errorHandling($e);
-                return new JsonResponse(array(
-                    'error' => $exception['error'],
-                    'error_type' => $exception['type'],
-                    'error_description' => $exception['error_description']), $exception['httpCode']);
+                return $this->jsonExceptionResponse($e);
             }
         }
         elseif ($bundle == 'FOS') {
@@ -488,12 +476,12 @@ class ApiFunctions
     }
 
     /**
-     * Gets the right error message and code
-     * 
+     * Generate a JSON response containing an error message, error type and code.
+     *
      * @param unknown $e
-     * @return array $result
+     * @return JsonResponse
      */
-    private function errorHandling($e)
+    private function jsonExceptionResponse($e)
     {
         $result = array('type' => 'ERROR');
         if ($e instanceof OAuth2AuthenticateException || $e->getPrevious() instanceof OAuth2AuthenticateException) {
@@ -518,7 +506,16 @@ class ApiFunctions
             $result['error'] = $e->getCode();
             $result['error_description'] = $this->container->get('translator')->trans($e->getMessage());
             $result['httpCode'] = 500;
+            $logger = $this->container->get('logger');
+            $logger->critical($e->getMessage() . $e->getTraceAsString());
         }
-        return $result;
+        return new JsonResponse(
+            array(
+                'error' => $result['error'],
+                'error_type' => $result['type'],
+                'error_description' => $result['error_description']
+            ),
+            $result['httpCode']
+        );
     }
 }
