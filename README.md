@@ -1,9 +1,9 @@
 xrow RestBundle
 ====================
 
-## Documentation
-
 This is a bundle which creates an API for third party application. The data for the API are comming from your favorite CRM (salesforce, navision, and so on).
+
+## Installation
 
 1. Create a class in your crm bundle and implements CRMPluginInterface. Here is the default [crm plugin class](https://github.com/xrowgmbh/rest-bundle/blob/master/CRM/CRMPlugin.php). Add the path to your crm plugin class in your app/config/config.yml:
     ```yml
@@ -115,6 +115,6 @@ This is a bundle which creates an API for third party application. The data for 
 
 ## License
 
-This bundle is under the MIT license. See the complete license in the bundle:
+This bundle is under the MIT license.
+See the complete [license](Resources/meta/LICENSE) in the bundle.
 
-    Resources/meta/LICENSE
