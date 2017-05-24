@@ -118,3 +118,6 @@ This is a bundle which creates an API for third party application. The data for 
 This bundle is under the MIT license.
 See the complete [license](Resources/meta/LICENSE) in the bundle.
 
+## Development
+
+See the [notes for developers](Resources/doc/develop.md)

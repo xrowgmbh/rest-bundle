@@ -22,6 +22,7 @@ use OAuth2\ServerBundle\Entity\AccessToken as OAuth2AccessToken;
 use eZ\Publish\Core\MVC\Symfony\Security\UserWrapped as eZUserWrapped;
 use xrow\restBundle\Security\OAuth2Token;
 use xrow\restBundle\Exception\OAuth2AuthenticateException;
+use xrow\restBundle\Exception\UserException;
 use xrow\restBundle\HttpFoundation\xrowJsonResponse as JsonResponse;
 
 class ApiFunctions
@@ -124,12 +125,21 @@ class ApiFunctions
                 if ($user instanceof eZUserWrapped) {
                     $user = $user->getWrappedUser();
                 }
+
                 // Set subscriptions to session for permissions for legacy login
-                $userData = array('user' => $this->crmPlugin->getUser($user),
-                                  'subscriptions' => $this->crmPlugin->getSubscriptions($user));
-                $session->set('CRMUserData', $userData);
-                $return = array('session_name' => $session->getName(),
-                                'session_id' => $session->getId());
+                try {
+                    $userData = array(
+                                    'user' => $this->crmPlugin->getUser($user),
+                                    'subscriptions' => $this->crmPlugin->getSubscriptions($user)
+                                );
+                    $session->set('CRMUserData', $userData);
+                    $return = array(
+                                    'session_name' => $session->getName(),
+                                    'session_id' => $session->getId()
+                                );
+                } catch(UserException $e) {
+                    return $this->jsonExceptionResponse($e);
+                }
                 return new JsonResponse(array(
                     'result' => $return,
                     'type' => 'CONTENT',
