@@ -209,11 +209,24 @@ function restLogout(redirectURL, sessionArray){
             crossDomain: true,
             url     : oauthSettings.baseURL+oauthSettings.apiLogoutURL+'/'+sessionArray.session_id
         }).done(function (logoutRequest) {
-            localStorage.removeItem(jwtProviderId);
-            if (redirectURL && redirectURL != '')
-                window.location.href = redirectURL;
-            else
-                location.reload();
+            // Destroy the session cookie on the current domain
+            // Assume that after reload the check-session-iframe will destroy the cookie on other domains
+            $.ajax({
+                type : 'DELETE',
+                xhrFields : {
+                    withCredentials: true
+                },
+                crossDomain: true,
+                url : document.location.protocol +'//' + document.location.hostname + oauthSettings.apiLogoutURL + '/' +sessionArray.session_id
+            }).done(function (logoutRequest) {});
+            setTimeout(
+                function() {
+                    localStorage.removeItem(jwtProviderId);
+                    if (redirectURL && redirectURL != '')
+                        window.location.href = redirectURL;
+                    else
+                        location.reload();
+                }, 2000); 
         });
     }
     else {
