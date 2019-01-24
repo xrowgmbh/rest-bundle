@@ -34,7 +34,7 @@ class ApiControllerV2 extends Controller
     /**
      * Set cookie from API server to my server
      * 
-     * @Route("/setcookie")
+     * @Route("/set_session_cookie")
      * @Method({"GET", "POST"})
      * 
      * @param Request $request
