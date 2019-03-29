@@ -271,6 +271,11 @@ function checkSessionIframe(localStorageToken) {
 
          // Get OP post message
          window.addEventListener('message', function(event){
+             if (event.data === "blockerIframeLoaded") {
+                 console.log("WARNING: An adblocker is blocking iframe events!");
+                 return;
+             }
+
              if (xrowRestDoLogg)
                  console.log('Client hat Sessionstatus vom OpenIDConnect-Provider erhalten: '+event.data);
              // Source is not the OP. Reject this request.
