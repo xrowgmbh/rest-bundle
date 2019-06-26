@@ -367,6 +367,10 @@ System.register("app.component", ["angular2/core", "angular2/common", "rxjs/Rx",
                                         window.location.href = _this.redirectUrl;
                                     else
                                         window.location.reload();
+                                    
+                                    if (typeof ga === 'function' && (window.location.host).indexOf("kundenkonto") != -1 ) {
+                                        ga('send', 'event', 'Session', 'login', window.location.href, 3);
+                                    }
                                 }, function (error) {
                                     _this.setError(error);
                                 });
@@ -396,6 +400,12 @@ System.register("app.component", ["angular2/core", "angular2/common", "rxjs/Rx",
                     this.setButton('enabled');
                     this.showErrorText = true;
                     window.scroll(0, 0);
+                    if (typeof ga === 'function' && (window.location.host).indexOf("kundenkonto") != -1 ) {
+                        ga('send', 'exception', {
+                            'exDescription': 'Login failed: ' + this.errorText,
+                            'exFatal': true
+                          });
+                    }
                     if (this.doLogg)
                         console.warn("In app.components");
                 };
