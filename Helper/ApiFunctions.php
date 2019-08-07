@@ -60,6 +60,16 @@ class ApiFunctions
     {
         $user = false;
         $session = $request->getSession();
+        
+        $remeberMeValue = $request->get('remeberme');
+        if($this->container->hasParameter('expire_time.limit')) {
+            $expireLimit = $this->container->getParameter('expire_time.limit');
+        } else {
+            $expireLimit = 0;
+        }
+        if($remeberMeValue === 'no') {
+            session_set_cookie_params($expireLimit);
+        }
         if ($session->isStarted() === false) {
             $session->start();
         }
@@ -160,6 +170,17 @@ class ApiFunctions
      */
     public function setCookie(Request $request, $bundle = 'FOS')
     {
+        if($this->container->hasParameter('expire_time.limit')) {
+            $expireLimit = time() + $this->container->getParameter('expire_time.limit');
+        } else {
+            $expireLimit = 0;
+        }
+        if($this->container->hasParameter('expire_time.nolimit')) {
+            $expireNoLimit = time() + $this->container->getParameter('expire_time.nolimit');
+        } else {
+            $expireNoLimit = 0;
+        }
+        $expireTime = $expireLimit;
         $user = $this->checkAccessGranted($request, $bundle);
         if ($user instanceof JsonResponse) {
             return $user;
@@ -167,12 +188,16 @@ class ApiFunctions
         $newResponse = new JsonResponse();
         $sessionName = 'eZSESSID';
         $sessionValue = $request->get('idsv');
+        $remeberMeValue = $request->get('remeberme');
+        if($remeberMeValue === "yes") {
+            $expireTime = $expireNoLimit;
+        }
         if ($sessionValue !== null) {
             if ($request->isSecure()) {
-                $cookie = new Cookie($sessionName, $sessionValue, 0, '/', null, 1, 1);
+                $cookie = new Cookie($sessionName, $sessionValue, $expireTime, '/', null, 1, 1);
             }
             else {
-                $cookie = new Cookie($sessionName, $sessionValue, 0, '/', null, 0, 1);
+                $cookie = new Cookie($sessionName, $sessionValue, $expireTime, '/', null, 0, 1);
             }
             $newResponse->headers->setCookie($cookie);
         }
