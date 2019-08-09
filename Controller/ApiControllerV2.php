@@ -232,8 +232,8 @@ class ApiControllerV2 extends Controller
         $expireTime = $expireLimit;
         $sessionName = 'eZSESSID';
         $sessionValue = $request->get('idsv');
-        $remeberMeValue = $request->get('remeberme');
-        if($remeberMeValue === "yes") {
+        $rememberMeValue = $request->get('rememberme');
+        if($rememberMeValue === "yes") {
             $expireTime = $expireNoLimit;
         }
         $newResponse = new Response();

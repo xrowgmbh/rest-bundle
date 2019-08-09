@@ -61,13 +61,13 @@ class ApiFunctions
         $user = false;
         $session = $request->getSession();
         
-        $remeberMeValue = $request->get('remeberme');
+        $rememberMeValue = $request->get('rememberme');
         if($this->container->hasParameter('expire_time.limit')) {
             $expireLimit = $this->container->getParameter('expire_time.limit');
         } else {
             $expireLimit = 0;
         }
-        if($remeberMeValue === 'no') {
+        if($rememberMeValue === 'no') {
             session_set_cookie_params($expireLimit);
         }
         if ($session->isStarted() === false) {
@@ -188,8 +188,8 @@ class ApiFunctions
         $newResponse = new JsonResponse();
         $sessionName = 'eZSESSID';
         $sessionValue = $request->get('idsv');
-        $remeberMeValue = $request->get('remeberme');
-        if($remeberMeValue === "yes") {
+        $rememberMeValue = $request->get('rememberme');
+        if($rememberMeValue === "yes") {
             $expireTime = $expireNoLimit;
         }
         if ($sessionValue !== null) {
