@@ -68,6 +68,10 @@ class ApiFunctions
             $expireLimit = 0;
         }
         if($rememberMeValue === 'no') {
+            //php7.2 Bug: #75650 Why this warning? "Cannot change session name when session is active"?
+            if($session->isStarted()) {
+                $session->invalidate();
+            }
             session_set_cookie_params($expireLimit);
         }
         if ($session->isStarted() === false) {
